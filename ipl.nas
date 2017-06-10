@@ -32,12 +32,31 @@ entry:
 	MOV DH,0
 	MOV CL,2
 
+readloop:
+	MOV SI,0
+
+retry:
 	MOV AH,0x02
 	MOV AL,1
 	MOV BX,0
 	MOV DL,0x00
 	INT 0x13
-	JC error
+	JNC next
+	ADD SI,1
+	CMP SI,5
+	JAE error
+	MOV AH,0x00
+	MOV DL,0x00
+	INT 0x13
+	JMP retry
+
+next:
+	MOV AX,ES
+	ADD AX,0x0020
+	MOV ES,AX
+	ADD CL,1
+	CMP CL,18
+	JBE readloop
 
 fin:
 	HLT
@@ -58,11 +77,11 @@ putloop:
 	JMP putloop
 
 msg:
-	DB 0x0a, 0x0a
+	DB 0x0a,0x0a
 	DB "load error, get the fuck out"
 	DB 0x0a
 	DB 0
 
 RESB 0x7dfe-$;
 
-DB 0x55, 0xaa
+DB 0x55,0xaa
