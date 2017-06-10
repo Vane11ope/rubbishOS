@@ -1,18 +1,22 @@
+MAKE = make -r
+NASK = z_tools/nask
+EDIMG = z_tools/edimg
+
 default :
 	make img
 
 ipl.bin : ipl.nas Makefile
-	z_tools/nask ipl.nas ipl.bin ipl.lst
+	$(NASK) ipl.nas ipl.bin ipl.lst
 
 hello.img : ipl.bin Makefile
-	z_tools/edimg imgin:z_tools/fdimg0at.tek \
+	$(EDIMG) imgin:z_tools/fdimg0at.tek \
 		wbinimg src:ipl.bin len:512 from:0 to:0 imgout:hello.img
 
 asm :
-	make -r ipl.bin
+	$(MAKE) ipl.bin
 
 img :
-	make -r hello.img
+	$(MAKE) hello.img
 
 run :
 	make img
