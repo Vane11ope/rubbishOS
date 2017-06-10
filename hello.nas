@@ -1,5 +1,5 @@
 ORG 0x7c00
-JMP entry
+JMP 0x7c54
 DB 0x90
 DB "HELLOIPL";
 DW 512;
@@ -26,7 +26,7 @@ entry:
 	MOV SP,0x7c00
 	MOV DS,AX
 	MOV ES,AX
-	MOV SI,msg
+	MOV SI,0x7c70
 
 putloop:
 	MOV AL,[SI]
@@ -35,6 +35,7 @@ putloop:
 	JE fin
 	MOV AH,0x0e
 	MOV BX,15
+	MOV BL,0x22
 	INT 0x10
 	JMP putloop
 
