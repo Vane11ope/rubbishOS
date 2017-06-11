@@ -33,4 +33,4 @@ clean :
 
 src_only :
 	make clean
-	rm -f hello.img
+	rm -f rubbish.img
