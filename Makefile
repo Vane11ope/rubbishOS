@@ -8,24 +8,28 @@ default :
 ipl.bin : ipl.nas Makefile
 	$(NASK) ipl.nas ipl.bin ipl.lst
 
-hello.img : ipl.bin Makefile
-	$(EDIMG) imgin:z_tools/fdimg0at.tek \
-		wbinimg src:ipl.bin len:512 from:0 to:0 imgout:hello.img
+rubbish.sys : rubbish.nas Makefile
+	$(NASK) rubbish.nas rubbish.sys rubbish.lst
 
-asm :
-	$(MAKE) ipl.bin
+rubbish.img : ipl.bin rubbish.sys Makefile
+	$(EDIMG) imgin:z_tools/fdimg0at.tek \
+		wbinimg src:ipl.bin len:512 from:0 to:0 \
+		copy from:rubbish.sys to:@: \
+		imgout:rubbish.img
 
 img :
-	$(MAKE) hello.img
+	$(MAKE) rubbish.img
 
 run :
 	make img
-	cp hello.img z_tools/qemu/fdimage0.bin
+	cp rubbish.img z_tools/qemu/fdimage0.bin
 	make -C z_tools/qemu
 
 clean :
 	rm -f ipl.bin  # -f option is for the case where the file does not even exist
 	rm -f ipl.lst
+	rm -f rubbish.sys
+	rm -f rubbish.lst
 
 src_only :
 	make clean
