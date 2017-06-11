@@ -68,8 +68,7 @@ next:
 	JB readloop
 
 fin:
-	HLT
-	JMP fin
+	JMP 0xc200
 
 error:
 	MOV SI,msg
