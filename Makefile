@@ -20,6 +20,9 @@ ipl10.bin : ipl10.nas Makefile
 asmhead.bin : asmhead.nas Makefile
 	$(NASK) asmhead.nas asmhead.bin asmhead.lst
 
+func.obj : func.nas Makefile
+	$(NASK) func.nas func.obj func.lst
+
 bootpack.gas : bootpack.c Makefile
 	$(CC1) -o bootpack.gas bootpack.c
 
@@ -29,9 +32,9 @@ bootpack.nas : bootpack.gas Makefile
 bootpack.obj : bootpack.nas Makefile
 	$(NASK) bootpack.nas bootpack.obj bootpack.lst
 
-bootpack.bim : bootpack.obj Makefile
+bootpack.bim : bootpack.obj func.obj Makefile
 	$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map \
-		bootpack.obj
+		bootpack.obj func.obj
 
 bootpack.rub : bootpack.bim Makefile
 	$(BIM2RUB) bootpack.bim bootpack.rub 0
