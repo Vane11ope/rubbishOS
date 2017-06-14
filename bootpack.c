@@ -25,6 +25,7 @@ void init_palette(void);
 void set_palette(int start, int end, unsigned char *rgb);
 void init_screen(char *vram, int x, int y);
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
+void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
 
 struct BOOTINFO {
 	char cyls, leds, vmode, reserve;
@@ -39,6 +40,13 @@ void RubbMain(void)
 
 	init_palette();
 	init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
+
+	static char font_A[16] = {
+		0x00, 0x18, 0x18, 0x18, 0x18, 0x24, 0x24, 0x24,
+		0x24, 0x7e, 0x42, 0x42, 0x42, 0xe7, 0x00, 0x00
+	};
+
+	putfont8(binfo->vram, binfo->scrnx, 0, 0, COL8_000000, font_A);
 
 	for (;;) {
 		io_hlt();
@@ -112,6 +120,25 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, i
 		for (x = x0; x<= x1; ++x) {
 			*(vram + y * xsize + x) = c;
 		}
+	}
+	return;
+}
+
+void putfont8(char *vram, int xsize, int x, int y, char c, char *font)
+{
+	int i;
+	char *p, data;
+	for (i = 0; i < 16; ++i) {
+		p = vram + (y + i) * xsize + x;
+		data = font[i];
+		if ((data & 0x80) != 0) {p[0] = c;}
+		if ((data & 0x40) != 0) {p[1] = c;}
+		if ((data & 0x20) != 0) {p[2] = c;}
+		if ((data & 0x10) != 0) {p[3] = c;}
+		if ((data & 0x08) != 0) {p[4] = c;}
+		if ((data & 0x04) != 0) {p[5] = c;}
+		if ((data & 0x02) != 0) {p[6] = c;}
+		if ((data & 0x01) != 0) {p[7] = c;}
 	}
 	return;
 }
