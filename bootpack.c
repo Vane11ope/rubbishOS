@@ -35,18 +35,34 @@ struct BOOTINFO {
 
 void RubbMain(void)
 {
-	struct BOOTINFO *binfo;
-	binfo = (struct BOOTINFO *)0x0ff0;
+	struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
+	extern char hankaku[4096];
 
 	init_palette();
 	init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
 
-	static char font_A[16] = {
-		0x00, 0x18, 0x18, 0x18, 0x18, 0x24, 0x24, 0x24,
-		0x24, 0x7e, 0x42, 0x42, 0x42, 0xe7, 0x00, 0x00
-	};
+	//static char font_A[16] = {
+	//	0x00, 0x18, 0x18, 0x18, 0x18, 0x24, 0x24, 0x24,
+	//	0x24, 0x7e, 0x42, 0x42, 0x42, 0xe7, 0x00, 0x00
+	//};
 
-	putfont8(binfo->vram, binfo->scrnx, 0, 0, COL8_000000, font_A);
+	putfont8(binfo->vram, binfo->scrnx, 8, 8, COL8_FFFFFF, hankaku + 'V' * 16);
+	putfont8(binfo->vram, binfo->scrnx, 16, 8, COL8_FFFFFF, hankaku + 'A' * 16);
+	putfont8(binfo->vram, binfo->scrnx, 24, 8, COL8_FFFFFF, hankaku + 'N' * 16);
+	putfont8(binfo->vram, binfo->scrnx, 32, 8, COL8_FFFFFF, hankaku + 'E' * 16);
+	putfont8(binfo->vram, binfo->scrnx, 40, 8, COL8_FFFFFF, hankaku + 'L' * 16);
+	putfont8(binfo->vram, binfo->scrnx, 48, 8, COL8_FFFFFF, hankaku + 'L' * 16);
+	putfont8(binfo->vram, binfo->scrnx, 56, 8, COL8_FFFFFF, hankaku + 'O' * 16);
+	putfont8(binfo->vram, binfo->scrnx, 64, 8, COL8_FFFFFF, hankaku + 'P' * 16);
+	putfont8(binfo->vram, binfo->scrnx, 72, 8, COL8_FFFFFF, hankaku + 'E' * 16);
+
+	short tweetx = 11;
+	short tweety = binfo->scrny - 20;
+	putfont8(binfo->vram, binfo->scrnx, tweetx, tweety, COL8_000000, hankaku + 'T' * 16);
+	putfont8(binfo->vram, binfo->scrnx, tweetx + 8, tweety, COL8_000000, hankaku + 'W' * 16);
+	putfont8(binfo->vram, binfo->scrnx, tweetx + 16, tweety, COL8_000000, hankaku + 'E' * 16);
+	putfont8(binfo->vram, binfo->scrnx, tweetx + 24, tweety, COL8_000000, hankaku + 'E' * 16);
+	putfont8(binfo->vram, binfo->scrnx, tweetx + 32, tweety, COL8_000000, hankaku + 'T' * 16);
 
 	for (;;) {
 		io_hlt();
@@ -95,7 +111,7 @@ void set_palette(int start, int end, unsigned char *rgb)
 
 void init_screen(char *vram, int x, int y)
 {
-	boxfill8(vram, x, COL8_008484, 0, 0, x - 1, y - 29);
+	boxfill8(vram, x, COL8_000000, 0, 0, x - 1, y - 29);
 	boxfill8(vram, x, COL8_C6C6C6, 0, y - 28, x - 1, y - 28);
 	boxfill8(vram, x, COL8_FFFFFF, 0, y - 27, x - 1, y - 27);
 	boxfill8(vram, x, COL8_C6C6C6, 0, y - 26, x - 1, y - 1);

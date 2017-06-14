@@ -6,10 +6,12 @@ CC1      = tools/gocc1 -I$(RUBPATH) -Os -Wall -quiet
 GAS2NASK = tools/gas2nask -a
 OBJ2BIM  = tools/obj2bim
 BIM2RUB  = tools/bim2rub
+BIN2OBJ  = tools/bin2obj
 RULEFILE = tools/rubbish/rubbish.rul
 EDIMG    = tools/edimg
 IMGTOL   = tools/imgtol
 DEL      = rm -f
+MAKEFONT = tools/makefont
 
 default :
 	$(MAKE) img
@@ -23,6 +25,12 @@ asmhead.bin : asmhead.nas Makefile
 func.obj : func.nas Makefile
 	$(NASK) func.nas func.obj func.lst
 
+hankaku.bin : hankaku.txt Makefile
+	$(MAKEFONT) hankaku.txt hankaku.bin
+
+hankaku.obj : hankaku.bin Makefile
+	$(BIN2OBJ) hankaku.bin hankaku.obj _hankaku
+
 bootpack.gas : bootpack.c Makefile
 	$(CC1) -o bootpack.gas bootpack.c
 
@@ -32,9 +40,9 @@ bootpack.nas : bootpack.gas Makefile
 bootpack.obj : bootpack.nas Makefile
 	$(NASK) bootpack.nas bootpack.obj bootpack.lst
 
-bootpack.bim : bootpack.obj func.obj Makefile
+bootpack.bim : bootpack.obj func.obj hankaku.obj Makefile
 	$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map \
-		bootpack.obj func.obj
+		bootpack.obj func.obj hankaku.obj
 
 bootpack.rub : bootpack.bim Makefile
 	$(BIM2RUB) bootpack.bim bootpack.rub 0
