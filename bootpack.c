@@ -26,6 +26,7 @@ void set_palette(int start, int end, unsigned char *rgb);
 void init_screen(char *vram, int x, int y);
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
 void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
+void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s);
 
 struct BOOTINFO {
 	char cyls, leds, vmode, reserve;
@@ -36,7 +37,6 @@ struct BOOTINFO {
 void RubbMain(void)
 {
 	struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
-	extern char hankaku[4096];
 
 	init_palette();
 	init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
@@ -46,23 +46,11 @@ void RubbMain(void)
 	//	0x24, 0x7e, 0x42, 0x42, 0x42, 0xe7, 0x00, 0x00
 	//};
 
-	putfont8(binfo->vram, binfo->scrnx, 8, 8, COL8_FFFFFF, hankaku + 'V' * 16);
-	putfont8(binfo->vram, binfo->scrnx, 16, 8, COL8_FFFFFF, hankaku + 'A' * 16);
-	putfont8(binfo->vram, binfo->scrnx, 24, 8, COL8_FFFFFF, hankaku + 'N' * 16);
-	putfont8(binfo->vram, binfo->scrnx, 32, 8, COL8_FFFFFF, hankaku + 'E' * 16);
-	putfont8(binfo->vram, binfo->scrnx, 40, 8, COL8_FFFFFF, hankaku + 'L' * 16);
-	putfont8(binfo->vram, binfo->scrnx, 48, 8, COL8_FFFFFF, hankaku + 'L' * 16);
-	putfont8(binfo->vram, binfo->scrnx, 56, 8, COL8_FFFFFF, hankaku + 'O' * 16);
-	putfont8(binfo->vram, binfo->scrnx, 64, 8, COL8_FFFFFF, hankaku + 'P' * 16);
-	putfont8(binfo->vram, binfo->scrnx, 72, 8, COL8_FFFFFF, hankaku + 'E' * 16);
+	putfonts8_asc(binfo->vram, binfo->scrnx, 8, 8, COL8_FFFFFF, "VANELLOPE");
 
 	short tweetx = 11;
 	short tweety = binfo->scrny - 20;
-	putfont8(binfo->vram, binfo->scrnx, tweetx, tweety, COL8_000000, hankaku + 'T' * 16);
-	putfont8(binfo->vram, binfo->scrnx, tweetx + 8, tweety, COL8_000000, hankaku + 'W' * 16);
-	putfont8(binfo->vram, binfo->scrnx, tweetx + 16, tweety, COL8_000000, hankaku + 'E' * 16);
-	putfont8(binfo->vram, binfo->scrnx, tweetx + 24, tweety, COL8_000000, hankaku + 'E' * 16);
-	putfont8(binfo->vram, binfo->scrnx, tweetx + 32, tweety, COL8_000000, hankaku + 'T' * 16);
+	putfonts8_asc(binfo->vram, binfo->scrnx, tweetx, tweety, COL8_000000, "TWEET");
 
 	for (;;) {
 		io_hlt();
@@ -155,6 +143,16 @@ void putfont8(char *vram, int xsize, int x, int y, char c, char *font)
 		if ((data & 0x04) != 0) {p[5] = c;}
 		if ((data & 0x02) != 0) {p[6] = c;}
 		if ((data & 0x01) != 0) {p[7] = c;}
+	}
+	return;
+}
+
+void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s)
+{
+	extern char hankaku[4096];
+	for (; *s != 0x00; ++s) {
+		putfont8(vram, xsize, x, y, c, hankaku + *s * 16);
+		x += 8;
 	}
 	return;
 }
