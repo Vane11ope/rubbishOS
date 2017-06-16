@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #define COL8_000000 0
 #define COL8_FF0000 1
 #define COL8_00FF00 2
@@ -47,6 +49,9 @@ void RubbMain(void)
 	//};
 
 	putfonts8_asc(binfo->vram, binfo->scrnx, 8, 8, COL8_FFFFFF, "VANELLOPE");
+	char* s;
+	sprintf(s, "scrnx is %d", binfo->scrnx);
+	putfonts8_asc(binfo->vram, binfo->scrnx, 8, 24, COL8_FFFFFF, s);
 
 	short tweetx = 11;
 	short tweety = binfo->scrny - 20;
