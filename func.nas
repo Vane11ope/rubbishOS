@@ -84,5 +84,5 @@ _load_gdtr: ; void load_gdtr(int limit, int addr);
 _load_idtr: ; void load_idtr(int limit, int addr);
 	MOV  AX,[ESP+4]
 	MOV  [ESP+6],AX
-	LIDT [ESP++6]
+	LIDT [ESP+6]
 	RET
