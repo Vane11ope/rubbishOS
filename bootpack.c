@@ -3,6 +3,7 @@
 void RubbMain(void)
 {
 	init_gdtidt();
+	init_pic();
 
 	struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
 
