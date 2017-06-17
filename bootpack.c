@@ -45,7 +45,7 @@ void RubbMain(void)
 	init_palette();
 	init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
 
-	char *mouse[256];
+	char mouse[256];
 	init_mouse(mouse, COL8_000000);
 	putblock8_8(binfo->vram, binfo->scrnx, 16, 16, 140, 100, mouse, 16);
 
