@@ -37,6 +37,7 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 #define PIC0_OCW2		0x0020
 #define PIC1_OCW2		0x00a0
 void init_pic(void);
+void inthandler21(int *esp);
 
 /* func.nas */
 void io_hlt(void);
