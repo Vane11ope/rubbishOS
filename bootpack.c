@@ -2,11 +2,11 @@
 
 void RubbMain(void)
 {
-	init_gdtidt();
-	init_pic();
-
 	struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
 
+	init_gdtidt();
+	init_pic();
+	io_sti();
 	init_palette();
 	init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
 
@@ -27,6 +27,9 @@ void RubbMain(void)
 	short tweetx = 11;
 	short tweety = binfo->scrny - 20;
 	putfonts8_asc(binfo->vram, binfo->scrnx, tweetx, tweety, COL8_000000, "TWEET");
+
+	io_out8(PIC0_IMR, 0xf9);
+	io_out8(PIC1_IMR, 0xef);
 
 	for (;;) {
 		io_hlt();
