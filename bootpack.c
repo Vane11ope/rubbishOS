@@ -32,18 +32,17 @@ void RubbMain(void)
 	io_out8(PIC0_IMR, 0xf9);
 	io_out8(PIC1_IMR, 0xef);
 
-	unsigned char i;
-	char* s;
+	int i;
+	char s[40];
 	for (;;) {
 		io_cli();
-		if (keybuf.next == 0) {
+		if (keybuf.len== 0) {
 			io_stihlt();
 		} else {
-			i = keybuf.data[0];
-			--keybuf.next;
-			int j;
-			for (j = 0; j < keybuf.next; ++j) {
-				keybuf.data[j] = keybuf.data[j+1];
+			i = keybuf.data[keybuf.next_r++];
+			--keybuf.len;
+			if (keybuf.next_r >= 32) {
+				keybuf.next_r = 0;
 			}
 			io_sti();
 			sprintf(s, "%02X", i);
