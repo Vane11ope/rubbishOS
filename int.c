@@ -1,5 +1,7 @@
 #include "bootpack.h"
 
+struct KEYBUF keybuf;
+
 void init_pic(void)
 {
 	io_out8(PIC0_IMR, 0xff);
@@ -23,14 +25,13 @@ void init_pic(void)
 
 void inthandler21(int *esp)
 {
-	struct BOOTINFO *binfo = (struct BOOTINFO *) 0xff0;
-	unsigned char data, s[4];
+	unsigned char data;
 	io_out8(PIC0_OCW2, 0x61);
 	data = io_in8(PORT_KEYDAT);
-
-	sprintf(s, "%02X", data);
-	boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 0, 0, 15, 31);
-	putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
+	if (keybuf.flag == 0) {
+		keybuf.data = data;
+		keybuf.flag = 1;
+	}
 	return;
 }
 
