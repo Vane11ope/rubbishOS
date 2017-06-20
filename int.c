@@ -23,12 +23,15 @@ void init_pic(void)
 
 void inthandler21(int *esp)
 {
-	struct BOOTINFO *binfo = (struct BOOTINFO *)0xff0;
-	boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 0, 0, 32 * 8 - 1, 15);
-	putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, "INT 21 (IRQ-1) : PS/2 keyboard");
-	for(;;){
-		io_hlt();
-	}
+	struct BOOTINFO *binfo = (struct BOOTINFO *) 0xff0;
+	unsigned char data, s[4];
+	io_out8(PIC0_OCW2, 0x61);
+	data = io_in8(PORT_KEYDAT);
+
+	sprintf(s, "%02X", data);
+	boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 0, 0, 15, 31);
+	putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
+	return;
 }
 
 void inthandler27(int *esp)

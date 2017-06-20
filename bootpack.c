@@ -19,10 +19,10 @@ void RubbMain(void)
 	//	0x24, 0x7e, 0x42, 0x42, 0x42, 0xe7, 0x00, 0x00
 	//};
 
-	putfonts8_asc(binfo->vram, binfo->scrnx, 8, 8, COL8_FFFFFF, "VANELLOPE");
-	char* s;
-	sprintf(s, "scrnx is %d", binfo->scrnx);
-	putfonts8_asc(binfo->vram, binfo->scrnx, 8, 24, COL8_FFFFFF, s);
+	putfonts8_asc(binfo->vram, binfo->scrnx, 240, 145, COL8_FFFFFF, "VANELLOPE");
+	//char* s;
+	//sprintf(s, "scrnx is %d", binfo->scrnx);
+	//putfonts8_asc(binfo->vram, binfo->scrnx, 8, 24, COL8_FFFFFF, s);
 
 	short tweetx = 11;
 	short tweety = binfo->scrny - 20;

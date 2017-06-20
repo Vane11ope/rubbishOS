@@ -25,18 +25,19 @@ void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, i
 void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 
 /* int.c */
-#define PIC0_ICW1		0x0020
-#define PIC0_ICW2		0x0021
-#define PIC0_ICW3		0x0021
-#define PIC0_ICW4		0x0021
-#define PIC1_ICW1		0x00a0
-#define PIC1_ICW2		0x00a1
-#define PIC1_ICW3		0x00a1
-#define PIC1_ICW4		0x00a1
-#define PIC0_IMR		0x0021
-#define PIC1_IMR		0x00a1
-#define PIC0_OCW2		0x0020
-#define PIC1_OCW2		0x00a0
+#define PIC0_ICW1   0x0020
+#define PIC0_ICW2   0x0021
+#define PIC0_ICW3   0x0021
+#define PIC0_ICW4   0x0021
+#define PIC1_ICW1   0x00a0
+#define PIC1_ICW2   0x00a1
+#define PIC1_ICW3   0x00a1
+#define PIC1_ICW4   0x00a1
+#define PIC0_IMR    0x0021
+#define PIC1_IMR    0x00a1
+#define PIC0_OCW2   0x0020
+#define PIC1_OCW2   0x00a0
+#define PORT_KEYDAT 0x0060
 void init_pic(void);
 void inthandler21(int *esp);
 
@@ -44,7 +45,13 @@ void inthandler21(int *esp);
 void io_hlt(void);
 void io_cli(void);
 void io_sti(void);
+void io_stihlt(void);
+int io_in8(int port);
+int io_in16(int port);
+int io_in32(int port);
 void io_out8(int port, int data);
+void io_out16(int port, int data);
+void io_out32(int port, int data);
 int io_load_eflags(void);
 void io_store_eflags(int eflags);
 void load_gdtr(int limit, int addr);
