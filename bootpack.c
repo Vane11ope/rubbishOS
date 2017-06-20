@@ -36,11 +36,15 @@ void RubbMain(void)
 	char* s;
 	for (;;) {
 		io_cli();
-		if (keybuf.flag == 0) {
+		if (keybuf.next == 0) {
 			io_stihlt();
 		} else {
-			i = keybuf.data;
-			keybuf.flag = 0;
+			i = keybuf.data[0];
+			--keybuf.next;
+			int j;
+			for (j = 0; j < keybuf.next; ++j) {
+				keybuf.data[j] = keybuf.data[j+1];
+			}
 			io_sti();
 			sprintf(s, "%02X", i);
 			boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 0, 0, 15, 31);

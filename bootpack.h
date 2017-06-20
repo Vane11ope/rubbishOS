@@ -40,7 +40,8 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 #define PORT_KEYDAT 0x0060
 
 struct KEYBUF {
-	unsigned char data, flag;
+	unsigned char data[32];
+	int next;
 };
 
 void init_pic(void);
