@@ -42,7 +42,7 @@ void inthandler2c(int *esp)
 {
 	struct BOOTINFO *binfo = (struct BOOTINFO *)0xff0;
 	boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 0, 0, 32 * 8 - 1, 15);
-	putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, "INT 21 (IRQ-1) : PS/2 keyboard");
+	putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, "INT 21 (IRQ-12) : PS/2 mouse");
 	for(;;){
 		io_hlt();
 	}

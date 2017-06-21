@@ -1,4 +1,5 @@
 #include "bootpack.h"
+
 extern struct FIFO8 keyfifo;
 
 void RubbMain(void)
@@ -35,6 +36,10 @@ void RubbMain(void)
 	int i;
 	char s[40], keybuf[32];
 	fifo8_init(&keyfifo, 32, keybuf);
+
+	init_keyboard();
+	enable_mouse();
+
 	for (;;) {
 		io_cli();
 		if (fifo8_status(&keyfifo) == 0) {
@@ -47,4 +52,29 @@ void RubbMain(void)
 			putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
 		}
 	}
+}
+
+void wait_KBC_sendready(void) {
+	for (;;) {
+		if ((io_in8(PORT_KEYSTA) & KEYSTA_SEND_NOTREADY) == 0) {
+			break;
+		}
+	}
+	return;
+}
+
+void init_keyboard(void) {
+	wait_KBC_sendready();
+	io_out8(PORT_KEYCMD, KEYCMD_WRITE_MODE);
+	wait_KBC_sendready();
+	io_out8(PORT_KEYDAT, KBC_MODE);
+	return;
+}
+
+void enable_mouse(void) {
+	wait_KBC_sendready();
+	io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
+	wait_KBC_sendready();
+	io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);
+	return;
 }
