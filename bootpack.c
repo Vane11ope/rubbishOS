@@ -1,6 +1,7 @@
 #include "bootpack.h"
 
 extern struct FIFO8 keyfifo;
+extern struct FIFO8 mousefifo;
 
 void RubbMain(void)
 {
@@ -34,22 +35,31 @@ void RubbMain(void)
 	io_out8(PIC1_IMR, 0xef);
 
 	int i;
-	char s[40], keybuf[32];
+	char s[40], keybuf[32], mousebuf[128];
 	fifo8_init(&keyfifo, 32, keybuf);
+	fifo8_init(&mousefifo, 128, mousebuf);
 
 	init_keyboard();
 	enable_mouse();
 
 	for (;;) {
 		io_cli();
-		if (fifo8_status(&keyfifo) == 0) {
+		if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) <= 0) {
 			io_stihlt();
 		} else {
-			i = fifo8_get(&keyfifo);
-			io_sti();
-			sprintf(s, "%02X", i);
-			boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 0, 0, 15, 31);
-			putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
+			if (fifo8_status(&keyfifo) > 0) {
+				i = fifo8_get(&keyfifo);
+				io_sti();
+				sprintf(s, "%02X", i);
+				boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 0, 0, 15, 31);
+				putfonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
+			} else {
+				i = fifo8_get(&mousefifo);
+				io_sti();
+				sprintf(s, "%02X", i);
+				boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 50, 0, 65, 31);
+				putfonts8_asc(binfo->vram, binfo->scrnx, 50, 0, COL8_FFFFFF, s);
+			}
 		}
 	}
 }
