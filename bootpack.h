@@ -39,11 +39,6 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 #define PIC1_OCW2   0x00a0
 #define PORT_KEYDAT 0x0060
 
-struct KEYBUF {
-	unsigned char data[32];
-	int next_r, next_w, len;
-};
-
 void init_pic(void);
 void inthandler21(int *esp);
 
@@ -91,3 +86,15 @@ void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, i
 void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
 void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s);
 void putblock8_8 (char *vram, int vxsize, int pxsize, int pysize, int px0, int py0, char* buf, int bxsize);
+
+/* fifo.c */
+#define FLAGS_OVERRUN 0x0001
+
+struct FIFO8 {
+	unsigned char *buf;
+	int next_w, next_r, size, free, flags;
+};
+void fifo8_init(struct FIFO8 *fifo, int size, unsigned char *buf);
+int fifo8_put(struct FIFO8 *fifo, unsigned char data);
+int fifo8_get(struct FIFO8 *fifo);
+int fifo8_status(struct FIFO8 *fifo);

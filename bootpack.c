@@ -1,5 +1,5 @@
 #include "bootpack.h"
-extern struct KEYBUF keybuf;
+extern struct FIFO8 keyfifo;
 
 void RubbMain(void)
 {
@@ -33,17 +33,14 @@ void RubbMain(void)
 	io_out8(PIC1_IMR, 0xef);
 
 	int i;
-	char s[40];
+	char s[40], keybuf[32];
+	fifo8_init(&keyfifo, 32, keybuf);
 	for (;;) {
 		io_cli();
-		if (keybuf.len== 0) {
+		if (fifo8_status(&keyfifo) == 0) {
 			io_stihlt();
 		} else {
-			i = keybuf.data[keybuf.next_r++];
-			--keybuf.len;
-			if (keybuf.next_r >= 32) {
-				keybuf.next_r = 0;
-			}
+			i = fifo8_get(&keyfifo);
 			io_sti();
 			sprintf(s, "%02X", i);
 			boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 0, 0, 15, 31);
