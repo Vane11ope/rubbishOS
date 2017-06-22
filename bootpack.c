@@ -6,47 +6,34 @@ extern struct FIFO8 mousefifo;
 void RubbMain(void)
 {
 	struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
+	struct MOUSE_DEC mdec;
+	char s[40], keybuf[32], mouse[256], mousebuf[128];
+	short tweetx = 11;
+	short tweety = binfo->scrny - 20;
+	int mouse_x = 140;
+	int mouse_y = 100;
+	int mouse_w = 16;
+	int mouse_h = 16;
+	int mouse_s = 16;
+	int i = 0;
 
 	init_gdtidt();
 	init_pic();
 	io_sti();
 	init_keyboard();
+	init_mouse(mouse, COL8_000000);
 	init_palette();
 	init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
 
-	int mouse_x, mouse_y, mouse_w, mouse_h, mouse_s;
-	mouse_x = 140;
-	mouse_y = 100;
-	mouse_w = 16;
-	mouse_h = 16;
-	mouse_s = 16;
-	char mouse[256];
-	init_mouse(mouse, COL8_000000);
 	putblock8_8(binfo->vram, binfo->scrnx, mouse_w, mouse_h, mouse_x, mouse_y, mouse, mouse_s);
-
-	//static char font_A[16] = {
-	//	0x00, 0x18, 0x18, 0x18, 0x18, 0x24, 0x24, 0x24,
-	//	0x24, 0x7e, 0x42, 0x42, 0x42, 0xe7, 0x00, 0x00
-	//};
-
 	putfonts8_asc(binfo->vram, binfo->scrnx, 240, 145, COL8_FFFFFF, "VANELLOPE");
-	//char* s;
-	//sprintf(s, "scrnx is %d", binfo->scrnx);
-	//putfonts8_asc(binfo->vram, binfo->scrnx, 8, 24, COL8_FFFFFF, s);
-
-	short tweetx = 11;
-	short tweety = binfo->scrny - 20;
 	putfonts8_asc(binfo->vram, binfo->scrnx, tweetx, tweety, COL8_000000, "TWEET");
 
 	io_out8(PIC0_IMR, 0xf9);
 	io_out8(PIC1_IMR, 0xef);
 
-	int i;
-	char s[40], keybuf[32], mousebuf[128];
 	fifo8_init(&keyfifo, 32, keybuf);
 	fifo8_init(&mousefifo, 128, mousebuf);
-
-	struct MOUSE_DEC mdec;
 	enable_mouse(&mdec);
 
 	for (;;) {
