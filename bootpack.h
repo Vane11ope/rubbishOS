@@ -16,9 +16,13 @@ struct BOOTINFO {
 #define KBC_MODE             0x47
 #define KEYCMD_SENDTO_MOUSE  0xd4
 #define MOUSECMD_ENABLE      0xf4
+struct MOUSE_DEC {
+	unsigned char buf[3], phase;
+};
 void init_keyboard(void);
 void wait_KBC_sendready(void);
-void enable_mouse(void);
+void enable_mouse(struct MOUSE_DEC *mdec);
+int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
 
 /* dsctbl.c */
 #define AR_INTGATE32 0x008e

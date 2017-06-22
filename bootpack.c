@@ -38,10 +38,10 @@ void RubbMain(void)
 	char s[40], keybuf[32], mousebuf[128];
 	fifo8_init(&keyfifo, 32, keybuf);
 	fifo8_init(&mousefifo, 128, mousebuf);
-	unsigned char mouse_dbuf[3], mouse_phase;
-	mouse_phase = 0;
+
+	struct MOUSE_DEC mdec;
 	init_keyboard();
-	enable_mouse();
+	enable_mouse(&mdec);
 
 	for (;;) {
 		io_cli();
@@ -57,25 +57,10 @@ void RubbMain(void)
 			} else {
 				i = fifo8_get(&mousefifo);
 				io_sti();
-				switch (mouse_phase) {
-					case 0:
-						if (i == 0xfa) { mouse_phase = 1; }
-						break;
-					case 1:
-						mouse_dbuf[0] = i;
-						mouse_phase = 2;
-						break;
-					case 2:
-						mouse_dbuf[1] = i;
-						mouse_phase = 3;
-						break;
-					case 3:
-						mouse_dbuf[2] = i;
-						mouse_phase = 1;
-						sprintf(s, "%02X %02X %02X", mouse_dbuf[0], mouse_dbuf[1], mouse_dbuf[2]);
-						boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 50, 0, 114, 31);
-						putfonts8_asc(binfo->vram, binfo->scrnx, 50, 0, COL8_FFFFFF, s);
-						break;
+				if (mouse_decode(&mdec, i) == 1) {
+					sprintf(s, "%02X %02X %02X", mdec.buf[0], mdec.buf[1], mdec.buf[2]);
+					boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 50, 0, 114, 31);
+					putfonts8_asc(binfo->vram, binfo->scrnx, 50, 0, COL8_FFFFFF, s);
 				}
 			}
 		}
@@ -99,10 +84,32 @@ void init_keyboard(void) {
 	return;
 }
 
-void enable_mouse(void) {
+void enable_mouse(struct MOUSE_DEC *mdec) {
 	wait_KBC_sendready();
 	io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
 	wait_KBC_sendready();
 	io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);
+	mdec->phase = 0;
 	return;
+}
+
+int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat) {
+	switch (mdec->phase) {
+		case 0:
+			if (dat == 0xfa) { mdec->phase = 1; }
+			return 0;
+		case 1:
+			mdec->buf[0] = dat;
+			mdec->phase = 2;
+			return 0;
+		case 2:
+			mdec->buf[1] = dat;
+			mdec->phase = 3;
+			return 0;
+		case 3:
+			mdec->buf[2] = dat;
+			mdec->phase = 1;
+			return 1;
+	}
+	return -1;
 }
