@@ -13,9 +13,15 @@ void RubbMain(void)
 	init_palette();
 	init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
 
+	int mx, my, mw, mh, ms;
+	mx = 140;
+	my = 100;
+	mw = 16;
+	mh = 16;
+	ms = 16;
 	char mouse[256];
 	init_mouse(mouse, COL8_000000);
-	putblock8_8(binfo->vram, binfo->scrnx, 16, 16, 140, 100, mouse, 16);
+	putblock8_8(binfo->vram, binfo->scrnx, mw, mh, mx, my, mouse, ms);
 
 	//static char font_A[16] = {
 	//	0x00, 0x18, 0x18, 0x18, 0x18, 0x24, 0x24, 0x24,
@@ -70,6 +76,8 @@ void RubbMain(void)
 					}
 					boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 50, 0, 170, 31);
 					putfonts8_asc(binfo->vram, binfo->scrnx, 50, 0, COL8_FFFFFF, s);
+
+					boxfill8(binfo->vram, binfo->scrnx, COL8_000000, mx, my, mx + mw, my + mh);
 				}
 			}
 		}
