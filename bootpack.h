@@ -18,6 +18,7 @@ struct BOOTINFO {
 #define MOUSECMD_ENABLE      0xf4
 struct MOUSE_DEC {
 	unsigned char buf[3], phase;
+	int x, y, btn;
 };
 void init_keyboard(void);
 void wait_KBC_sendready(void);
