@@ -10,6 +10,7 @@ void RubbMain(void)
 	init_gdtidt();
 	init_pic();
 	io_sti();
+	init_keyboard();
 	init_palette();
 	init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
 
@@ -46,7 +47,6 @@ void RubbMain(void)
 	fifo8_init(&mousefifo, 128, mousebuf);
 
 	struct MOUSE_DEC mdec;
-	init_keyboard();
 	enable_mouse(&mdec);
 
 	for (;;) {

@@ -44,9 +44,9 @@ VRAM    EQU 0xff8
 		MOV  EAX,CR0
 		AND  EAX,0x7fffffff
 		OR   EAX,0x00000001
+		MOV  CR0,EAX
+		JMP  pipelineflush
 
-		MOV CR0,EAX
-		JMP pipelineflush
 pipelineflush:
 		MOV AX,1*8
 		MOV DS,AX
@@ -81,6 +81,7 @@ skip:
 waitkbdout:
 		IN  AL,0x64
 		AND AL,0x02
+		IN	AL,0x60
 		JNZ waitkbdout
 		RET
 
