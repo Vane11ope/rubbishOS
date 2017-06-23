@@ -7,9 +7,11 @@ void RubbMain(void)
 {
 	struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
 	struct MOUSE_DEC mdec;
+	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	char s[40], keybuf[32], mouse[256], mousebuf[128];
 	short tweetx = 11;
 	short tweety = binfo->scrny - 20;
+	unsigned int memtotal;
 	int mouse_x = 140;
 	int mouse_y = 100;
 	int mouse_w = 16;
@@ -36,8 +38,11 @@ void RubbMain(void)
 	fifo8_init(&mousefifo, 128, mousebuf);
 	enable_mouse(&mdec);
 
-	i = memtest(0x00400000, 0xbfffffff) / (1024 * 1024);
-	sprintf(s, "memory %dMB", i);
+	memtotal = memtest(0x00400000, 0xbfffffff);
+	memman_init(memman);
+	memman_free(memman, 0x00001000, 0x0009e000);
+	memman_free(memman, 0x00400000, memtotal - 0x00400000);
+	sprintf(s, "memory %dMB free : %dKB", memtotal / (1024*1024), memman_total(memman) / 1024);
 	putfonts8_asc(binfo->vram, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
 
 	for (;;) {

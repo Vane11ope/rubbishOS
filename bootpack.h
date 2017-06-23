@@ -130,3 +130,18 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
 void inthandler21(int *esp);
 void wait_KBC_sendready(void);
 void init_keyboard(void);
+
+/* memory.c */
+#define MEMMAN_FREES 4090
+#define MEMMAN_ADDR  0x003c0000
+struct FREEINFO {
+	unsigned int addr, size;
+};
+struct MEMMAN {
+	int frees, maxfrees, lostsize, losts;
+	struct FREEINFO free[MEMMAN_FREES];
+};
+void memman_init(struct MEMMAN *memman);
+unsigned int memman_total(struct MEMMAN *memman);
+unsigned int memman_alloc(struct MEMMAN *memman, unsigned int size);
+int memman_free(struct MEMMAN *memman, unsigned int addr, unsigned int size);
