@@ -16,6 +16,8 @@ struct BOOTINFO {
 #define KBC_MODE             0x47
 #define KEYCMD_SENDTO_MOUSE  0xd4
 #define MOUSECMD_ENABLE      0xf4
+#define EFLAGS_AC_BIT        0x00040000
+#define CR0_CACHE_DISABLE    0x60000000
 struct MOUSE_DEC {
 	unsigned char buf[3], phase;
 	int x, y, btn;
@@ -24,6 +26,8 @@ void init_keyboard(void);
 void wait_KBC_sendready(void);
 void enable_mouse(struct MOUSE_DEC *mdec);
 int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
+unsigned int memtest(unsigned int start, unsigned int end);
+unsigned int memtest_sub(unsigned int start, unsigned int end);
 
 /* dsctbl.c */
 #define AR_INTGATE32 0x008e
@@ -73,6 +77,8 @@ int io_load_eflags(void);
 void io_store_eflags(int eflags);
 void load_gdtr(int limit, int addr);
 void load_idtr(int limit, int addr);
+int load_cr0(void);
+void store_cr0(int cr0);
 void asm_inthandler21(void);
 void asm_inthandler27(void);
 void asm_inthandler2c(void);
