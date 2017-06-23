@@ -120,7 +120,7 @@ unsigned int memtest(unsigned int start, unsigned int end)
 
 unsigned int memtest_sub(unsigned int start, unsigned int end)
 {
-	unsigned int i, *p, old, pat0 = 0xaa55aa55, pat1 = 0x55aa55aa;
+	volatile unsigned int i, *p, old, pat0 = 0xaa55aa55, pat1 = 0x55aa55aa;
 	for (i = start; i <= end; i += 0x1000) {
 		p = (unsigned int *) (i + 0xffc);
 		old = *p;
