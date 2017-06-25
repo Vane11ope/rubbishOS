@@ -104,9 +104,9 @@ void RubbMain(void)
 						mouse_y = binfo->scrny - mouse_h;
 					}
 					sprintf(s, "(%3d, %3d)", mouse_x, mouse_y);
-					boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 0, 15, 79, 30);
-					putfonts8_asc(binfo->vram, binfo->scrnx, 0, 15, COL8_FFFFFF, s);
-					sheet_refresh(shtctl, sht_back, 0, 15, 79, 30);
+					boxfill8(sht_buf_back, binfo->scrnx, COL8_000000, 0, 50, 79, 66);
+					putfonts8_asc(sht_buf_back, binfo->scrnx, 0, 50, COL8_FFFFFF, s);
+					sheet_refresh(shtctl, sht_back, 0, 50, 79, 66);
 					sheet_slide(shtctl, sht_mouse, mouse_x, mouse_y);
 				}
 			}
