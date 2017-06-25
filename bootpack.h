@@ -167,3 +167,7 @@ void sheet_refresh(struct SHTCTL *ctl, struct SHEET *sht, int bx0, int by0, int 
 void sheet_refreshsub(struct SHTCTL *ctl, int vx0, int vy0, int vx1, int vy1);
 void sheet_slide(struct SHTCTL *ctl, struct SHEET *sht, int vx0, int vy0);
 void sheet_free(struct SHTCTL *ctl, struct SHEET *sht);
+
+/* utility */
+static inline int max(int a, int b) { return a >= b ? a : b; }
+static inline int min(int a, int b) { return a <= b ? a : b; }
