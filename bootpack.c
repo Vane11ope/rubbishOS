@@ -52,7 +52,7 @@ void RubbMain(void)
 	putfonts8_asc(sht_buf_back, binfo->scrnx, 240, 145, COL8_FFFFFF, "VANELLOPE");
 	putfonts8_asc(sht_buf_back, binfo->scrnx, tweetx, tweety, COL8_000000, "TWEET");
 
-	sheet_refresh(shtctl);
+	sheet_refresh(shtctl, sht_back, 0, 0, binfo->scrnx, binfo->scrny);
 
 	io_out8(PIC0_IMR, 0xf9);
 	io_out8(PIC1_IMR, 0xef);
@@ -71,7 +71,7 @@ void RubbMain(void)
 				sprintf(s, "%02X", i);
 				boxfill8(sht_buf_back, binfo->scrnx, COL8_000000, 0, 0, 15, 31);
 				putfonts8_asc(sht_buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
-				sheet_refresh(shtctl);
+				sheet_refresh(shtctl, sht_back, 0, 0, 15, 31);
 			} else {
 				i = fifo8_get(&mousefifo);
 				io_sti();
@@ -88,6 +88,7 @@ void RubbMain(void)
 					}
 					boxfill8(sht_buf_back, binfo->scrnx, COL8_000000, 50, 0, 170, 31);
 					putfonts8_asc(sht_buf_back, binfo->scrnx, 50, 0, COL8_FFFFFF, s);
+					sheet_refresh(shtctl, sht_back, 50, 0, 170, 31);
 					mouse_x += mdec.x;
 					mouse_y += mdec.y;
 					if (mouse_x < 0) {
@@ -105,6 +106,7 @@ void RubbMain(void)
 					sprintf(s, "(%3d, %3d)", mouse_x, mouse_y);
 					boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 0, 15, 79, 30);
 					putfonts8_asc(binfo->vram, binfo->scrnx, 0, 15, COL8_FFFFFF, s);
+					sheet_refresh(shtctl, sht_back, 0, 15, 79, 30);
 					sheet_slide(shtctl, sht_mouse, mouse_x, mouse_y);
 				}
 			}
