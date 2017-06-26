@@ -20,6 +20,7 @@ void RubbMain(void)
 	int mouse_w = 16;
 	int mouse_h = 16;
 	int mouse_s = 16;
+	int mouse_offset = 5;
 	int i = 0;
 
 	init_gdtidt();
@@ -97,11 +98,11 @@ void RubbMain(void)
 					if (mouse_y < 0) {
 						mouse_y = 0;
 					}
-					if (mouse_x > binfo->scrnx - mouse_w) {
-						mouse_x = binfo->scrnx - mouse_w;
+					if (mouse_x > binfo->scrnx - mouse_offset) {
+						mouse_x = binfo->scrnx - mouse_offset;
 					}
-					if (mouse_y > binfo->scrny - mouse_h) {
-						mouse_y = binfo->scrny - mouse_h;
+					if (mouse_y > binfo->scrny - mouse_offset) {
+						mouse_y = binfo->scrny - mouse_offset;
 					}
 					sprintf(s, "(%3d, %3d)", mouse_x, mouse_y);
 					boxfill8(sht_buf_back, binfo->scrnx, COL8_000000, 0, 50, 79, 66);
