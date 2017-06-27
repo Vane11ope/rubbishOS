@@ -28,6 +28,7 @@ void enable_mouse(struct MOUSE_DEC *mdec);
 int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
 unsigned int memtest(unsigned int start, unsigned int end);
 unsigned int memtest_sub(unsigned int start, unsigned int end);
+void make_window(unsigned char *buf, int xsize, int ysize, char *title);
 
 /* dsctbl.c */
 #define AR_INTGATE32 0x008e
