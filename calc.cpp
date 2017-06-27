@@ -2,7 +2,7 @@
 using namespace std;
 
 int main() {
-	unsigned short someHex, otherHex;
+	unsigned int someHex, otherHex;
 	someHex = 0x1000;
 	otherHex = someHex^0xFFFF;
 	cerr << someHex << endl;
