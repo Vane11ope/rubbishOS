@@ -61,6 +61,7 @@ void sheet_updown(struct SHEET *sht, int height)
 				sht->shtctl->sheets[h]->height = h;
 			}
 			sht->shtctl->sheets[height] = sht;
+			sheet_refreshsub(sht->shtctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize, height + 1);
 		} else {
 			if (sht->shtctl->top > old) {
 				for (h = old; h < sht->shtctl->top; ++h) {
@@ -69,8 +70,8 @@ void sheet_updown(struct SHEET *sht, int height)
 				}
 			}
 			--sht->shtctl->top;
+			sheet_refreshsub(sht->shtctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize, 0);
 		}
-		sheet_refreshsub(sht->shtctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize, sht->height);
 	} else if (old < height) {
 		if (old >= 0) {
 			for (h = old; h < height; ++h) {
@@ -85,7 +86,7 @@ void sheet_updown(struct SHEET *sht, int height)
 			++sht->shtctl->top;
 		}
 		sht->shtctl->sheets[height] = sht;
-		sheet_refreshsub(sht->shtctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize, sht->height);
+		sheet_refreshsub(sht->shtctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize, height);
 	}
 	return;
 }
@@ -134,7 +135,7 @@ void sheet_slide(struct SHEET *sht, int vx0, int vy0)
 	sht->vx0 = vx0;
 	sht->vy0 = vy0;
 	if (sht->height >= 0) {
-		sheet_refreshsub(sht->shtctl, old_vx0, old_vy0, old_vx0 + sht->bxsize, old_vy0 + sht->bysize, sht->height);
+		sheet_refreshsub(sht->shtctl, old_vx0, old_vy0, old_vx0 + sht->bxsize, old_vy0 + sht->bysize, 0);
 		sheet_refreshsub(sht->shtctl, vx0, vy0, vx0 + sht->bxsize, vy0 + sht->bysize, sht->height);
 	}
 	return;
