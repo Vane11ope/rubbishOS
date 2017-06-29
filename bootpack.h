@@ -112,6 +112,9 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s
 void putblock8_8 (char *vram, int vxsize, int pxsize, int pysize, int px0, int py0, char* buf, int bxsize);
 
 /* timer.c */
+struct TIMERCTL {
+	unsigned int count;
+};
 void init_pit(void);
 void inthandler20(int *esp);
 

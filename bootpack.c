@@ -1,5 +1,6 @@
 #include "bootpack.h"
 
+extern struct TIMERCTL timerctl;
 extern struct FIFO8 keyfifo;
 extern struct FIFO8 mousefifo;
 
@@ -21,7 +22,7 @@ void RubbMain(void)
 	int mouse_h = 16;
 	int mouse_s = 16;
 	int mouse_offset = 5;
-	int i = 0, counter = 0;
+	int i = 0;
 
 	init_gdtidt();
 	init_pic();
@@ -58,7 +59,7 @@ void RubbMain(void)
 	putfonts8_asc(sht_buf_win, 160, tempX + 16, tempY + 16, COL8_000000, "Number");
 	putfonts8_asc(sht_buf_win, 160, tempX + 32, tempY + 32, COL8_000000, "Gorilla");
 	putfonts8_asc(sht_buf_win, 160, tempX + 48, tempY + 48, COL8_000000, "Vanellope");
-	sprintf(s, "%010d", counter);
+	sprintf(s, "%010d", timerctl.count);
 	putfonts8_asc(sht_buf_win_sub, 160, 70, 28, COL8_000000, s);
 	sheet_slide(sht_back, 0, 0);
 	sheet_slide(sht_mouse, mouse_x, mouse_y);
@@ -83,9 +84,8 @@ void RubbMain(void)
 	enable_mouse(&mdec);
 
 	for (;;) {
-		++counter;
 		boxfill8(sht_buf_win_sub, 160, COL8_C6C6C6, 70, 28, 159, 44);
-		sprintf(s, "%010d", counter);
+		sprintf(s, "%010d", timerctl.count);
 		putfonts8_asc(sht_buf_win_sub, 160, 70, 28, COL8_000000, s);
 		sheet_refresh(sht_win_sub, 70, 28, 160, 44);
 		io_cli();
