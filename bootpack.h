@@ -114,9 +114,13 @@ void putblock8_8 (char *vram, int vxsize, int pxsize, int pysize, int px0, int p
 /* timer.c */
 struct TIMERCTL {
 	unsigned int count;
+	unsigned int timeout;
+	unsigned char data;
+	struct FIFO8 *fifo;
 };
 void init_pit(void);
 void inthandler20(int *esp);
+void settimer(unsigned int timeout, struct FIFO8 *fifo, unsigned char data);
 
 /* fifo.c */
 #define FLAGS_OVERRUN 0x0001
