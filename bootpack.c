@@ -25,6 +25,7 @@ void RubbMain(void)
 
 	init_gdtidt();
 	init_pic();
+	init_pit();
 	io_sti();
 
 	memtotal = memtest(0x00400000, 0xbfffffff);
@@ -75,7 +76,7 @@ void RubbMain(void)
 
 	sheet_refresh(sht_back, 0, 0, binfo->scrnx, binfo->scrny);
 
-	io_out8(PIC0_IMR, 0xf9);
+	io_out8(PIC0_IMR, 0xf8);
 	io_out8(PIC1_IMR, 0xef);
 	fifo8_init(&keyfifo, 32, keybuf);
 	fifo8_init(&mousefifo, 128, mousebuf);
