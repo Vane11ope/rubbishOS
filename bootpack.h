@@ -119,8 +119,9 @@ struct TIMER {
 	unsigned char data;
 };
 struct TIMERCTL {
-	unsigned int count, next;
-	struct TIMER timer[MAX_TIMER];
+	unsigned int count, next, timernum;
+	struct TIMER *timer[MAX_TIMER];
+	struct TIMER timer0[MAX_TIMER];
 };
 void init_pit(void);
 struct TIMER *timer_alloc(void);
