@@ -47,7 +47,7 @@ void timer_init(struct TIMER *timer, struct FIFO8 *fifo, unsigned char data)
 
 void timer_settime(struct TIMER *timer, unsigned int timeout)
 {
-	timer->timeout = timeout;
+	timer->timeout = timeout + timerctl.count;
 	timer->flags = TIMER_FLAGS_USING;
 	return;
 }
@@ -58,11 +58,11 @@ void inthandler20(int *esp)
 	io_out8(PIC0_OCW2, 0x60);
 	++timerctl.count;
 	for (i = 0; i < MAX_TIMER; ++i) {
-		if (timerctl.timer[i].flags == TIMER_FLAGS_USING) {
-			--timerctl.timer[i].timeout;
-			if (timerctl.timer[i].timeout == 0) {
-				timerctl.timer[i].flags = TIMER_FLAGS_ALLOC;
-				fifo8_put(timerctl.timer[i].fifo, timerctl.timer[i].data);
+		struct TIMER timer = timerctl.timer[i];
+		if (timer.flags == TIMER_FLAGS_USING) {
+			if (timer.timeout <= timerctl.count) {
+				timer.flags = TIMER_FLAGS_ALLOC;
+				fifo8_put(timer.fifo, timer.data);
 			}
 		}
 	}
