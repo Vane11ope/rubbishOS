@@ -112,15 +112,22 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s
 void putblock8_8 (char *vram, int vxsize, int pxsize, int pysize, int px0, int py0, char* buf, int bxsize);
 
 /* timer.c */
+#define MAX_TIMER 500
+struct TIMER {
+	unsigned int timeout, flags;
+	struct FIFO8 *fifo;
+	unsigned char data;
+};
 struct TIMERCTL {
 	unsigned int count;
-	unsigned int timeout;
-	unsigned char data;
-	struct FIFO8 *fifo;
+	struct TIMER timer[MAX_TIMER];
 };
 void init_pit(void);
+struct TIMER *timer_alloc(void);
+void timer_free(struct TIMER *timer);
+void timer_init(struct TIMER *timer, struct FIFO8 *fifo, unsigned char data);
+void timer_settime(struct TIMER *timer, unsigned int timeout);
 void inthandler20(int *esp);
-void settimer(unsigned int timeout, struct FIFO8 *fifo, unsigned char data);
 
 /* fifo.c */
 #define FLAGS_OVERRUN 0x0001
