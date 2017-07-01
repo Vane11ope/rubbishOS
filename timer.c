@@ -40,7 +40,7 @@ void timer_free(struct TIMER *timer)
 	return;
 }
 
-void timer_init(struct TIMER *timer, struct FIFO8 *fifo, unsigned char data)
+void timer_init(struct TIMER *timer, struct FIFO32 *fifo, int data)
 {
 	timer->fifo = fifo;
 	timer->data = data;
@@ -81,7 +81,7 @@ void inthandler20(int *esp)
 		struct TIMER *timer = timerctl.timer[i];
 		if (timer->timeout <= timerctl.count) {
 			timer->flags = TIMER_FLAGS_ALLOC;
-			fifo8_put(timer->fifo, timer->data);
+			fifo32_put(timer->fifo, timer->data);
 			continue;
 		}
 		break;
