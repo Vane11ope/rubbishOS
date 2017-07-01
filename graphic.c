@@ -137,6 +137,14 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s
 	return;
 }
 
+void putfonts8_asc_sht(struct SHEET *sheet, int x, int y, int color, int backcolor, char *str, int len)
+{
+	boxfill8(sheet->buf, sheet->bxsize, backcolor, x, y, x + len * 8 - 1, y + 15);
+	putfonts8_asc(sheet->buf, sheet->bxsize, x, y, color, str);
+	sheet_refresh(sheet, x, y, x + len * 8, y + 16);
+	return;
+}
+
 void putblock8_8(char *vram, int vxsize, int pxsize, int pysize, int px0, int py0, char* buf, int bxsize)
 {
 	int x, y;

@@ -120,12 +120,9 @@ void RubbMain(void)
 	// finally the interrupt flags are on
 	io_sti();
 
-	int timeY = 70;
 	for (;;) {
-		boxfill8(sht_buf_win_sub, 160, COL8_C6C6C6, 70, 28, 159, 44);
 		sprintf(s, "%010d", timerctl.count);
-		putfonts8_asc(sht_buf_win_sub, 160, 70, 28, COL8_000000, s);
-		sheet_refresh(sht_win_sub, 70, 28, 160, 44);
+		putfonts8_asc_sht(sht_win_sub, 70, 28, COL8_000000, COL8_C6C6C6, s, length(s));
 		io_cli();
 		if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) + fifo8_status(&timerfifo) + fifo8_status(&timerfifo2) + fifo8_status(&timerfifo3) <= 0) {
 			io_sti();
@@ -134,9 +131,7 @@ void RubbMain(void)
 				i = fifo8_get(&keyfifo);
 				io_sti();
 				sprintf(s, "%02X", i);
-				boxfill8(sht_buf_back, binfo->scrnx, COL8_000000, 0, 0, 15, 31);
-				putfonts8_asc(sht_buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
-				sheet_refresh(sht_back, 0, 0, 15, 31);
+				putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_000000, s, length(s));
 			} else if (fifo8_status(&mousefifo) > 0) {
 				i = fifo8_get(&mousefifo);
 				io_sti();
@@ -151,9 +146,7 @@ void RubbMain(void)
 					if ((mdec.btn & 0x04) != 0) {
 						s[2] = 'C';
 					}
-					boxfill8(sht_buf_back, binfo->scrnx, COL8_000000, 50, 0, 170, 31);
-					putfonts8_asc(sht_buf_back, binfo->scrnx, 50, 0, COL8_FFFFFF, s);
-					sheet_refresh(sht_back, 50, 0, 170, 31);
+					putfonts8_asc_sht(sht_back, 50, 0, COL8_FFFFFF, COL8_000000, s, length(s));
 					mouse_x += mdec.x;
 					mouse_y += mdec.y;
 					if (mouse_x < 0) {
@@ -169,34 +162,30 @@ void RubbMain(void)
 						mouse_y = binfo->scrny - mouse_offset;
 					}
 					sprintf(s, "(%3d, %3d)", mouse_x, mouse_y);
-					boxfill8(sht_buf_back, binfo->scrnx, COL8_000000, 0, 50, 79, 66);
-					putfonts8_asc(sht_buf_back, binfo->scrnx, 0, 50, COL8_FFFFFF, s);
-					sheet_refresh(sht_back, 0, 50, 79, 66);
+					putfonts8_asc_sht(sht_back, 0, 50, COL8_FFFFFF, COL8_000000, s, length(s));
 					sheet_slide(sht_mouse, mouse_x, mouse_y);
 				}
 			} else if (fifo8_status(&timerfifo) != 0) {
 				i = fifo8_get(&timerfifo);
 				io_sti();
-				putfonts8_asc(sht_buf_back, binfo->scrnx, 0, timeY, COL8_FFFFFF, "10[sec]");
-				sheet_refresh(sht_back, 0, timeY, 56, timeY + 16);
+				putfonts8_asc_sht(sht_back, 0, 70, COL8_FFFFFF, COL8_000000, "10[sec]", 7);
 			} else if (fifo8_status(&timerfifo2) != 0) {
 				i = fifo8_get(&timerfifo2);
 				io_sti();
-				putfonts8_asc(sht_buf_back, binfo->scrnx, 0, timeY + 16, COL8_FFFFFF, "3[sec]");
-				sheet_refresh(sht_back, 0, timeY + 16, 56, timeY + 16 + 16);
+				putfonts8_asc_sht(sht_back, 0, 86, COL8_FFFFFF, COL8_000000, "3[sec]", 6);
 			} else if (fifo8_status(&timerfifo3) != 0) {
 				i = fifo8_get(&timerfifo3);
 				io_sti();
 				if (i != 0) {
 					timer_init(timer3, &timerfifo3, 0);
-					boxfill8(sht_buf_back, binfo->scrnx, COL8_FFFFFF, 8, timeY + 32, 15, timeY + 32 + 16);
+					boxfill8(sht_buf_back, binfo->scrnx, COL8_FFFFFF, 8, 102, 15, 117);
 				} else {
 					timer_init(timer3, &timerfifo3, 1);
-					boxfill8(sht_buf_back, binfo->scrnx, COL8_000000, 8, timeY + 32, 15, timeY + 32 + 16);
+					boxfill8(sht_buf_back, binfo->scrnx, COL8_000000, 8, 102, 15, 117);
 				}
 			}
 			timer_settime(timer3, 50);
-			sheet_refresh(sht_back, 8, timeY + 32, 16, timeY + 32 + 17);
+			sheet_refresh(sht_back, 8, 102, 16, 119);
 		}
 	}
 }
