@@ -6,6 +6,7 @@ extern struct FIFO8 mousefifo;
 
 void RubbMain(void)
 {
+	// variables in use
 	struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
 	struct MOUSE_DEC mdec;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
@@ -26,31 +27,39 @@ void RubbMain(void)
 	int mouse_offset = 5;
 	int i = 0;
 
-	init_gdtidt();
-	init_pic();
-	init_pit();
-	io_sti();
-
+	// memory manager
 	memtotal = memtest(0x00400000, 0xbfffffff);
 	memman_init(memman);
 	memman_free(memman, 0x00001000, 0x0009e000);
 	memman_free(memman, 0x00400000, memtotal - 0x00400000);
 
-	init_keyboard();
+	// segment settings
+	init_gdtidt();
+	// interrupt settings
+	init_pic();
+	// timerctl init
+	init_pit();
+	// color settings
 	init_palette();
 
+	// sheet settings
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
+	// sheet alloc
 	sht_back = sheet_alloc(shtctl);
 	sht_mouse = sheet_alloc(shtctl);
 	sht_win = sheet_alloc(shtctl);
 	sht_win_sub = sheet_alloc(shtctl);
+	// sheet buf memory alloc
 	sht_buf_back = (unsigned char *)memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);
 	sht_buf_win = (unsigned char *)memman_alloc_4k(memman, 160 * 100);
 	sht_buf_win_sub = (unsigned char *)memman_alloc_4k(memman, 160 * 50);
+	// set buf for each sheet
 	sheet_setbuf(sht_back, sht_buf_back, binfo->scrnx, binfo->scrny, -1);
 	sheet_setbuf(sht_mouse, sht_buf_mouse, 16, 16, 99);
 	sheet_setbuf(sht_win, sht_buf_win, 160, 100, -1);
 	sheet_setbuf(sht_win_sub, sht_buf_win_sub, 160, 50, -1);
+
+	// init screens and mouse graphics after sheet settings
 	init_screen(sht_buf_back, binfo->scrnx, binfo->scrny);
 	init_mouse(sht_buf_mouse, 99);
 	make_window(sht_buf_win, 160, 100, "window");
@@ -61,8 +70,18 @@ void RubbMain(void)
 	putfonts8_asc(sht_buf_win, 160, tempX + 16, tempY + 16, COL8_000000, "Number");
 	putfonts8_asc(sht_buf_win, 160, tempX + 32, tempY + 32, COL8_000000, "Gorilla");
 	putfonts8_asc(sht_buf_win, 160, tempX + 48, tempY + 48, COL8_000000, "Vanellope");
+
+	// drawing some information on the screen
+	sprintf(s, "memory %dMB free : %dKB", memtotal / (1024*1024), memman_total(memman) / 1024);
+	putfonts8_asc(sht_buf_back, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
+	putfonts8_asc(sht_buf_back, binfo->scrnx, 240, 145, COL8_FFFFFF, "VANELLOPE");
+	putfonts8_asc(sht_buf_back, binfo->scrnx, tweetx, tweety, COL8_000000, "TWEET");
+
+	// show timer
 	sprintf(s, "%010d", timerctl.count);
 	putfonts8_asc(sht_buf_win_sub, 160, 70, 28, COL8_000000, s);
+
+	// sheet positionings(refresh included)
 	sheet_slide(sht_back, 0, 0);
 	sheet_slide(sht_mouse, mouse_x, mouse_y);
 	sheet_slide(sht_win, 80, 72);
@@ -71,19 +90,8 @@ void RubbMain(void)
 	sheet_updown(sht_win, 1);
 	sheet_updown(sht_win_sub, 2);
 	sheet_updown(sht_mouse, 3);
-	sprintf(s, "memory %dMB free : %dKB", memtotal / (1024*1024), memman_total(memman) / 1024);
-	putfonts8_asc(sht_buf_back, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
-	//putblock8_8(binfo->vram, binfo->scrnx, mouse_w, mouse_h, mouse_x, mouse_y, sht_buf_mouse, mouse_s);
-	putfonts8_asc(sht_buf_back, binfo->scrnx, 240, 145, COL8_FFFFFF, "VANELLOPE");
-	putfonts8_asc(sht_buf_back, binfo->scrnx, tweetx, tweety, COL8_000000, "TWEET");
 
-	sheet_refresh(sht_back, 0, 0, binfo->scrnx, binfo->scrny);
-
-	io_out8(PIC0_IMR, 0xf8);
-	io_out8(PIC1_IMR, 0xef);
-	fifo8_init(&keyfifo, 32, keybuf);
-	fifo8_init(&mousefifo, 128, mousebuf);
-
+	// set each timer
 	fifo8_init(&timerfifo, 8, timerbuf);
 	timer = timer_alloc();
 	timer_init(timer, &timerfifo, 1);
@@ -97,10 +105,22 @@ void RubbMain(void)
 	timer_init(timer3, &timerfifo3, 1);
 	timer_settime(timer3, 50);
 
+	// fifo for keyboard and mouse init
+	fifo8_init(&keyfifo, 32, keybuf);
+	fifo8_init(&mousefifo, 128, mousebuf);
+
+	// start accepting keyboard and mouse interrupts
+	io_out8(PIC0_IMR, 0xf8);
+	io_out8(PIC1_IMR, 0xef);
+
+	// keyboard
+	init_keyboard();
 	enable_mouse(&mdec);
 
-	int timeY = 70;
+	// finally the interrupt flags are on
+	io_sti();
 
+	int timeY = 70;
 	for (;;) {
 		boxfill8(sht_buf_win_sub, 160, COL8_C6C6C6, 70, 28, 159, 44);
 		sprintf(s, "%010d", timerctl.count);

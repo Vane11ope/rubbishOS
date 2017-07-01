@@ -137,7 +137,7 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s
 	return;
 }
 
-void putblock8_8 (char *vram, int vxsize, int pxsize, int pysize, int px0, int py0, char* buf, int bxsize)
+void putblock8_8(char *vram, int vxsize, int pxsize, int pysize, int px0, int py0, char* buf, int bxsize)
 {
 	int x, y;
 	for (y = 0; y < pysize; ++y) {
