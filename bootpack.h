@@ -111,13 +111,14 @@ void inthandler21(int *esp);
 /* timer.c */
 #define MAX_TIMER 500
 struct TIMER {
+	struct TIMER *next;
 	unsigned int timeout, flags;
 	struct FIFO32 *fifo;
 	int data;
 };
 struct TIMERCTL {
 	unsigned int count, next, timernum;
-	struct TIMER *timer[MAX_TIMER];
+	struct TIMER *firsttimer;
 	struct TIMER timer0[MAX_TIMER];
 };
 void init_pit(void);

@@ -49,49 +49,70 @@ void timer_init(struct TIMER *timer, struct FIFO32 *fifo, int data)
 
 void timer_settime(struct TIMER *timer, unsigned int timeout)
 {
-	int e, i, j;
+	int e;
+	struct TIMER *t, *s;
 	timer->timeout = timeout + timerctl.count;
 	timer->flags = TIMER_FLAGS_USING;
 	e = io_load_eflags();
 	io_cli();
-	for (i = 0; i < timerctl.timernum; ++i) {
-		if (timerctl.timer[i]->timeout >= timer->timeout) {
+	++timerctl.timernum;
+	if (timerctl.timernum == 1) {
+		timerctl.firsttimer = timer;
+		timer->next = 0;
+		timerctl.next = timer->timeout;
+		io_store_eflags(e);
+		return;
+	}
+	t = timerctl.firsttimer;
+	if (timer->timeout <= t->timeout) {
+		timerctl.firsttimer = timer;
+		timer->next = t;
+		timerctl.next = timer->timeout;
+		io_store_eflags(e);
+		return;
+	}
+	for (;;) {
+		s = t;
+		t = t->next;
+		if (t == 0) {
 			break;
 		}
+		if (timer->timeout <= t->timeout) {
+			s->next = timer;
+			timer->next = t;
+			io_store_eflags(e);
+			return;
+		}
 	}
-	for (j = timerctl.timernum; j > i; --j) {
-		timerctl.timer[j] = timerctl.timer[j - 1];
-	}
-	++timerctl.timernum;
-	timerctl.timer[i] = timer;
-	timerctl.next = timerctl.timer[0]->timeout;
+	s->next = timer;
+	timer->next = 0;
 	io_store_eflags(e);
 	return;
 }
 
 void inthandler20(int *esp)
 {
-	int i, j;
+	int i;
+	struct TIMER *timer;
 	io_out8(PIC0_OCW2, 0x60);
 	++timerctl.count;
 	if (timerctl.next > timerctl.count) {
 		return;
 	}
+	timer = timerctl.firsttimer;
 	for (i = 0; i < timerctl.timernum; ++i) {
-		struct TIMER *timer = timerctl.timer[i];
 		if (timer->timeout <= timerctl.count) {
 			timer->flags = TIMER_FLAGS_ALLOC;
 			fifo32_put(timer->fifo, timer->data);
+			timer = timer->next;
 			continue;
 		}
 		break;
 	}
 	timerctl.timernum -= i;
-	for (j = 0; j < timerctl.timernum; ++j) {
-		timerctl.timer[j] = timerctl.timer[j + i];
-	}
+	timerctl.firsttimer = timer;
 	if (timerctl.timernum > 0) {
-		timerctl.next = timerctl.timer[0]->timeout;
+		timerctl.next = timer->timeout;
 	} else {
 		timerctl.next = 0xffffffff;
 	}
