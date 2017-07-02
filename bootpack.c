@@ -5,7 +5,7 @@ extern struct TIMERCTL timerctl;
 void RubbMain(void)
 {
 	// variables in use
-	struct BOOTINFO *binfo = (struct BOOTINFO *)0x0ff0;
+	struct BOOTINFO *binfo = (struct BOOTINFO *)0x00000ff0;
 	struct MOUSE_DEC mdec;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SHTCTL *shtctl;
