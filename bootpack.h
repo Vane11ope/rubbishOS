@@ -117,7 +117,7 @@ struct TIMER {
 	int data;
 };
 struct TIMERCTL {
-	unsigned int count, next, timernum;
+	unsigned int count, next;
 	struct TIMER *firsttimer;
 	struct TIMER timer0[MAX_TIMER];
 };
