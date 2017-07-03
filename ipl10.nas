@@ -2,7 +2,7 @@
 	ORG 0x7c00
 	JMP entry
 	DB 0x90
-	DB "HELLOIPL";
+	DB "RUBBISH ";
 	DW 512;
 	DB 1;
 	DW 1;
@@ -17,8 +17,8 @@
 	DD 2880;
 	DB 0,0,0x29;
 	DD 0xffffffff;
-	DB "HELLO-OS";
-	DB "FAT12";
+	DB "RUBBISHOS  ";
+	DB "FAT12   ";
 	RESB 18;
 
 entry:
@@ -67,7 +67,7 @@ next:
 	CMP CH,CYLS
 	JB readloop
 
-fin:
+	MOV [0x0ff0],CH
 	JMP 0xc200
 
 error:
@@ -80,9 +80,12 @@ putloop:
 	JE fin
 	MOV AH,0x0e
 	MOV BX,15
-	MOV BL,0x22
 	INT 0x10
 	JMP putloop
+
+fin:
+	HLT
+	JMP fin
 
 msg:
 	DB 0x0a,0x0a
