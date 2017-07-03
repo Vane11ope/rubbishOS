@@ -13,8 +13,6 @@ void RubbMain(void)
 	struct FIFO32 fifo;
 	struct TIMER *timer, *timer2, *timer3;
 	unsigned char *sht_buf_back, sht_buf_mouse[256], *sht_buf_win, *sht_buf_win_sub;
-	unsigned char temp10[7] = "10[sec]";
-	unsigned char temp3[6] = "3[sec]";
 	char s[40];
 	short tweetx = 11;
 	short tweety = binfo->scrny - 20;
@@ -67,7 +65,7 @@ void RubbMain(void)
 	init_screen(sht_buf_back, binfo->scrnx, binfo->scrny);
 	init_mouse(sht_buf_mouse, 99);
 	make_window(sht_buf_win, 160, 100, "window");
-	make_window(sht_buf_win_sub, 160, 50, "Counter");
+	make_window(sht_buf_win_sub, 160, 50, "window");
 	int tempX = 20;
 	int tempY = 28;
 	putfonts8_asc(sht_buf_win, 160, tempX, tempY, COL8_000000, "Composite");
@@ -80,10 +78,6 @@ void RubbMain(void)
 	putfonts8_asc(sht_buf_back, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
 	putfonts8_asc(sht_buf_back, binfo->scrnx, 240, 145, COL8_FFFFFF, "VANELLOPE");
 	putfonts8_asc(sht_buf_back, binfo->scrnx, tweetx, tweety, COL8_000000, "TWEET");
-
-	// show timer
-	sprintf(s, "%010d", timerctl.count);
-	putfonts8_asc(sht_buf_win_sub, 160, 70, 28, COL8_000000, s);
 
 	// sheet positionings(refresh included)
 	sheet_slide(sht_back, 0, 0);
@@ -118,17 +112,18 @@ void RubbMain(void)
 	io_sti();
 
 	for (;;) {
-		sprintf(s, "%010d", timerctl.count);
-		putfonts8_asc_sht(sht_win_sub, 70, 28, COL8_000000, COL8_C6C6C6, s);
 		io_cli();
 		if (fifo32_status(&fifo) <= 0) {
-			io_sti();
+			io_stihlt();
 		} else {
 			i = fifo32_get(&fifo);
 			io_sti();
 			if (256 <= i && i <= 511) {
-				sprintf(s, "%02X", i);
+				sprintf(s, "%02X", i - 256);
 				putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_000000, s);
+				if (i == 0x1e + 256) {
+					putfonts8_asc_sht(sht_win_sub, 50, 28, COL8_000000, COL8_C6C6C6, "A");
+				}
 			} else if (512 <= i && i <= 767) {
 				if (mouse_decode(&mdec, i) != 0) {
 					sprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);
@@ -161,9 +156,9 @@ void RubbMain(void)
 					sheet_slide(sht_mouse, mouse_x, mouse_y);
 				}
 			} else if (i == 10) {
-				putfonts8_asc_sht(sht_back, 0, 70, COL8_FFFFFF, COL8_000000, temp10);
+				putfonts8_asc_sht(sht_back, 0, 70, COL8_FFFFFF, COL8_000000, "10[sec]");
 			} else if (i == 3) {
-				putfonts8_asc_sht(sht_back, 0, 86, COL8_FFFFFF, COL8_000000, temp3);
+				putfonts8_asc_sht(sht_back, 0, 86, COL8_FFFFFF, COL8_000000, "3[sec]");
 			} else if (i == 1) {
 				timer_init(timer3, &fifo, 0);
 				boxfill8(sht_buf_back, binfo->scrnx, COL8_FFFFFF, 8, 102, 15, 117);
