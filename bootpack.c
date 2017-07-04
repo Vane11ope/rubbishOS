@@ -180,6 +180,9 @@ void RubbMain(void)
 					sprintf(s, "(%3d, %3d)", mouse_x, mouse_y);
 					putfonts8_asc_sht(sht_back, 0, 50, COL8_FFFFFF, COL8_000000, s);
 					sheet_slide(sht_mouse, mouse_x, mouse_y);
+					if (mdec.btn & 0x01 != 0) {
+						sheet_slide(sht_win_sub, mouse_x - 80, mouse_y - 8);
+					}
 				}
 			} else if (i == 10) {
 				putfonts8_asc_sht(sht_back, 0, 70, COL8_FFFFFF, COL8_000000, "10[sec]");
