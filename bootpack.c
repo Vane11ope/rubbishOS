@@ -25,6 +25,15 @@ void RubbMain(void)
 	int mouse_s = 16;
 	int mouse_offset = 5;
 	int i = 0;
+	// each key
+	static char keytable[0x54] = {
+		0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '^', 0,   0,
+		'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '@', '[', 0,   0,   'A', 'S',
+		'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', ':', 0,   0,   ']', 'Z', 'X', 'C', 'V',
+		'B', 'N', 'M', ',', '.', '/', 0,   '*', 0,   ' ', 0,   0,   0,   0,   0,   0,
+		0,   0,   0,   0,   0,   0,   0,   '7', '8', '9', '-', '4', '5', '6', '+', '1',
+		'2', '3', '0', '.'
+	};
 
 	// memory manager
 	memtotal = memtest(0x00400000, 0xbfffffff);
@@ -121,8 +130,12 @@ void RubbMain(void)
 			if (256 <= i && i <= 511) {
 				sprintf(s, "%02X", i - 256);
 				putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_000000, s);
-				if (i == 0x1e + 256) {
-					putfonts8_asc_sht(sht_win_sub, 50, 28, COL8_000000, COL8_C6C6C6, "A");
+				if (i < 0x54 + 256) {
+					if (keytable[i - 256] != 0) {
+						s[0] = keytable[i-256];
+						s[1] = 0;
+						putfonts8_asc_sht(sht_win_sub, 50, 28, COL8_000000, COL8_C6C6C6, s);
+					}
 				}
 			} else if (512 <= i && i <= 767) {
 				if (mouse_decode(&mdec, i) != 0) {
