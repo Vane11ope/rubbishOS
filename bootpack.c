@@ -24,6 +24,7 @@ void RubbMain(void)
 	int mouse_h = 16;
 	int mouse_s = 16;
 	int mouse_offset = 5;
+	int win_cursor_x, win_cursor_color;
 	int i = 0;
 	// each key
 	static char keytable[0x54] = {
@@ -88,6 +89,11 @@ void RubbMain(void)
 	putfonts8_asc(sht_buf_back, binfo->scrnx, 240, 145, COL8_FFFFFF, "VANELLOPE");
 	putfonts8_asc(sht_buf_back, binfo->scrnx, tweetx, tweety, COL8_000000, "TWEET");
 
+	// make window
+	make_textbox8(sht_win_sub, 8, 28, 144, 16, COL8_FFFFFF);
+	win_cursor_x = 8;
+	win_cursor_color = COL8_FFFFFF;
+
 	// sheet positionings(refresh included)
 	sheet_slide(sht_back, 0, 0);
 	sheet_slide(sht_mouse, mouse_x, mouse_y);
@@ -131,12 +137,19 @@ void RubbMain(void)
 				sprintf(s, "%02X", i - 256);
 				putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_000000, s);
 				if (i < 0x54 + 256) {
-					if (keytable[i - 256] != 0) {
-						s[0] = keytable[i-256];
+					if (keytable[i - 256] != 0 && win_cursor_x < 144) {
+						s[0] = keytable[i - 256];
 						s[1] = 0;
-						putfonts8_asc_sht(sht_win_sub, 50, 28, COL8_000000, COL8_C6C6C6, s);
+						putfonts8_asc_sht(sht_win_sub, win_cursor_x, 28, COL8_000000, COL8_FFFFFF, s);
+						win_cursor_x += 8;
 					}
 				}
+				if (i == 256 + 0x0e && win_cursor_x > 8) {
+					putfonts8_asc_sht(sht_win_sub, win_cursor_x, 28, COL8_000000, COL8_FFFFFF, " ");
+					win_cursor_x -= 8;
+				}
+				boxfill8(sht_win_sub->buf, sht_win_sub->bxsize, win_cursor_color, win_cursor_x, 28, win_cursor_x + 7, 43);
+				sheet_refresh(sht_win_sub, win_cursor_x, 28, win_cursor_x + 8, 44);
 			} else if (512 <= i && i <= 767) {
 				if (mouse_decode(&mdec, i) != 0) {
 					sprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);
@@ -172,16 +185,17 @@ void RubbMain(void)
 				putfonts8_asc_sht(sht_back, 0, 70, COL8_FFFFFF, COL8_000000, "10[sec]");
 			} else if (i == 3) {
 				putfonts8_asc_sht(sht_back, 0, 86, COL8_FFFFFF, COL8_000000, "3[sec]");
-			} else if (i == 1) {
-				timer_init(timer3, &fifo, 0);
-				boxfill8(sht_buf_back, binfo->scrnx, COL8_FFFFFF, 8, 102, 15, 117);
+			} else if (i <= 1) {
+				if (i != 0) {
+					timer_init(timer3, &fifo, 0);
+					win_cursor_color = COL8_000000;
+				} else {
+					timer_init(timer3, &fifo, 1);
+					win_cursor_color = COL8_FFFFFF;
+				}
 				timer_settime(timer3, 50);
-				sheet_refresh(sht_back, 8, 102, 16, 119);
-			} else if (i == 0) {
-				timer_init(timer3, &fifo, 1);
-				boxfill8(sht_buf_back, binfo->scrnx, COL8_000000, 8, 102, 15, 117);
-				timer_settime(timer3, 50);
-				sheet_refresh(sht_back, 8, 102, 16, 119);
+				boxfill8(sht_win_sub->buf, sht_win_sub->bxsize, win_cursor_color, win_cursor_x, 28,  win_cursor_x + 7, 43);
+				sheet_refresh(sht_win_sub, win_cursor_x, 28, win_cursor_x + 8, 44);
 			}
 		}
 	}
