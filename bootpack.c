@@ -99,6 +99,8 @@ void RubbMain(void)
 	sheet_setbuf(sht_mouse, sht_buf_mouse, 16, 16, 99);
 	sheet_setbuf(sht_win, sht_buf_win, 160, 100, -1);
 	sheet_setbuf(sht_win_sub, sht_buf_win_sub, 160, 50, -1);
+	// memorize the address of sht_back to use it in the other func
+	(*(int *)0x0fec) = (int)sht_back;
 
 	// init screens and mouse graphics after sheet settings
 	init_screen(sht_buf_back, binfo->scrnx, binfo->scrny);
@@ -244,14 +246,20 @@ void task_b_main(void)
 {
 	struct FIFO32 fifo;
 	struct TIMER *timer_ts;
-	int i, fifobuf[128];
+	int i, fifobuf[128], count = 0;
+	char s[11];
+	struct SHEET *sht_back;
 
+	sht_back = (struct SHEET *)*((int *)0x0fec);
 	fifo32_init(&fifo, 128, fifobuf);
 	timer_ts = timer_alloc();
 	timer_init(timer_ts, &fifo, 1);
 	timer_settime(timer_ts, 2);
 
 	for(;;) {
+		++count;
+		sprintf(s, "%10d", count);
+		putfonts8_asc_sht(sht_back, 0, 192, COL8_FFFFFF, COL8_000000, s);
 		io_cli();
 		if (fifo32_status(&fifo) == 0) {
 			io_stihlt();
