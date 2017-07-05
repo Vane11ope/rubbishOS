@@ -48,6 +48,7 @@ void load_idtr(int limit, int addr);
 int load_cr0(void);
 void store_cr0(int cr0);
 void load_tr(int tr);
+void taskswitch3(void);
 void taskswitch4(void);
 void asm_inthandler20(void);
 void asm_inthandler21(void);
