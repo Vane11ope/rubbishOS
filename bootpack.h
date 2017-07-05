@@ -18,6 +18,12 @@ struct BOOTINFO {
 #define MOUSECMD_ENABLE      0xf4
 #define EFLAGS_AC_BIT        0x00040000
 #define CR0_CACHE_DISABLE    0x60000000
+struct TSS32 {
+	int backlink, esp0, ss0, esp1, ss1, esp2, ss2, cr3;
+	int eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;
+	int es, cs, ss, ds, fs, gs;
+	int ldtr, iomap;
+};
 struct MOUSE_DEC {
 	unsigned char buf[3], phase;
 	int x, y, btn;
@@ -26,6 +32,7 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
 unsigned int memtest(unsigned int start, unsigned int end);
 unsigned int memtest_sub(unsigned int start, unsigned int end);
 void make_window(unsigned char *buf, int xsize, int ysize, char *title);
+void task_b_main(void);
 
 /* func.nas */
 void io_hlt(void);
@@ -44,6 +51,8 @@ void load_gdtr(int limit, int addr);
 void load_idtr(int limit, int addr);
 int load_cr0(void);
 void store_cr0(int cr0);
+void load_tr(int tr);
+void taskswitch4(void);
 void asm_inthandler20(void);
 void asm_inthandler21(void);
 void asm_inthandler27(void);
@@ -77,6 +86,9 @@ int fifo32_status(struct FIFO32 *fifo);
 
 /* dsctbl.c */
 #define AR_INTGATE32 0x008e
+#define AR_TSS32 0x0089
+#define ADR_GDT 0x00270000
+#define ADR_IDT 0x0026f800
 struct SEGMENT_DESCRIPTOR {
 	short limit_low, base_low;
 	char base_mid, access_right;
@@ -88,6 +100,7 @@ struct GATE_DESCRIPTOR {
 	char dw_count, access_right;
 	short offset_high;
 };
+
 void init_gdtidt(void);
 void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);
 void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);

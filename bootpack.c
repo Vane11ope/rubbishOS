@@ -8,6 +8,8 @@ void RubbMain(void)
 	struct BOOTINFO *binfo = (struct BOOTINFO *)0x00000ff0;
 	struct MOUSE_DEC mdec;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
+	struct TSS32 tss_a, tss_b;
 	struct SHTCTL *shtctl;
 	struct SHEET *sht_back, *sht_mouse, *sht_win, *sht_win_sub;
 	struct FIFO32 fifo;
@@ -17,6 +19,7 @@ void RubbMain(void)
 	short tweetx = 11;
 	short tweety = binfo->scrny - 20;
 	unsigned int memtotal, count = 0;
+	int task_b_esp;
 	int fifobuf[128];
 	int mouse_x = (binfo->scrnx - 16) / 2;
 	int mouse_y = (binfo->scrny - 28 - 16) / 2;
@@ -50,6 +53,32 @@ void RubbMain(void)
 	init_pit();
 	// color settings
 	init_palette();
+
+	// multitasking
+	tss_a.ldtr = 0;
+	tss_a.iomap = 0x40000000;
+	task_b_esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024;
+	tss_b.ldtr = 0;
+	tss_b.iomap = 0x40000000;
+	tss_b.eip = (int) &task_b_main;
+	tss_b.eflags = 0x00000202;
+	tss_b.eax = 0;
+	tss_b.ecx = 0;
+	tss_b.edx = 0;
+	tss_b.ebx = 0;
+	tss_b.esp = task_b_esp;
+	tss_b.ebp = 0;
+	tss_b.esi = 0;
+	tss_b.edi = 0;
+	tss_b.es = 1 * 8;
+	tss_b.cs = 2 * 8;
+	tss_b.ss = 1 * 8;
+	tss_b.ds = 1 * 8;
+	tss_b.fs = 1 * 8;
+	tss_b.gs = 1 * 8;
+	set_segmdesc(gdt + 3, 103, &tss_a, AR_TSS32);
+	set_segmdesc(gdt + 4, 103, &tss_b, AR_TSS32);
+	load_tr(3 * 8);
 
 	// fifo init
 	fifo32_init(&fifo, 128, fifobuf);
@@ -186,6 +215,7 @@ void RubbMain(void)
 				}
 			} else if (i == 10) {
 				putfonts8_asc_sht(sht_back, 0, 70, COL8_FFFFFF, COL8_000000, "10[sec]");
+				taskswitch4();
 			} else if (i == 3) {
 				putfonts8_asc_sht(sht_back, 0, 86, COL8_FFFFFF, COL8_000000, "3[sec]");
 			} else if (i <= 1) {
@@ -302,4 +332,9 @@ void make_window(unsigned char *buf, int xsize, int ysize, char *title)
 		}
 	}
 	return;
+}
+
+void task_b_main(void)
+{
+	for(;;) {io_hlt();}
 }
