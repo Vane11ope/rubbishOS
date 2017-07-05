@@ -13,7 +13,7 @@ void RubbMain(void)
 	struct SHTCTL *shtctl;
 	struct SHEET *sht_back, *sht_mouse, *sht_win, *sht_win_sub;
 	struct FIFO32 fifo;
-	struct TIMER *timer, *timer2, *timer3;
+	struct TIMER *timer, *timer2, *timer3, *timer_ts;
 	unsigned char *sht_buf_back, sht_buf_mouse[256], *sht_buf_win, *sht_buf_win_sub;
 	char s[40];
 	short tweetx = 11;
@@ -143,6 +143,9 @@ void RubbMain(void)
 	timer3 = timer_alloc();
 	timer_init(timer3, &fifo, 1);
 	timer_settime(timer3, 50);
+	timer_ts = timer_alloc();
+	timer_init(timer_ts, &fifo, 2);
+	timer_settime(timer_ts, 2);
 
 	// keyboard
 	init_keyboard(&fifo, 256);
@@ -162,7 +165,10 @@ void RubbMain(void)
 		} else {
 			i = fifo32_get(&fifo);
 			io_sti();
-			if (256 <= i && i <= 511) {
+			if (i == 2) {
+				farjmp(0, 4 * 8);
+				timer_settime(timer_ts, 2);
+			} else if (256 <= i && i <= 511) {
 				sprintf(s, "%02X", i - 256);
 				putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_000000, s);
 				if (i < 0x54 + 256) {
@@ -215,7 +221,7 @@ void RubbMain(void)
 				}
 			} else if (i == 10) {
 				putfonts8_asc_sht(sht_back, 0, 70, COL8_FFFFFF, COL8_000000, "10[sec]");
-				taskswitch4();
+				farjmp(0, 4 * 8);
 			} else if (i == 3) {
 				putfonts8_asc_sht(sht_back, 0, 86, COL8_FFFFFF, COL8_000000, "3[sec]");
 			} else if (i <= 1) {
@@ -237,13 +243,13 @@ void RubbMain(void)
 void task_b_main(void)
 {
 	struct FIFO32 fifo;
-	struct TIMER *timer;
+	struct TIMER *timer_ts;
 	int i, fifobuf[128];
 
 	fifo32_init(&fifo, 128, fifobuf);
-	timer = timer_alloc();
-	timer_init(timer, &fifo, 1);
-	timer_settime(timer, 500);
+	timer_ts = timer_alloc();
+	timer_init(timer_ts, &fifo, 1);
+	timer_settime(timer_ts, 2);
 
 	for(;;) {
 		io_cli();
@@ -253,7 +259,8 @@ void task_b_main(void)
 			i = fifo32_get(&fifo);
 			io_sti();
 			if (i == 1) {
-				taskswitch3();
+				farjmp(0, 3 * 8);
+				timer_settime(timer_ts, 2);
 			}
 		}
 	}
