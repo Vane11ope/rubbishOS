@@ -24,11 +24,16 @@ struct TSS32 {
 	int es, cs, ss, ds, fs, gs;
 	int ldtr, iomap;
 };
+struct SHEET {
+	unsigned char *buf;
+	int bxsize, bysize, vx0, vy0, opacity, height, flags;
+	struct SHTCTL *shtctl;
+};
 struct MOUSE_DEC {
 	unsigned char buf[3], phase;
 	int x, y, btn;
 };
-void task_b_main(void);
+void task_b_main(struct SHEET *sht_back);
 
 /* func.nas */
 void io_hlt(void);
@@ -142,11 +147,6 @@ void inthandler20(int *esp);
 /* sheet.c */
 #define MAX_SHEETS 256
 #define SHEET_USE 1
-struct SHEET {
-	unsigned char *buf;
-	int bxsize, bysize, vx0, vy0, opacity, height, flags;
-	struct SHTCTL *shtctl;
-};
 struct SHTCTL {
 	unsigned char *vram, *map;
 	int xsize, ysize, top;

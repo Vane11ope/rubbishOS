@@ -57,7 +57,7 @@ void RubbMain(void)
 	// multitasking
 	tss_a.ldtr = 0;
 	tss_a.iomap = 0x40000000;
-	task_b_esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024;
+	task_b_esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
 	tss_b.ldtr = 0;
 	tss_b.iomap = 0x40000000;
 	tss_b.eip = (int) &task_b_main;
@@ -99,8 +99,8 @@ void RubbMain(void)
 	sheet_setbuf(sht_mouse, sht_buf_mouse, 16, 16, 99);
 	sheet_setbuf(sht_win, sht_buf_win, 160, 100, -1);
 	sheet_setbuf(sht_win_sub, sht_buf_win_sub, 160, 50, -1);
-	// memorize the address of sht_back to use it in the other func
-	(*(int *)0x0fec) = (int)sht_back;
+	// memorize sht_back
+	(*(int *)(task_b_esp + 4)) = (int)sht_back;
 
 	// init screens and mouse graphics after sheet settings
 	init_screen(sht_buf_back, binfo->scrnx, binfo->scrny);
@@ -242,15 +242,13 @@ void RubbMain(void)
 	}
 }
 
-void task_b_main(void)
+void task_b_main(struct SHEET *sht_back)
 {
 	struct FIFO32 fifo;
 	struct TIMER *timer_ts, *timer_put;
 	int i, fifobuf[128], count = 0;
 	char s[12];
-	struct SHEET *sht_back;
 
-	sht_back = (struct SHEET *)*((int *)0x0fec);
 	fifo32_init(&fifo, 128, fifobuf);
 	timer_ts = timer_alloc();
 	timer_init(timer_ts, &fifo, 2);
@@ -263,7 +261,7 @@ void task_b_main(void)
 		++count;
 		io_cli();
 		if (fifo32_status(&fifo) == 0) {
-			io_stihlt();
+			io_sti();
 		} else {
 			i = fifo32_get(&fifo);
 			io_sti();
