@@ -144,6 +144,10 @@ void timer_init(struct TIMER *timer, struct FIFO32 *fifo, int data);
 void timer_settime(struct TIMER *timer, unsigned int timeout);
 void inthandler20(int *esp);
 
+/* mtask.c */
+void mt_init(void);
+void mt_taskswitch(void);
+
 /* sheet.c */
 #define MAX_SHEETS 256
 #define SHEET_USE 1

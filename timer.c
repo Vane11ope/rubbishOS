@@ -6,6 +6,7 @@
 #define TIMER_FLAGS_USING 2
 
 struct TIMERCTL timerctl;
+extern struct TIMER *mt_timer;
 
 void init_pit(void)
 {
@@ -83,8 +84,11 @@ void timer_settime(struct TIMER *timer, unsigned int timeout)
 
 void inthandler20(int *esp)
 {
-	struct TIMER *timer;
 	io_out8(PIC0_OCW2, 0x60);
+
+	struct TIMER *timer;
+	char ts = 0;
+
 	++timerctl.count;
 	if (timerctl.next > timerctl.count) {
 		return;
@@ -92,8 +96,12 @@ void inthandler20(int *esp)
 	timer = timerctl.firsttimer;
 	for (;;) {
 		if (timer->timeout <= timerctl.count) {
+			if (timer == mt_timer) {
+				ts = 1;
+			} else {
+				fifo32_put(timer->fifo, timer->data);
+			}
 			timer->flags = TIMER_FLAGS_ALLOC;
-			fifo32_put(timer->fifo, timer->data);
 			timer = timer->next;
 			continue;
 		}
@@ -101,5 +109,8 @@ void inthandler20(int *esp)
 	}
 	timerctl.firsttimer = timer;
 	timerctl.next = timer->timeout;
+	if (ts != 0) {
+		mt_taskswitch();
+	}
 	return;
 }
