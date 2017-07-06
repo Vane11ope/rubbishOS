@@ -9,17 +9,16 @@ void RubbMain(void)
 	struct MOUSE_DEC mdec;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
-	struct TSS32 tss_a, tss_b;
 	struct SHTCTL *shtctl;
 	struct SHEET *sht_back, *sht_mouse, *sht_win, *sht_win_sub;
 	struct FIFO32 fifo;
-	struct TIMER *timer, *timer2, *timer3, *timer_ts;
+	struct TIMER *timer, *timer2, *timer3;
+	struct TASK *task_b;
 	unsigned char *sht_buf_back, sht_buf_mouse[256], *sht_buf_win, *sht_buf_win_sub;
 	char s[40];
 	short tweetx = 11;
 	short tweety = binfo->scrny - 20;
 	unsigned int memtotal, count = 0;
-	int task_b_esp;
 	int fifobuf[128];
 	int mouse_x = (binfo->scrnx - 16) / 2;
 	int mouse_y = (binfo->scrny - 28 - 16) / 2;
@@ -49,36 +48,12 @@ void RubbMain(void)
 	init_gdtidt();
 	// interrupt settings
 	init_pic();
+	// interrupt flags on
+	io_sti();
 	// timerctl init
 	init_pit();
 	// color settings
 	init_palette();
-
-	// multitasking
-	tss_a.ldtr = 0;
-	tss_a.iomap = 0x40000000;
-	task_b_esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
-	tss_b.ldtr = 0;
-	tss_b.iomap = 0x40000000;
-	tss_b.eip = (int) &task_b_main;
-	tss_b.eflags = 0x00000202;
-	tss_b.eax = 0;
-	tss_b.ecx = 0;
-	tss_b.edx = 0;
-	tss_b.ebx = 0;
-	tss_b.esp = task_b_esp;
-	tss_b.ebp = 0;
-	tss_b.esi = 0;
-	tss_b.edi = 0;
-	tss_b.es = 1 * 8;
-	tss_b.cs = 2 * 8;
-	tss_b.ss = 1 * 8;
-	tss_b.ds = 1 * 8;
-	tss_b.fs = 1 * 8;
-	tss_b.gs = 1 * 8;
-	set_segmdesc(gdt + 3, 103, &tss_a, AR_TSS32);
-	set_segmdesc(gdt + 4, 103, &tss_b, AR_TSS32);
-	load_tr(3 * 8);
 
 	// fifo init
 	fifo32_init(&fifo, 128, fifobuf);
@@ -99,8 +74,6 @@ void RubbMain(void)
 	sheet_setbuf(sht_mouse, sht_buf_mouse, 16, 16, 99);
 	sheet_setbuf(sht_win, sht_buf_win, 160, 100, -1);
 	sheet_setbuf(sht_win_sub, sht_buf_win_sub, 160, 50, -1);
-	// memorize sht_back
-	(*(int *)(task_b_esp + 4)) = (int)sht_back;
 
 	// init screens and mouse graphics after sheet settings
 	init_screen(sht_buf_back, binfo->scrnx, binfo->scrny);
@@ -145,9 +118,6 @@ void RubbMain(void)
 	timer3 = timer_alloc();
 	timer_init(timer3, &fifo, 1);
 	timer_settime(timer3, 50);
-	timer_ts = timer_alloc();
-	timer_init(timer_ts, &fifo, 2);
-	timer_settime(timer_ts, 2);
 
 	// keyboard
 	init_keyboard(&fifo, 256);
@@ -157,8 +127,19 @@ void RubbMain(void)
 	io_out8(PIC0_IMR, 0xf8);
 	io_out8(PIC1_IMR, 0xef);
 
-	// finally the interrupt flags are on
-	io_sti();
+	// multitasking
+	task_init(memman);
+	task_b = task_alloc();
+	task_b->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
+	task_b->tss.eip = (int) &task_b_main;
+	task_b->tss.es = 1 * 8;
+	task_b->tss.cs = 2 * 8;
+	task_b->tss.ss = 1 * 8;
+	task_b->tss.ds = 1 * 8;
+	task_b->tss.fs = 1 * 8;
+	task_b->tss.gs = 1 * 8;
+	*((int *)(task_b->tss.esp + 4)) = (int)sht_back;
+	task_run(task_b);
 
 	for (;;) {
 		io_cli();
@@ -167,10 +148,7 @@ void RubbMain(void)
 		} else {
 			i = fifo32_get(&fifo);
 			io_sti();
-			if (i == 2) {
-				farjmp(0, 4 * 8);
-				timer_settime(timer_ts, 2);
-			} else if (256 <= i && i <= 511) {
+			if (256 <= i && i <= 511) {
 				sprintf(s, "%02X", i - 256);
 				putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_000000, s);
 				if (i < 0x54 + 256) {
@@ -223,7 +201,6 @@ void RubbMain(void)
 				}
 			} else if (i == 10) {
 				putfonts8_asc_sht(sht_back, 0, 70, COL8_FFFFFF, COL8_000000, "10[sec]");
-				farjmp(0, 4 * 8);
 			} else if (i == 3) {
 				putfonts8_asc_sht(sht_back, 0, 86, COL8_FFFFFF, COL8_000000, "3[sec]");
 			} else if (i <= 1) {
