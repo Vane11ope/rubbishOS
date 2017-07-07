@@ -13,7 +13,7 @@ void RubbMain(void)
 	struct SHEET *sht_back, *sht_mouse, *sht_win, *sht_win_sub;
 	struct FIFO32 fifo;
 	struct TIMER *timer, *timer2, *timer3;
-	struct TASK *task_b;
+	struct TASK *task_a, *task_b;
 	unsigned char *sht_buf_back, sht_buf_mouse[256], *sht_buf_win, *sht_buf_win_sub;
 	char s[40];
 	short tweetx = 11;
@@ -56,7 +56,7 @@ void RubbMain(void)
 	init_palette();
 
 	// fifo init
-	fifo32_init(&fifo, 128, fifobuf);
+	fifo32_init(&fifo, 128, fifobuf, 0);
 
 	// sheet settings
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
@@ -128,7 +128,8 @@ void RubbMain(void)
 	io_out8(PIC1_IMR, 0xef);
 
 	// multitasking
-	task_init(memman);
+	task_a = task_init(memman);
+	fifo.task = task_a;
 	task_b = task_alloc();
 	task_b->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
 	task_b->tss.eip = (int) &task_b_main;
@@ -144,7 +145,8 @@ void RubbMain(void)
 	for (;;) {
 		io_cli();
 		if (fifo32_status(&fifo) <= 0) {
-			io_stihlt();
+			task_sleep(task_a);
+			io_sti();
 		} else {
 			i = fifo32_get(&fifo);
 			io_sti();
@@ -226,7 +228,7 @@ void task_b_main(struct SHEET *sht_back)
 	int i, fifobuf[128], count0 = 0, count = 0;
 	char s[12];
 
-	fifo32_init(&fifo, 128, fifobuf);
+	fifo32_init(&fifo, 128, fifobuf, 0);
 	timer_1s = timer_alloc();
 	timer_init(timer_1s, &fifo, 100);
 	timer_settime(timer_1s, 100);

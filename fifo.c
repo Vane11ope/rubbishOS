@@ -1,12 +1,13 @@
 #include "bootpack.h"
 
-void fifo32_init(struct FIFO32 *fifo, int size, int *buf) {
+void fifo32_init(struct FIFO32 *fifo, int size, int *buf, struct TASK *task) {
 	fifo->size = size;
 	fifo->buf = buf;
 	fifo->free = size;
 	fifo->flags = 0;
 	fifo->next_w = 0;
 	fifo->next_r = 0;
+	fifo->task = task;
 	return;
 }
 
@@ -21,6 +22,11 @@ int fifo32_put(struct FIFO32 *fifo, int data)
 		fifo->next_w = 0;
 	}
 	--fifo->free;
+	if (fifo->task != 0) {
+		if (fifo->task->flags != 2) {
+			task_run(fifo->task);
+		}
+	}
 	return 0;
 }
 
