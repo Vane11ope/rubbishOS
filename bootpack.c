@@ -10,11 +10,11 @@ void RubbMain(void)
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
 	struct SHTCTL *shtctl;
-	struct SHEET *sht_back, *sht_mouse, *sht_win, *sht_win_sub;
+	struct SHEET *sht_back, *sht_mouse, *sht_win, *sht_win_sub, *sht_win_many[3];
 	struct FIFO32 fifo;
-	struct TIMER *timer, *timer2, *timer3;
-	struct TASK *task_a, *task_b;
-	unsigned char *sht_buf_back, sht_buf_mouse[256], *sht_buf_win, *sht_buf_win_sub;
+	struct TIMER *timer;
+	struct TASK *task_a, *task_many[3];
+	unsigned char *sht_buf_back, sht_buf_mouse[256], *sht_buf_win, *sht_buf_win_sub, *sht_buf_win_many;
 	char s[40];
 	short tweetx = 11;
 	short tweety = binfo->scrny - 20;
@@ -58,6 +58,10 @@ void RubbMain(void)
 	// fifo init
 	fifo32_init(&fifo, 128, fifobuf, 0);
 
+	// multitasking
+	task_a = task_init(memman);
+	fifo.task = task_a;
+
 	// sheet settings
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
 	// sheet alloc
@@ -68,18 +72,37 @@ void RubbMain(void)
 	// sheet buf memory alloc
 	sht_buf_back = (unsigned char *)memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);
 	sht_buf_win = (unsigned char *)memman_alloc_4k(memman, 160 * 100);
-	sht_buf_win_sub = (unsigned char *)memman_alloc_4k(memman, 160 * 50);
+	sht_buf_win_sub = (unsigned char *)memman_alloc_4k(memman, 144 * 52);
 	// set buf for each sheet
 	sheet_setbuf(sht_back, sht_buf_back, binfo->scrnx, binfo->scrny, -1);
 	sheet_setbuf(sht_mouse, sht_buf_mouse, 16, 16, 99);
 	sheet_setbuf(sht_win, sht_buf_win, 160, 100, -1);
-	sheet_setbuf(sht_win_sub, sht_buf_win_sub, 160, 50, -1);
+	sheet_setbuf(sht_win_sub, sht_buf_win_sub, 144, 52, -1);
+	// set plural sheets
+	for (i = 0; i < 3; ++i) {
+		sht_win_many[i] = sheet_alloc(shtctl);
+		sht_buf_win_many = (unsigned char *)memman_alloc_4k(memman, 144 * 52);
+		sheet_setbuf(sht_win_many[i], sht_buf_win_many, 144, 52, -1);
+		sprintf(s, "task%d", i);
+		make_window(sht_buf_win_many, 144, 52, s, 0);
+		task_many[i] = task_alloc();
+		task_many[i]->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
+		task_many[i]->tss.eip = (int) &task_b_main;
+		task_many[i]->tss.es = 1 * 8;
+		task_many[i]->tss.cs = 2 * 8;
+		task_many[i]->tss.ss = 1 * 8;
+		task_many[i]->tss.ds = 1 * 8;
+		task_many[i]->tss.fs = 1 * 8;
+		task_many[i]->tss.gs = 1 * 8;
+		*((int *)(task_many[i]->tss.esp + 4)) = (int)sht_win_many[i];
+		task_run(task_many[i]);
+	}
 
 	// init screens and mouse graphics after sheet settings
 	init_screen(sht_buf_back, binfo->scrnx, binfo->scrny);
 	init_mouse(sht_buf_mouse, 99);
-	make_window(sht_buf_win, 160, 100, "window");
-	make_window(sht_buf_win_sub, 160, 50, "window");
+	make_window(sht_buf_win, 160, 100, "window", 0);
+	make_window(sht_buf_win_sub, 144, 52, "window", 1);
 	int tempX = 20;
 	int tempY = 28;
 	putfonts8_asc(sht_buf_win, 160, tempX, tempY, COL8_000000, "Composite");
@@ -90,11 +113,11 @@ void RubbMain(void)
 	// drawing some information on the screen
 	sprintf(s, "memory %dMB free : %dKB", memtotal / (1024*1024), memman_total(memman) / 1024);
 	putfonts8_asc(sht_buf_back, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
-	putfonts8_asc(sht_buf_back, binfo->scrnx, 240, 145, COL8_FFFFFF, "VANELLOPE");
+	putfonts8_asc(sht_buf_back, binfo->scrnx, 240, 192, COL8_FFFFFF, "VANELLOPE");
 	putfonts8_asc(sht_buf_back, binfo->scrnx, tweetx, tweety, COL8_000000, "TWEET");
 
 	// make window
-	make_textbox8(sht_win_sub, 8, 28, 144, 16, COL8_FFFFFF);
+	make_textbox8(sht_win_sub, 8, 28, 128, 16, COL8_FFFFFF);
 	win_cursor_x = 8;
 	win_cursor_color = COL8_FFFFFF;
 
@@ -102,22 +125,22 @@ void RubbMain(void)
 	sheet_slide(sht_back, 0, 0);
 	sheet_slide(sht_mouse, mouse_x, mouse_y);
 	sheet_slide(sht_win, 80, 72);
-	sheet_slide(sht_win_sub, 150, 50);
+	sheet_slide(sht_win_sub, 8, 56);
+	sheet_slide(sht_win_many[0], 168, 56);
+	sheet_slide(sht_win_many[1], 8, 116);
+	sheet_slide(sht_win_many[2], 168, 116);
 	sheet_updown(sht_back, 0);
 	sheet_updown(sht_win, 1);
-	sheet_updown(sht_win_sub, 2);
-	sheet_updown(sht_mouse, 3);
+	sheet_updown(sht_win_many[0], 2);
+	sheet_updown(sht_win_many[1], 3);
+	sheet_updown(sht_win_many[2], 4);
+	sheet_updown(sht_win_sub, 5);
+	sheet_updown(sht_mouse, 6);
 
 	// set each timer
 	timer = timer_alloc();
-	timer_init(timer, &fifo, 10);
-	timer_settime(timer, 1000);
-	timer2 = timer_alloc();
-	timer_init(timer2, &fifo, 3);
-	timer_settime(timer2, 300);
-	timer3 = timer_alloc();
-	timer_init(timer3, &fifo, 1);
-	timer_settime(timer3, 50);
+	timer_init(timer, &fifo, 1);
+	timer_settime(timer, 50);
 
 	// keyboard
 	init_keyboard(&fifo, 256);
@@ -126,21 +149,6 @@ void RubbMain(void)
 	// start accepting keyboard and mouse interrupts
 	io_out8(PIC0_IMR, 0xf8);
 	io_out8(PIC1_IMR, 0xef);
-
-	// multitasking
-	task_a = task_init(memman);
-	fifo.task = task_a;
-	task_b = task_alloc();
-	task_b->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
-	task_b->tss.eip = (int) &task_b_main;
-	task_b->tss.es = 1 * 8;
-	task_b->tss.cs = 2 * 8;
-	task_b->tss.ss = 1 * 8;
-	task_b->tss.ds = 1 * 8;
-	task_b->tss.fs = 1 * 8;
-	task_b->tss.gs = 1 * 8;
-	*((int *)(task_b->tss.esp + 4)) = (int)sht_back;
-	task_run(task_b);
 
 	for (;;) {
 		io_cli();
@@ -154,7 +162,7 @@ void RubbMain(void)
 				sprintf(s, "%02X", i - 256);
 				putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_000000, s);
 				if (i < 0x54 + 256) {
-					if (keytable[i - 256] != 0 && win_cursor_x < 144) {
+					if (keytable[i - 256] != 0 && win_cursor_x < 128) {
 						s[0] = keytable[i - 256];
 						s[1] = 0;
 						putfonts8_asc_sht(sht_win_sub, win_cursor_x, 28, COL8_000000, COL8_FFFFFF, s);
@@ -201,19 +209,15 @@ void RubbMain(void)
 						sheet_slide(sht_win_sub, mouse_x - 80, mouse_y - 8);
 					}
 				}
-			} else if (i == 10) {
-				putfonts8_asc_sht(sht_back, 0, 70, COL8_FFFFFF, COL8_000000, "10[sec]");
-			} else if (i == 3) {
-				putfonts8_asc_sht(sht_back, 0, 86, COL8_FFFFFF, COL8_000000, "3[sec]");
 			} else if (i <= 1) {
 				if (i != 0) {
-					timer_init(timer3, &fifo, 0);
+					timer_init(timer, &fifo, 0);
 					win_cursor_color = COL8_000000;
 				} else {
-					timer_init(timer3, &fifo, 1);
+					timer_init(timer, &fifo, 1);
 					win_cursor_color = COL8_FFFFFF;
 				}
-				timer_settime(timer3, 50);
+				timer_settime(timer, 50);
 				boxfill8(sht_win_sub->buf, sht_win_sub->bxsize, win_cursor_color, win_cursor_x, 28,  win_cursor_x + 7, 43);
 				sheet_refresh(sht_win_sub, win_cursor_x, 28, win_cursor_x + 8, 44);
 			}
@@ -221,10 +225,10 @@ void RubbMain(void)
 	}
 }
 
-void task_b_main(struct SHEET *sht_back)
+void task_b_main(struct SHEET *sheet)
 {
 	struct FIFO32 fifo;
-	struct TIMER *timer_1s, *timer_put;
+	struct TIMER *timer_1s;
 	int i, fifobuf[128], count0 = 0, count = 0;
 	char s[12];
 
@@ -232,9 +236,6 @@ void task_b_main(struct SHEET *sht_back)
 	timer_1s = timer_alloc();
 	timer_init(timer_1s, &fifo, 100);
 	timer_settime(timer_1s, 100);
-	timer_put = timer_alloc();
-	timer_init(timer_put, &fifo, 1);
-	timer_settime(timer_put, 1);
 
 	for(;;) {
 		++count;
@@ -244,13 +245,9 @@ void task_b_main(struct SHEET *sht_back)
 		} else {
 			i = fifo32_get(&fifo);
 			io_sti();
-			if (i == 1) {
-				sprintf(s, "%10d", count);
-				putfonts8_asc_sht(sht_back, 0, 192, COL8_FFFFFF, COL8_000000, s);
-				timer_settime(timer_put, 1);
-			} else if (i == 100) {
+			if (i == 100) {
 				sprintf(s, "%10d", count - count0);
-				putfonts8_asc_sht(sht_back, 0, 208, COL8_FFFFFF, COL8_000000, s);
+				putfonts8_asc_sht(sheet, 24, 28, COL8_000000, COL8_C6C6C6, s);
 				count0 = count;
 				timer_settime(timer_1s, 100);
 			}
