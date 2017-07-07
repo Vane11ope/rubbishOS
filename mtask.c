@@ -1,4 +1,7 @@
 #include "bootpack.h"
+#define TASK_SLEEP   0
+#define TASK_ALLOC   1
+#define TASK_RUNNING 2
 
 struct TASKCTL *taskctl;
 struct TIMER *task_timer;
@@ -10,12 +13,12 @@ struct TASK *task_init(struct MEMMAN *memman)
 	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
 	taskctl = (struct TASKCTL *)memman_alloc_4k(memman, sizeof(struct TASKCTL));
 	for (i = 0; i < MAX_TASKS; ++i) {
-		taskctl->tasks0[i].flags = 0;
+		taskctl->tasks0[i].flags = TASK_SLEEP;
 		taskctl->tasks0[i].sel = (TASK_GDT0 + i) * 8;
 		set_segmdesc(gdt + TASK_GDT0 + i, 103, (int) &taskctl->tasks0[i].tss, AR_TSS32);
 	}
 	task = task_alloc();
-	task->flags = 2;
+	task->flags = TASK_RUNNING;
 	taskctl->activetasks = 1;
 	taskctl->now = 0;
 	taskctl->tasks[0] = task;
@@ -30,9 +33,9 @@ struct TASK *task_alloc(void)
 	int i;
 	struct TASK *task;
 	for(i = 0; i < MAX_TASKS; ++i) {
-		if (taskctl->tasks0[i].flags == 0) {
+		if (taskctl->tasks0[i].flags == TASK_SLEEP) {
 			task = &taskctl->tasks0[i];
-			task->flags = 1;
+			task->flags = TASK_ALLOC;
 			task->tss.eflags = 0x00000202;
 			task->tss.eax = 0;
 			task->tss.ecx = 0;
@@ -55,7 +58,7 @@ struct TASK *task_alloc(void)
 
 void task_run(struct TASK *task)
 {
-	task->flags = 2;
+	task->flags = TASK_RUNNING;
 	taskctl->tasks[taskctl->activetasks++] = task;
 	return;
 }
@@ -71,4 +74,12 @@ void task_switch(void)
 		farjmp(0, taskctl->tasks[taskctl->now]->sel);
 	}
 	return;
+}
+
+void task_sleep(struct TASK *task)
+{
+	int i;
+	char ts = 0;
+	if (task->flags == TASK_RUNNING) {
+	}
 }
