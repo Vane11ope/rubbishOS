@@ -1,9 +1,10 @@
 #include "bootpack.h"
-#define ADR_GDT      0x00270000
-#define AR_TSS32     0x0089
-#define TASK_INIT    0
-#define TASK_ALLOC   1
-#define TASK_RUNNING 2
+#define ADR_GDT           0x00270000
+#define AR_TSS32          0x0089
+#define TASK_INIT         0
+#define TASK_ALLOC        1
+#define TASK_RUNNING      2
+#define PRIORITY_NOCHANGE 0
 
 struct TASKCTL *taskctl;
 struct TIMER *task_timer;
@@ -21,6 +22,7 @@ struct TASK *task_init(struct MEMMAN *memman)
 	}
 	task = task_alloc();
 	task->flags = TASK_RUNNING;
+	task->priority = 2;
 	taskctl->activetasks = 1;
 	taskctl->now = 0;
 	taskctl->tasks[0] = task;
@@ -58,22 +60,29 @@ struct TASK *task_alloc(void)
 	return 0;
 }
 
-void task_run(struct TASK *task)
+void task_run(struct TASK *task, int priority)
 {
-	task->flags = TASK_RUNNING;
-	taskctl->tasks[taskctl->activetasks++] = task;
+	if (priority > PRIORITY_NOCHANGE) {
+		task->priority = priority;
+	}
+	if (task->flags != TASK_RUNNING) {
+		task->flags = TASK_RUNNING;
+		taskctl->tasks[taskctl->activetasks++] = task;
+	}
 	return;
 }
 
 void task_switch(void)
 {
-	timer_settime(task_timer, 2);
+	struct TASK *task;
+	++taskctl->now;
+	if (taskctl->now == taskctl->activetasks) {
+		taskctl->now = 0;
+	}
+	task = taskctl->tasks[taskctl->now];
+	timer_settime(task_timer, task->priority);
 	if (taskctl->activetasks >= 2) {
-		++taskctl->now;
-		if (taskctl->now == taskctl->activetasks) {
-			taskctl->now = 0;
-		}
-		farjmp(0, taskctl->tasks[taskctl->now]->sel);
+		farjmp(0, task->sel);
 	}
 	return;
 }

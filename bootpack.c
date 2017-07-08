@@ -98,7 +98,7 @@ void RubbMain(void)
 		task_many[i]->tss.fs = 1 * 8;
 		task_many[i]->tss.gs = 1 * 8;
 		*((int *)(task_many[i]->tss.esp + 4)) = (int)sht_win_many[i];
-		task_run(task_many[i]);
+		task_run(task_many[i], i + 1);
 	}
 
 	// init screens and mouse graphics after sheet settings

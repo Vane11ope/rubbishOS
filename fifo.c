@@ -1,5 +1,7 @@
 #include "bootpack.h"
-#define FLAGS_OVERRUN 0x0001
+#define FLAGS_OVERRUN     0x0001
+#define TASK_RUNNING      2
+#define PRIORITY_NOCHANGE 0
 
 void fifo32_init(struct FIFO32 *fifo, int size, int *buf, struct TASK *task) {
 	fifo->size = size;
@@ -24,8 +26,8 @@ int fifo32_put(struct FIFO32 *fifo, int data)
 	}
 	--fifo->free;
 	if (fifo->task != 0) {
-		if (fifo->task->flags != 2) {
-			task_run(fifo->task);
+		if (fifo->task->flags != TASK_RUNNING) {
+			task_run(fifo->task, PRIORITY_NOCHANGE);
 		}
 	}
 	return 0;
