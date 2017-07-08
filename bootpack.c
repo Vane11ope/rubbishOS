@@ -1,11 +1,14 @@
 #include "bootpack.h"
+#define ADR_BINFO   0x00000ff0
+#define ADR_GDT     0x00270000
+#define MEMMAN_ADDR 0x003c0000
 
 extern struct TIMERCTL timerctl;
 
 void RubbMain(void)
 {
 	// variables in use
-	struct BOOTINFO *binfo = (struct BOOTINFO *)0x00000ff0;
+	struct BOOTINFO *binfo = (struct BOOTINFO *) ADR_BINFO;
 	struct MOUSE_DEC mdec;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;

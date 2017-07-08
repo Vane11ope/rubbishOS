@@ -1,5 +1,7 @@
 #include "bootpack.h"
-#define TASK_INIT   0
+#define ADR_GDT      0x00270000
+#define AR_TSS32     0x0089
+#define TASK_INIT    0
 #define TASK_ALLOC   1
 #define TASK_RUNNING 2
 

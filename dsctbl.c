@@ -1,4 +1,7 @@
 #include "bootpack.h"
+#define AR_INTGATE32 0x008e
+#define ADR_GDT      0x00270000
+#define ADR_IDT      0x0026f800
 
 void init_gdtidt(void)
 {

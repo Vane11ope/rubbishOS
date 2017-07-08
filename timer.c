@@ -1,6 +1,6 @@
 #include "bootpack.h"
-#define PIT_CTRL 0x0043
-#define PIT_CNT0 0x0040
+#define PIT_CTRL          0x0043
+#define PIT_CNT0          0x0040
 #define TIMER_FLAGS_INIT  0
 #define TIMER_FLAGS_ALLOC 1
 #define TIMER_FLAGS_USING 2

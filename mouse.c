@@ -1,4 +1,8 @@
 #include "bootpack.h"
+#define PORT_KEYDAT          0x0060
+#define PORT_KEYCMD          0x0064
+#define KEYCMD_SENDTO_MOUSE  0xd4
+#define MOUSECMD_ENABLE      0xf4
 
 struct FIFO32 *mousefifo;
 int mousedata;
