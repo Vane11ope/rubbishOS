@@ -64,6 +64,7 @@ void RubbMain(void)
 	// multitasking
 	task_a = task_init(memman);
 	fifo.task = task_a;
+	task_run(task_a, 1, 0);
 
 	// sheet settings
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
@@ -98,7 +99,7 @@ void RubbMain(void)
 		task_many[i]->tss.fs = 1 * 8;
 		task_many[i]->tss.gs = 1 * 8;
 		*((int *)(task_many[i]->tss.esp + 4)) = (int)sht_win_many[i];
-		task_run(task_many[i], i + 1);
+		task_run(task_many[i], 2, i + 1);
 	}
 
 	// init screens and mouse graphics after sheet settings

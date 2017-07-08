@@ -14,6 +14,8 @@
 #define PIC0_OCW2            0x0020
 #define PIC1_OCW2            0x00a0
 #define MAX_TASKS            1000
+#define MAX_TASKS_EACH_LV    100
+#define MAX_TASKLEVEL        10
 #define TASK_GDT0            3
 #define MEMMAN_FREES         4090
 #define MAX_TIMER            500
@@ -52,15 +54,21 @@ struct TSS32 {
 
 struct TASK {
 	int sel, flags;
-	int priority;
+	int level, priority;
 	struct TSS32 tss;
 };
 
-struct TASKCTL {
+struct TASKLEVEL {
 	int activetasks;
 	int now;
-	struct TASK *tasks[MAX_TASKS];
-	struct TASK tasks0[MAX_TASKS];
+	struct TASK *p_tasks[MAX_TASKS_EACH_LV];
+};
+
+struct TASKCTL {
+	int now_lv;
+	char lv_change;
+	struct TASKLEVEL tasklevels[MAX_TASKLEVEL];
+	struct TASK tasks[MAX_TASKS];
 };
 
 struct SHEET {
@@ -167,9 +175,13 @@ void inthandler20(int *esp);
 /* mtask.c */
 struct TASK *task_init(struct MEMMAN *memman);
 struct TASK *task_alloc(void);
-void task_run(struct TASK *task, int priority);
+void task_run(struct TASK *task, int level, int priority);
 void task_switch(void);
 void task_sleep(struct TASK *task);
+struct TASK *task_now(void);
+void task_add(struct TASK* task);
+void task_remove(struct TASK *task);
+void task_switchsub(void);
 
 /* sheet.c */
 struct SHTCTL {
