@@ -52,10 +52,22 @@ struct TSS32 {
 	int ldtr, iomap;
 };
 
+/* fifo.c */
+struct FIFO32 {
+	struct TASK *task;
+	int *buf;
+	int next_w, next_r, size, free, flags;
+};
+void fifo32_init(struct FIFO32 *fifo, int size, int *buf, struct TASK *task);
+int fifo32_put(struct FIFO32 *fifo, int data);
+int fifo32_get(struct FIFO32 *fifo);
+int fifo32_status(struct FIFO32 *fifo);
+
 struct TASK {
+	struct FIFO32 fifo;
+	struct TSS32 tss;
 	int sel, flags;
 	int level, priority;
-	struct TSS32 tss;
 };
 
 struct TASKLEVEL {
@@ -121,17 +133,6 @@ int memman_free(struct MEMMAN *memman, unsigned int addr, unsigned int size);
 unsigned int memtest(unsigned int start, unsigned int end);
 unsigned int memtest_sub(unsigned int start, unsigned int end);
 
-/* fifo.c */
-struct FIFO32 {
-	int *buf;
-	int next_w, next_r, size, free, flags;
-	struct TASK *task;
-};
-void fifo32_init(struct FIFO32 *fifo, int size, int *buf, struct TASK *task);
-int fifo32_put(struct FIFO32 *fifo, int data);
-int fifo32_get(struct FIFO32 *fifo);
-int fifo32_status(struct FIFO32 *fifo);
-
 /* dsctbl.c */
 struct SEGMENT_DESCRIPTOR {
 	short limit_low, base_low;
@@ -156,8 +157,8 @@ void inthandler21(int *esp);
 /* timer.c */
 struct TIMER {
 	struct TIMER *next;
-	unsigned int timeout, flags;
 	struct FIFO32 *fifo;
+	unsigned int timeout, flags;
 	int data;
 };
 struct TIMERCTL {

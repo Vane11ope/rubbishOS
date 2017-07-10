@@ -161,17 +161,27 @@ void RubbMain(void)
 			if (256 <= i && i <= 511) {
 				sprintf(s, "%02X", i - 256);
 				putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_000000, s);
-				if (i < 0x54 + 256) {
-					if (keytable[i - 256] != 0 && win_cursor_x < 128) {
-						s[0] = keytable[i - 256];
-						s[1] = 0;
-						putfonts8_asc_sht(sht_win_sub, win_cursor_x, 28, COL8_000000, COL8_FFFFFF, s);
-						win_cursor_x += 8;
+				if (i < 0x54 + 256 && keytable[i - 256] != 0) {
+					if (key_to == 0) {
+						if (win_cursor_x < 128) {
+							s[0] = keytable[i - 256];
+							s[1] = 0;
+							putfonts8_asc_sht(sht_win_sub, win_cursor_x, 28, COL8_000000, COL8_FFFFFF, s);
+							win_cursor_x += 8;
+						}
+					} else {
+						fifo32_put(&task_console->fifo, keytable[i - 256] + 256);
 					}
 				}
-				if (i == 256 + 0x0e && win_cursor_x > 8) {
-					putfonts8_asc_sht(sht_win_sub, win_cursor_x, 28, COL8_000000, COL8_FFFFFF, " ");
-					win_cursor_x -= 8;
+				if (i == 256 + 0x0e) {
+					if (key_to == 0) {
+						if (win_cursor_x > 8) {
+							putfonts8_asc_sht(sht_win_sub, win_cursor_x, 28, COL8_000000, COL8_FFFFFF, " ");
+							win_cursor_x -= 8;
+						}
+					} else {
+						fifo32_put(&task_console->fifo, 8 + 256);
+					}
 				}
 				if (i == 256 + 0x0f) {
 					if (key_to == 0) {
