@@ -182,6 +182,11 @@ void RubbMain(void)
 				} else {
 					s[0] = 0;
 				}
+				if ('A' <= s[0] && s[0] <= 'Z') {
+					if (key_shift == 0) {
+						s[0] += 0x20;
+					}
+				}
 				if (s[0] != 0) {
 					if (key_to == 0) {
 						if (win_cursor_x < 128) {
