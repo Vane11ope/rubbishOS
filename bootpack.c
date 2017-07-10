@@ -1,6 +1,8 @@
 #include "bootpack.h"
 #define ADR_BINFO   0x00000ff0
 #define ADR_GDT     0x00270000
+#define PORT_KEYDAT 0x0060
+#define KEYCMD_LED  0xed
 #define MEMMAN_ADDR 0x003c0000
 
 extern struct TIMERCTL timerctl;
@@ -14,7 +16,7 @@ void RubbMain(void)
 	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
 	struct SHTCTL *shtctl;
 	struct SHEET *sht_back, *sht_mouse, *sht_win, *sht_win_sub, *sht_console;
-	struct FIFO32 fifo;
+	struct FIFO32 fifo, keycmd;
 	struct TIMER *timer;
 	struct TASK *task_a, *task_console;
 	unsigned char *sht_buf_back, sht_buf_mouse[256], *sht_buf_win, *sht_buf_win_sub, *sht_buf_console;
@@ -22,7 +24,7 @@ void RubbMain(void)
 	short tweetx = 11;
 	short tweety = binfo->scrny - 20;
 	unsigned int memtotal, count = 0;
-	int fifobuf[128];
+	int fifobuf[128], keycmd_buf[32];
 	int mouse_x = (binfo->scrnx - 16) / 2;
 	int mouse_y = (binfo->scrny - 28 - 16) / 2;
 	int mouse_w = 16;
@@ -30,7 +32,7 @@ void RubbMain(void)
 	int mouse_s = 16;
 	int mouse_offset = 5;
 	int win_cursor_x, win_cursor_color;
-	int key_to = 0, key_shift = 0;
+	int key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
 	int i = 0;
 	// each key
 	static char keytable[0x80] = {
@@ -73,6 +75,7 @@ void RubbMain(void)
 
 	// fifo init
 	fifo32_init(&fifo, 128, fifobuf, 0);
+	fifo32_init(&keycmd, 32, keycmd_buf, 0);
 
 	// multitasking
 	task_a = task_init(memman);
@@ -162,7 +165,15 @@ void RubbMain(void)
 	io_out8(PIC0_IMR, 0xf8);
 	io_out8(PIC1_IMR, 0xef);
 
+	fifo32_put(&keycmd, KEYCMD_LED);
+	fifo32_put(&keycmd, key_leds);
+
 	for (;;) {
+		if (fifo32_status(&keycmd) > 0 && keycmd_wait < 0) {
+			keycmd_wait = fifo32_get(&keycmd);
+			wait_KBC_sendready();
+			io_out8(PORT_KEYDAT, keycmd_wait);
+		}
 		io_cli();
 		if (fifo32_status(&fifo) <= 0) {
 			task_sleep(task_a);
@@ -183,7 +194,7 @@ void RubbMain(void)
 					s[0] = 0;
 				}
 				if ('A' <= s[0] && s[0] <= 'Z') {
-					if (key_shift == 0) {
+					if ((key_leds & 4) == 0 && key_shift == 0) {
 						s[0] += 0x20;
 					}
 				}
@@ -220,6 +231,28 @@ void RubbMain(void)
 					}
 					sheet_refresh(sht_win_sub, 0, 0, sht_win_sub->bxsize, 21);
 					sheet_refresh(sht_console, 0, 0, sht_console->bxsize, 21);
+				}
+				if (i == 256 + 0x3a) {
+					key_leds ^= 4;
+					fifo32_put(&keycmd, KEYCMD_LED);
+					fifo32_put(&keycmd, key_leds);
+				}
+				if (i == 256 + 0x45) {
+					key_leds ^= 2;
+					fifo32_put(&keycmd, KEYCMD_LED);
+					fifo32_put(&keycmd, key_leds);
+				}
+				if (i == 256 + 0x46) {
+					key_leds ^= 1;
+					fifo32_put(&keycmd, KEYCMD_LED);
+					fifo32_put(&keycmd, key_leds);
+				}
+				if (i == 256 + 0xfa) {
+					keycmd_wait = -1;
+				}
+				if (i == 256 + 0xfe) {
+					wait_KBC_sendready();
+					io_out8(PORT_KEYDAT, keycmd_wait);
 				}
 				if (i == 256 + 0x2a) {
 					key_shift |= 1;
