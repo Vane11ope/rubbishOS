@@ -125,6 +125,21 @@ void make_textbox8(struct SHEET *sheet, int x0, int y0, int sx, int sy, int colo
 
 void make_window(unsigned char *buf, int xsize, int ysize, char *title, char isactive)
 {
+	boxfill8(buf, xsize, COL8_C6C6C6, 0, 0, xsize - 1, 0);
+	boxfill8(buf, xsize, COL8_FFFFFF, 1, 1, xsize - 2, 1);
+	boxfill8(buf, xsize, COL8_C6C6C6, 0, 0, 0, ysize - 1);
+	boxfill8(buf, xsize, COL8_FFFFFF, 1, 1, 1, ysize - 2);
+	boxfill8(buf, xsize, COL8_848484, xsize - 2, 1, xsize - 2, ysize - 2);
+	boxfill8(buf, xsize, COL8_000000, xsize - 1, 0, xsize - 1, ysize - 1);
+	boxfill8(buf, xsize, COL8_C6C6C6, 2, 2, xsize - 3, ysize - 3);
+	boxfill8(buf, xsize, COL8_848484, 1, ysize - 2, xsize - 2, ysize - 2);
+	boxfill8(buf, xsize, COL8_000000, 0, ysize - 1, xsize - 1, ysize - 1);
+	make_window_title(buf, xsize, title, isactive);
+	return;
+}
+
+void make_window_title(unsigned char *buf, int xsize, char *title, char isactive)
+{
 	static char closebtn[14][16] = {
 		"OOOOOOOOOOOOOOO@",
 		"OQQQQQQQQQQQQQ$@",
@@ -150,16 +165,7 @@ void make_window(unsigned char *buf, int xsize, int ysize, char *title, char isa
 		titlecolor = COL8_FFFFFF;
 		titleback = COL8_000084;
 	}
-	boxfill8(buf, xsize, COL8_C6C6C6, 0, 0, xsize - 1, 0);
-	boxfill8(buf, xsize, COL8_FFFFFF, 1, 1, xsize - 2, 1);
-	boxfill8(buf, xsize, COL8_C6C6C6, 0, 0, 0, ysize - 1);
-	boxfill8(buf, xsize, COL8_FFFFFF, 1, 1, 1, ysize - 2);
-	boxfill8(buf, xsize, COL8_848484, xsize - 2, 1, xsize - 2, ysize - 2);
-	boxfill8(buf, xsize, COL8_000000, xsize - 1, 0, xsize - 1, ysize - 1);
-	boxfill8(buf, xsize, COL8_C6C6C6, 2, 2, xsize - 3, ysize - 3);
 	boxfill8(buf, xsize, titleback, 3, 3, xsize - 4, 20);
-	boxfill8(buf, xsize, COL8_848484, 1, ysize - 2, xsize - 2, ysize - 2);
-	boxfill8(buf, xsize, COL8_000000, 0, ysize - 1, xsize - 1, ysize - 1);
 	putfonts8_asc(buf, xsize, 24, 4, titlecolor, title);
 	for (y = 0; y < 14; ++y) {
 		for (x = 0; x < 16; ++x) {

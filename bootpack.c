@@ -30,6 +30,7 @@ void RubbMain(void)
 	int mouse_s = 16;
 	int mouse_offset = 5;
 	int win_cursor_x, win_cursor_color;
+	int key_to = 0;
 	int i = 0;
 	// each key
 	static char keytable[0x54] = {
@@ -171,6 +172,19 @@ void RubbMain(void)
 				if (i == 256 + 0x0e && win_cursor_x > 8) {
 					putfonts8_asc_sht(sht_win_sub, win_cursor_x, 28, COL8_000000, COL8_FFFFFF, " ");
 					win_cursor_x -= 8;
+				}
+				if (i == 256 + 0x0f) {
+					if (key_to == 0) {
+						key_to = 1;
+						make_window_title(sht_buf_win_sub, sht_win_sub->bxsize, "window", 0);
+						make_window_title(sht_buf_console, sht_console->bxsize, "terminal", 1);
+					} else {
+						key_to = 0;
+						make_window_title(sht_buf_win_sub, sht_win_sub->bxsize, "window", 1);
+						make_window_title(sht_buf_console, sht_console->bxsize, "terminal", 0);
+					}
+					sheet_refresh(sht_win_sub, 0, 0, sht_win_sub->bxsize, 21);
+					sheet_refresh(sht_console, 0, 0, sht_console->bxsize, 21);
 				}
 				boxfill8(sht_win_sub->buf, sht_win_sub->bxsize, win_cursor_color, win_cursor_x, 28, win_cursor_x + 7, 43);
 				sheet_refresh(sht_win_sub, win_cursor_x, 28, win_cursor_x + 8, 44);

@@ -209,6 +209,7 @@ void init_mouse(char *mouse, char bc);
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
 void make_textbox8(struct SHEET *sheet, int x0, int y0, int sx, int sy, int color);
 void make_window(unsigned char *buf, int xsize, int ysize, char *title, char isactive);
+void make_window_title(unsigned char *buf, int xsize, char *title, char isactive);
 void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
 void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s);
 void putfonts8_asc_sht(struct SHEET *sheet, int x, int y, int color, int backcolor, char *str);
