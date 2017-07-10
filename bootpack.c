@@ -30,16 +30,28 @@ void RubbMain(void)
 	int mouse_s = 16;
 	int mouse_offset = 5;
 	int win_cursor_x, win_cursor_color;
-	int key_to = 0;
+	int key_to = 0, key_shift = 0;
 	int i = 0;
 	// each key
-	static char keytable[0x54] = {
+	static char keytable[0x80] = {
 		0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '^', 0,   0,
 		'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '@', '[', 0,   0,   'A', 'S',
 		'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', ':', 0,   0,   ']', 'Z', 'X', 'C', 'V',
 		'B', 'N', 'M', ',', '.', '/', 0,   '*', 0,   ' ', 0,   0,   0,   0,   0,   0,
 		0,   0,   0,   0,   0,   0,   0,   '7', '8', '9', '-', '4', '5', '6', '+', '1',
-		'2', '3', '0', '.'
+		'2', '3', '0', '.', 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+		0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+		0,   0,   0,   0x5c, 0,  0,   0,   0,   0,   0,   0,   0,   0,   0x5c, 0,  0
+	};
+	static char keytable_shift[0x80] = {
+		0,   0,   '!', 0x22, '#', '$', '%', '&', 0x27, '(', ')', '(J~(B', '=', '(J~(B', 0,   0,
+		'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '`', '{', 0,   0,   'A', 'S',
+		'D', 'F', 'G', 'H', 'J', 'K', 'L', '+', '*', 0,   0,   '}', 'Z', 'X', 'C', 'V',
+		'B', 'N', 'M', '<', '>', '?', 0,   '*', 0,   ' ', 0,   0,   0,   0,   0,   0,
+		0,   0,   0,   0,   0,   0,   0,   '7', '8', '9', '-', '4', '5', '6', '+', '1',
+		'2', '3', '0', '.', 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+		0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+		0,   0,   0,   '_', 0,   0,   0,   0,   0,   0,   0,   0,   0,   '|', 0,   0
 	};
 
 	// memory manager
@@ -161,16 +173,24 @@ void RubbMain(void)
 			if (256 <= i && i <= 511) {
 				sprintf(s, "%02X", i - 256);
 				putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_000000, s);
-				if (i < 0x54 + 256 && keytable[i - 256] != 0) {
+				if (i < 0x80 + 256) {
+					if (key_shift == 0) {
+						s[0] = keytable[i - 256];
+					} else {
+						s[0] = keytable_shift[i - 256];
+					}
+				} else {
+					s[0] = 0;
+				}
+				if (s[0] != 0) {
 					if (key_to == 0) {
 						if (win_cursor_x < 128) {
-							s[0] = keytable[i - 256];
 							s[1] = 0;
 							putfonts8_asc_sht(sht_win_sub, win_cursor_x, 28, COL8_000000, COL8_FFFFFF, s);
 							win_cursor_x += 8;
 						}
 					} else {
-						fifo32_put(&task_console->fifo, keytable[i - 256] + 256);
+						fifo32_put(&task_console->fifo, s[0] + 256);
 					}
 				}
 				if (i == 256 + 0x0e) {
@@ -195,6 +215,18 @@ void RubbMain(void)
 					}
 					sheet_refresh(sht_win_sub, 0, 0, sht_win_sub->bxsize, 21);
 					sheet_refresh(sht_console, 0, 0, sht_console->bxsize, 21);
+				}
+				if (i == 256 + 0x2a) {
+					key_shift |= 1;
+				}
+				if (i == 256 + 0x36) {
+					key_shift |= 2;
+				}
+				if (i == 256 + 0xaa) {
+					key_shift &= ~1;
+				}
+				if (i == 256 + 0xb6) {
+					key_shift &= ~2;
 				}
 				boxfill8(sht_win_sub->buf, sht_win_sub->bxsize, win_cursor_color, win_cursor_x, 28, win_cursor_x + 7, 43);
 				sheet_refresh(sht_win_sub, win_cursor_x, 28, win_cursor_x + 8, 44);
