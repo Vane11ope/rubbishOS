@@ -273,6 +273,11 @@ void RubbMain(void)
 				if (i == 256 + 0xb6) {
 					key_shift &= ~2;
 				}
+				if (i == 256 + 0x1c) { // Enter
+					if (key_to != 0) {
+						fifo32_put(&task_console->fifo, 10 + 256);
+					}
+				}
 				if (win_cursor_color >= 0) {
 					boxfill8(sht_win_sub->buf, sht_win_sub->bxsize, win_cursor_color, win_cursor_x, 28, win_cursor_x + 7, 43);
 				}
