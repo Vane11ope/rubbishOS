@@ -34,7 +34,7 @@ void RubbMain(void)
 	int mouse_s = 16;
 	int mouse_offset = 5;
 	int win_cursor_x, win_cursor_color;
-	int key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
+	int key_to = 0, key_shift = 0, key_ctrl = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
 	int i = 0;
 	// each key
 	static char keytable[0x80] = {
@@ -209,7 +209,11 @@ void RubbMain(void)
 							win_cursor_x += 8;
 						}
 					} else {
-						fifo32_put(&task_console->fifo, s[0] + 256);
+						if ((s[0] == 'L' || s[0] == 'l') && key_ctrl != 0) {
+							fifo32_put(&task_console->fifo, 1111);
+						} else {
+							fifo32_put(&task_console->fifo, s[0] + 256);
+						}
 					}
 				}
 				if (i == 256 + 0x0e) {
@@ -273,6 +277,12 @@ void RubbMain(void)
 				}
 				if (i == 256 + 0xb6) {
 					key_shift &= ~2;
+				}
+				if (i == 256 + 0x1d) {
+					key_ctrl |= 1;
+				}
+				if (i == 256 + 0x9d) {
+					key_ctrl &= ~1;
 				}
 				if (i == 256 + 0x1c) { // Enter
 					if (key_to != 0) {

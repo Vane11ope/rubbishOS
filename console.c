@@ -76,6 +76,9 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 						cursor_x += 8;
 					}
 				}
+			} else if (i == 1111) {
+				console_ctrl_l(cursor_y, sheet);
+				cursor_y = 28;
 			}
 			if (cursor_c >= 0) {
 				boxfill8(sheet->buf, sheet->bxsize, cursor_c, cursor_x, cursor_y, cursor_x + 7, cursor_y + 15);
@@ -104,4 +107,20 @@ int console_newline(int cursor_y, struct SHEET *sheet)
 		sheet_refresh(sheet, 8, 28, 8 + 240, 28 + 128);
 	}
 	return cursor_y;
+}
+
+void console_ctrl_l(int cursor_y, struct SHEET *sheet)
+{
+	int x, y;
+	for (y = 28; y < 44; ++y) {
+		for (x = 8; x < 8 + 240; ++x) {
+			sheet->buf[x + y * sheet->bxsize] = sheet->buf[x + (cursor_y + (y - 28))  * sheet->bxsize];
+		}
+	}
+	for (y = 44; y < 44 + 112; ++y) {
+		for (x = 8; x < 8 + 240; ++x) {
+			sheet->buf[x + y * sheet->bxsize] = COL8_000000;
+		}
+	}
+	sheet_refresh(sheet, 8, 28, 8 + 240, 28 + 128);
 }
