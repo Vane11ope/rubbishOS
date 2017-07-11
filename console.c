@@ -12,6 +12,7 @@ void console_task(struct SHEET *sheet)
 	timer_init(timer, &task->fifo, 1);
 	timer_settime(timer, 50);
 
+	putfonts8_asc_sht(sheet, 8, 28, COL8_FFFFFF, COL8_000000, ">");
 	for (;;) {
 		io_cli();
 		if (fifo32_status(&task->fifo) == 0) {

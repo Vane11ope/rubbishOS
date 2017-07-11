@@ -224,10 +224,13 @@ void RubbMain(void)
 						key_to = 1;
 						make_window_title(sht_buf_win_sub, sht_win_sub->bxsize, "window", 0);
 						make_window_title(sht_buf_console, sht_console->bxsize, "terminal", 1);
+						win_cursor_color = -1;
+						boxfill8(sht_win_sub->buf, sht_win_sub->bxsize, COL8_FFFFFF, win_cursor_x, 28, win_cursor_x + 7, 43);
 					} else {
 						key_to = 0;
 						make_window_title(sht_buf_win_sub, sht_win_sub->bxsize, "window", 1);
 						make_window_title(sht_buf_console, sht_console->bxsize, "terminal", 0);
+						win_cursor_color = COL8_000000;
 					}
 					sheet_refresh(sht_win_sub, 0, 0, sht_win_sub->bxsize, 21);
 					sheet_refresh(sht_console, 0, 0, sht_console->bxsize, 21);
@@ -266,7 +269,9 @@ void RubbMain(void)
 				if (i == 256 + 0xb6) {
 					key_shift &= ~2;
 				}
-				boxfill8(sht_win_sub->buf, sht_win_sub->bxsize, win_cursor_color, win_cursor_x, 28, win_cursor_x + 7, 43);
+				if (win_cursor_color >= 0) {
+					boxfill8(sht_win_sub->buf, sht_win_sub->bxsize, win_cursor_color, win_cursor_x, 28, win_cursor_x + 7, 43);
+				}
 				sheet_refresh(sht_win_sub, win_cursor_x, 28, win_cursor_x + 8, 44);
 			} else if (512 <= i && i <= 767) {
 				if (mouse_decode(&mdec, i) != 0) {
@@ -305,14 +310,20 @@ void RubbMain(void)
 			} else if (i <= 1) {
 				if (i != 0) {
 					timer_init(timer, &fifo, 0);
-					win_cursor_color = COL8_000000;
+					if (win_cursor_color >= 0) {
+						win_cursor_color = COL8_000000;
+					}
 				} else {
 					timer_init(timer, &fifo, 1);
-					win_cursor_color = COL8_FFFFFF;
+					if (win_cursor_color >= 0) {
+						win_cursor_color = COL8_FFFFFF;
+					}
 				}
 				timer_settime(timer, 50);
-				boxfill8(sht_win_sub->buf, sht_win_sub->bxsize, win_cursor_color, win_cursor_x, 28,  win_cursor_x + 7, 43);
-				sheet_refresh(sht_win_sub, win_cursor_x, 28, win_cursor_x + 8, 44);
+				if (win_cursor_color >= 0) {
+					boxfill8(sht_win_sub->buf, sht_win_sub->bxsize, win_cursor_color, win_cursor_x, 28,  win_cursor_x + 7, 43);
+					sheet_refresh(sht_win_sub, win_cursor_x, 28, win_cursor_x + 8, 44);
+				}
 			}
 		}
 	}
