@@ -4,6 +4,8 @@
 #define PORT_KEYDAT 0x0060
 #define KEYCMD_LED  0xed
 #define MEMMAN_ADDR 0x003c0000
+#define CONSOLE_ON  2
+#define CONSOLE_OFF 3
 
 extern struct TIMERCTL timerctl;
 
@@ -219,18 +221,20 @@ void RubbMain(void)
 						fifo32_put(&task_console->fifo, 8 + 256);
 					}
 				}
-				if (i == 256 + 0x0f) {
+				if (i == 256 + 0x0f) {  // tab
 					if (key_to == 0) {
 						key_to = 1;
 						make_window_title(sht_buf_win_sub, sht_win_sub->bxsize, "window", 0);
 						make_window_title(sht_buf_console, sht_console->bxsize, "terminal", 1);
 						win_cursor_color = -1;
 						boxfill8(sht_win_sub->buf, sht_win_sub->bxsize, COL8_FFFFFF, win_cursor_x, 28, win_cursor_x + 7, 43);
+						fifo32_put(&task_console->fifo, CONSOLE_ON);
 					} else {
 						key_to = 0;
 						make_window_title(sht_buf_win_sub, sht_win_sub->bxsize, "window", 1);
 						make_window_title(sht_buf_console, sht_console->bxsize, "terminal", 0);
 						win_cursor_color = COL8_000000;
+						fifo32_put(&task_console->fifo, CONSOLE_OFF);
 					}
 					sheet_refresh(sht_win_sub, 0, 0, sht_win_sub->bxsize, 21);
 					sheet_refresh(sht_console, 0, 0, sht_console->bxsize, 21);
