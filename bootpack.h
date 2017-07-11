@@ -227,7 +227,8 @@ void enable_mouse(struct FIFO32 *fifo, int data, struct MOUSE_DEC *mdec);
 int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
 
 /* console.c */
-void console_task(struct SHEET *sheet);
+void console_task(struct SHEET *sheet, unsigned int memtotal);
+int console_newline(int cursor_y, struct SHEET *sheet);
 
 /* utility */
 static inline int max(int a, int b) { return a >= b ? a : b; }

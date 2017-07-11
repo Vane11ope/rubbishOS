@@ -1,13 +1,15 @@
 #include "bootpack.h"
+#define MEMMAN_ADDR 0x003c0000
 #define CONSOLE_ON  2
 #define CONSOLE_OFF 3
 
-void console_task(struct SHEET *sheet)
+void console_task(struct SHEET *sheet, unsigned int memtotal)
 {
 	struct TIMER *timer;
 	struct TASK *task = task_now();
+	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	int i, x, y, fifobuf[128], cursor_x = 16, cursor_y = 28, cursor_c = -1;
-	char s[2];
+	char s[30], cmdline[30];
 
 	fifo32_init(&task->fifo, 128, fifobuf, task);
 	timer = timer_alloc();
@@ -48,20 +50,20 @@ void console_task(struct SHEET *sheet)
 					}
 				} else if (i == 10 + 256) { // Enter
 					putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ");
-					if (cursor_y < 28 + 112) {
-						cursor_y += 16;
-					} else {
-						for (y = 28; y < 28 + 112; ++y) {
-							for (x = 8; x < 8 + 240; ++x) {
-								sheet->buf[x + y * sheet->bxsize] = sheet->buf[x + (y + 16) * sheet->bxsize];
-							}
-						}
-						for (y = 28 + 112; y < 28 + 128; ++y) {
-							for (x = 8; x < 8 + 240; ++x) {
-								sheet->buf[x + y * sheet->bxsize] = COL8_000000;
-							}
-						}
-						sheet_refresh(sheet, 8, 28, 8 + 240, 28 + 128);
+					cmdline[cursor_x / 8 - 2] = 0;
+					cursor_y = console_newline(cursor_y, sheet);
+					if (cmdline[0] == 'm' && cmdline[1] == 'e' && cmdline[2] == 'm' && cmdline[3] == 0) {
+						sprintf(s, "total   %dMB", memtotal / (1024 * 1024));
+						putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s);
+						cursor_y = console_newline(cursor_y, sheet);
+						sprintf(s, "free %dKB", memman_total(memman) / 1024 );
+						putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s);
+						cursor_y = console_newline(cursor_y, sheet);
+						cursor_y = console_newline(cursor_y, sheet);
+					} else if (cmdline[0] != 0) {
+						putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, "Bad command.");
+						cursor_y = console_newline(cursor_y, sheet);
+						cursor_y = console_newline(cursor_y, sheet);
 					}
 					putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, ">");
 					cursor_x = 16;
@@ -69,6 +71,7 @@ void console_task(struct SHEET *sheet)
 					if (cursor_x < 240) {
 						s[0] = i - 256;
 						s[1] = 0;
+						cmdline[cursor_x / 8 - 2] = i - 256;
 						putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s);
 						cursor_x += 8;
 					}
@@ -80,4 +83,25 @@ void console_task(struct SHEET *sheet)
 			sheet_refresh(sheet, cursor_x, cursor_y, cursor_x + 8, cursor_y + 16);
 		}
 	}
+}
+
+int console_newline(int cursor_y, struct SHEET *sheet)
+{
+	int x, y;
+	if (cursor_y < 28 + 112) {
+		cursor_y += 16;
+	} else {
+		for (y = 28; y < 28 + 112; ++y) {
+			for (x = 8; x < 8 + 240; ++x) {
+				sheet->buf[x + y * sheet->bxsize] = sheet->buf[x + (y + 16) * sheet->bxsize];
+			}
+		}
+		for (y = 28 + 112; y < 28 + 128; ++y) {
+			for (x = 8; x < 8 + 240; ++x) {
+				sheet->buf[x + y * sheet->bxsize] = COL8_000000;
+			}
+		}
+		sheet_refresh(sheet, 8, 28, 8 + 240, 28 + 128);
+	}
+	return cursor_y;
 }

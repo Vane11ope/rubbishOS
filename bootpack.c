@@ -120,7 +120,7 @@ void RubbMain(void)
 	make_window(sht_buf_console, 256, 165, "terminal", 0);
 	make_textbox8(sht_console, 8, 28, 240, 128, COL8_000000);
 	task_console = task_alloc();
-	task_console->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
+	task_console->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 12;
 	task_console->tss.eip = (int) &console_task;
 	task_console->tss.es = 1 * 8;
 	task_console->tss.cs = 2 * 8;
@@ -129,6 +129,7 @@ void RubbMain(void)
 	task_console->tss.fs = 1 * 8;
 	task_console->tss.gs = 1 * 8;
 	*((int *)(task_console->tss.esp + 4)) = (int) sht_console;
+	*((int *)(task_console->tss.esp + 8)) = (int) memtotal;
 	task_run(task_console, 2, 2);
 
 	// drawing some information on the screen
