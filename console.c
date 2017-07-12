@@ -1,4 +1,5 @@
 #include "bootpack.h"
+#include "string.h"
 #define MEMMAN_ADDR 0x003c0000
 #define CONSOLE_ON  2
 #define CONSOLE_OFF 3
@@ -52,7 +53,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 					putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ");
 					cmdline[cursor_x / 8 - 2] = 0;
 					cursor_y = console_newline(cursor_y, sheet);
-					if (cmdline[0] == 'm' && cmdline[1] == 'e' && cmdline[2] == 'm' && cmdline[3] == 0) {
+					if (strcmp(cmdline, "mem") == 0) {
 						sprintf(s, "total   %dMB", memtotal / (1024 * 1024));
 						putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s);
 						cursor_y = console_newline(cursor_y, sheet);
