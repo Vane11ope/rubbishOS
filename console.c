@@ -12,7 +12,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct FILEINFO *finfo = (struct FILEINFO *) (ADR_DISKIMG + 0x002600);
 	int i, x, y, fifobuf[128], cursor_x = 16, cursor_y = 28, cursor_c = -1;
-	char s[30], cmdline[30];
+	char s[30], cmdline[30], *p;
 
 	fifo32_init(&task->fifo, 128, fifobuf, task);
 	timer = timer_alloc();
@@ -77,6 +77,54 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 								putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s);
 								cursor_y = console_newline(cursor_y, sheet);
 							}
+						}
+						cursor_y = console_newline(cursor_y, sheet);
+					} else if (strncmp(cmdline, "cat ", 4) == 0) {
+						for (y = 0; y < 11; ++y) { s[y] = ' '; }
+						y = 0;
+						for (x = 4; y < 11 && cmdline[x] != 0; ++x) {
+							if (cmdline[x] == '.' && y <= 8) {
+								y = 8;
+							} else {
+								s[y] = cmdline[x];
+								if ('a' <= s[y] && s[y] <= 'z') {
+									s[y] -= 0x20;
+								}
+								++y;
+							}
+						}
+						for (x = 0; x < 224; ) {
+							if (finfo[x].name[0] == 0x00) {
+								break;
+							}
+							if ((finfo[x].type & 0x18) == 0) {
+								for (y = 0; y < 11; ++y) {
+									if (finfo[x].name[y] != s[y]) {
+										goto type_next_file;
+									}
+								}
+								break;
+							}
+type_next_file:
+							++x;
+						}
+						if (x < 224 && finfo[x].name[0] != 0x00) {
+							y = finfo[x].size;
+							p = (char *) (finfo[x].cluster_no * 512 + 0x003e00 + ADR_DISKIMG);
+							cursor_x = 8;
+							for (x = 0; x < y; ++x) {
+								s[0] = p[x];
+								s[1] = 0;
+								putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s);
+								cursor_x += 8;
+								if (cursor_x == 8 + 240) {
+									cursor_x = 8;
+									cursor_y = console_newline(cursor_y, sheet);
+								}
+							}
+						} else {
+							putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, "File not found.");
+							cursor_y = console_newline(cursor_y, sheet);
 						}
 						cursor_y = console_newline(cursor_y, sheet);
 					} else if (cmdline[0] != 0) {
