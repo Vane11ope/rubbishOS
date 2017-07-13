@@ -1,6 +1,7 @@
 #include "bootpack.h"
 #include "string.h"
 #define MEMMAN_ADDR 0x003c0000
+#define ADR_DISKIMG 0x00100000
 #define CONSOLE_ON  2
 #define CONSOLE_OFF 3
 
@@ -9,6 +10,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	struct TIMER *timer;
 	struct TASK *task = task_now();
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+	struct FILEINFO *finfo = (struct FILEINFO *) (ADR_DISKIMG + 0x002600);
 	int i, x, y, fifobuf[128], cursor_x = 16, cursor_y = 28, cursor_c = -1;
 	char s[30], cmdline[30];
 
@@ -60,6 +62,22 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 						sprintf(s, "free %dKB", memman_total(memman) / 1024 );
 						putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s);
 						cursor_y = console_newline(cursor_y, sheet);
+						cursor_y = console_newline(cursor_y, sheet);
+					} else if (strcmp(cmdline, "ls") == 0) {
+						for (x = 0; x < 224; ++x) {
+							if (finfo[x].name[0] == 0x00) { break; }
+							if ((finfo[x].type & 0x18) == 0) {
+								sprintf(s, "filename.ext %7d", finfo[x].size);
+								for (y = 0; y < 8; ++y) {
+									s[y] = finfo[x].name[y];
+								}
+								s[9] = finfo[x].ext[0];
+								s[10] = finfo[x].ext[1];
+								s[11] = finfo[x].ext[2];
+								putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s);
+								cursor_y = console_newline(cursor_y, sheet);
+							}
+						}
 						cursor_y = console_newline(cursor_y, sheet);
 					} else if (cmdline[0] != 0) {
 						putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, "Bad command.");

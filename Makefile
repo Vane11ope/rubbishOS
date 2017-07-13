@@ -36,6 +36,7 @@ rubbish.img : ipl10.bin rubbish.sys Makefile
 	$(EDIMG) imgin:tools/fdimg0at.tek \
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:rubbish.sys to:@: \
+		copy from:ipl10.nas to:@: \
 		imgout:rubbish.img
 
 %.gas : %.c Makefile

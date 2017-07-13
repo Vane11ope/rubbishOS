@@ -227,6 +227,12 @@ void enable_mouse(struct FIFO32 *fifo, int data, struct MOUSE_DEC *mdec);
 int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
 
 /* console.c */
+struct FILEINFO {
+	unsigned char name[8], ext[3], type;
+	char reserve[10];
+	unsigned short time, data, cluster_no;
+	unsigned int size;
+};
 void console_task(struct SHEET *sheet, unsigned int memtotal);
 int console_newline(int cursor_y, struct SHEET *sheet);
 void console_ctrl_l(int cursor_y, struct SHEET *sheet);
