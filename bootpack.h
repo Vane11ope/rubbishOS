@@ -20,6 +20,8 @@
 #define MEMMAN_FREES         4090
 #define MAX_TIMER            500
 #define MAX_SHEETS           256
+#define CONSOLE_WIDTH        528
+#define CONSOLE_HEIGHT       677
 #define COL8_000000          0
 #define COL8_FF0000          1
 #define COL8_00FF00          2

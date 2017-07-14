@@ -12,7 +12,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct FILEINFO *finfo = (struct FILEINFO *) (ADR_DISKIMG + 0x002600);
 	int i, x, y, fifobuf[128], cursor_x = 16, cursor_y = 28, cursor_c = -1;
-	char s[30], cmdline[30], *p;
+	char s[64], cmdline[64], *p;
 
 	fifo32_init(&task->fifo, 128, fifobuf, task);
 	timer = timer_alloc();
@@ -117,7 +117,7 @@ type_next_file:
 								s[1] = 0;
 								putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s);
 								cursor_x += 8;
-								if (cursor_x == 8 + 240) {
+								if (cursor_x == 8 + CONSOLE_WIDTH - 16) {
 									cursor_x = 8;
 									cursor_y = console_newline(cursor_y, sheet);
 								}
@@ -135,7 +135,7 @@ type_next_file:
 					putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, ">");
 					cursor_x = 16;
 				} else {
-					if (cursor_x < 240) {
+					if (cursor_x < 512) {
 						s[0] = i - 256;
 						s[1] = 0;
 						cmdline[cursor_x / 8 - 2] = i - 256;
@@ -158,20 +158,21 @@ type_next_file:
 int console_newline(int cursor_y, struct SHEET *sheet)
 {
 	int x, y;
-	if (cursor_y < 28 + 112) {
+	short threshold = 28 + (CONSOLE_HEIGHT - 53);
+	if (cursor_y < threshold) {
 		cursor_y += 16;
 	} else {
-		for (y = 28; y < 28 + 112; ++y) {
-			for (x = 8; x < 8 + 240; ++x) {
+		for (y = 28; y < threshold; ++y) {
+			for (x = 8; x < 8 + CONSOLE_WIDTH; ++x) {
 				sheet->buf[x + y * sheet->bxsize] = sheet->buf[x + (y + 16) * sheet->bxsize];
 			}
 		}
-		for (y = 28 + 112; y < 28 + 128; ++y) {
+		for (y = threshold; y < threshold + 16; ++y) {
 			for (x = 8; x < 8 + 240; ++x) {
 				sheet->buf[x + y * sheet->bxsize] = COL8_000000;
 			}
 		}
-		sheet_refresh(sheet, 8, 28, 8 + 240, 28 + 128);
+		sheet_refresh(sheet, 8, 28, 8 + CONSOLE_WIDTH, 28 + threshold + 16);
 	}
 	return cursor_y;
 }
@@ -180,14 +181,14 @@ void console_ctrl_l(int cursor_y, struct SHEET *sheet)
 {
 	int x, y;
 	for (y = 28; y < 44; ++y) {
-		for (x = 8; x < 8 + 240; ++x) {
+		for (x = 8; x < 8 + CONSOLE_WIDTH - 16; ++x) {
 			sheet->buf[x + y * sheet->bxsize] = sheet->buf[x + (cursor_y + (y - 28))  * sheet->bxsize];
 		}
 	}
-	for (y = 44; y < 44 + 112; ++y) {
-		for (x = 8; x < 8 + 240; ++x) {
+	for (y = 44; y < 44 + CONSOLE_HEIGHT - 53; ++y) {
+		for (x = 8; x < 8 + CONSOLE_WIDTH - 16; ++x) {
 			sheet->buf[x + y * sheet->bxsize] = COL8_000000;
 		}
 	}
-	sheet_refresh(sheet, 8, 28, 8 + 240, 28 + 128);
+	sheet_refresh(sheet, 8, 28, 8 + CONSOLE_WIDTH - 16, 28 + CONSOLE_HEIGHT - 37);
 }

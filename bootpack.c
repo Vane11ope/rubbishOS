@@ -96,13 +96,13 @@ void RubbMain(void)
 	sht_buf_back = (unsigned char *)memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);
 	sht_buf_win = (unsigned char *)memman_alloc_4k(memman, 160 * 100);
 	sht_buf_win_sub = (unsigned char *)memman_alloc_4k(memman, 144 * 52);
-	sht_buf_console = (unsigned char *)memman_alloc_4k(memman, 256 * 165);
+	sht_buf_console = (unsigned char *)memman_alloc_4k(memman, CONSOLE_WIDTH * CONSOLE_HEIGHT);
 	// set buf for each sheet
 	sheet_setbuf(sht_back, sht_buf_back, binfo->scrnx, binfo->scrny, -1);
 	sheet_setbuf(sht_mouse, sht_buf_mouse, 16, 16, 99);
 	sheet_setbuf(sht_win, sht_buf_win, 160, 100, -1);
 	sheet_setbuf(sht_win_sub, sht_buf_win_sub, 144, 52, -1);
-	sheet_setbuf(sht_console, sht_buf_console, 256, 165, -1);
+	sheet_setbuf(sht_console, sht_buf_console, CONSOLE_WIDTH, CONSOLE_HEIGHT, -1);
 
 	// init screens and mouse graphics after sheet settings
 	init_screen(sht_buf_back, binfo->scrnx, binfo->scrny);
@@ -117,8 +117,8 @@ void RubbMain(void)
 	putfonts8_asc(sht_buf_win, 160, tempX + 48, tempY + 48, COL8_000000, "Vanellope");
 
 	// init console
-	make_window(sht_buf_console, 256, 165, "terminal", 0);
-	make_textbox8(sht_console, 8, 28, 240, 128, COL8_000000);
+	make_window(sht_buf_console, CONSOLE_WIDTH, CONSOLE_HEIGHT, "terminal", 0);
+	make_textbox8(sht_console, 8, 28, CONSOLE_WIDTH - 16, CONSOLE_HEIGHT - 37, COL8_000000);
 	task_console = task_alloc();
 	task_console->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 12;
 	task_console->tss.eip = (int) &console_task;
