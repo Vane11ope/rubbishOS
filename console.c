@@ -18,6 +18,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	int *fat = (int *) memman_alloc_4k(memman, 4 * 2880);
 	char s[64], cmdline[64], *p;
 
+	file_readfat(fat, (unsigned char *) (ADR_DISKIMG + 0x000200));
 	fifo32_init(&task->fifo, 128, fifobuf, task);
 	timer = timer_alloc();
 	timer_init(timer, &task->fifo, 1);
