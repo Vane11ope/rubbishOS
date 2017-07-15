@@ -2,7 +2,6 @@
 #include "string.h"
 #define MEMMAN_ADDR 0x003c0000
 #define ADR_DISKIMG 0x00100000
-#define ALL_SECTORS 2880
 #define CONSOLE_ON  2
 #define CONSOLE_OFF 3
 
@@ -215,36 +214,4 @@ void console_ctrl_l(int cursor_y, struct SHEET *sheet)
 		}
 	}
 	sheet_refresh(sheet, 8, WINDOW_TITLE_HEIGHT, 8 + CONSOLE_TEXTBOX_WIDTH, WINDOW_TITLE_HEIGHT + CONSOLE_TEXTBOX_HEIGHT);
-}
-
-void file_readfat (int *fat, unsigned char *img)
-{
-	int i, j = 0;
-	for (i = 0; i < ALL_SECTORS; i += 2) {
-		fat[i + 0] = (img[j + 0] | img[j + 1] << 8) & 0xfff;
-		fat[i + 1] = (img[j + 1] >> 4 | img[j + 2] << 4) & 0xfff;
-		j += 3;
-	}
-	return;
-}
-
-void file_loadfile(int cluster_no, int size, char *buf, int *fat, char *img)
-{
-	int i;
-	const short CLUSTER_SIZE = 512;
-	for (;;) {
-		if (size <= CLUSTER_SIZE) {
-			for (i = 0; i < size; ++i) {
-				buf[i] = img[cluster_no * CLUSTER_SIZE + i];
-			}
-			break;
-		}
-		for (i = 0; i < CLUSTER_SIZE; ++i) {
-			buf[i] = img[cluster_no * CLUSTER_SIZE + i];
-		}
-		size -= CLUSTER_SIZE;
-		buf += CLUSTER_SIZE;
-		cluster_no = fat[cluster_no];
-	}
-	return;
 }
