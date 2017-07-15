@@ -29,14 +29,19 @@ bootpack.bim : bootpack.obj func.obj hankaku.obj graphic.obj dsctbl.obj timer.ob
 bootpack.rub : bootpack.bim Makefile
 	$(BIM2RUB) bootpack.bim bootpack.rub 0
 
+hlt.rub : hlt.nas Makefile
+	$(NASK) hlt.nas hlt.rub hlt.lst
+
 rubbish.sys : asmhead.bin bootpack.rub Makefile
 	cat asmhead.bin  bootpack.rub > rubbish.sys
 
-rubbish.img : ipl10.bin rubbish.sys Makefile
+rubbish.img : ipl10.bin rubbish.sys hlt.rub Makefile
 	$(EDIMG) imgin:tools/fdimg0at.tek \
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:rubbish.sys to:@: \
 		copy from:ipl10.nas to:@: \
+		copy from:hlt.rub to:@: \
+		copy from:hlt.nas to:@: \
 		imgout:rubbish.img
 
 %.gas : %.c Makefile
@@ -68,6 +73,7 @@ clean :
 	$(DEL) bootpack.map
 	$(DEL) bootpack.bim
 	$(DEL) bootpack.rub
+	$(DEL) hlt.rub
 	$(DEL) rubbish.sys
 
 src_only :

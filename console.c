@@ -1,9 +1,11 @@
 #include "bootpack.h"
 #include "string.h"
-#define MEMMAN_ADDR 0x003c0000
-#define ADR_DISKIMG 0x00100000
-#define CONSOLE_ON  2
-#define CONSOLE_OFF 3
+#define MEMMAN_ADDR  0x003c0000
+#define ADR_GDT      0x00270000
+#define ADR_DISKIMG  0x00100000
+#define AR_CODE32_ER 0x409a
+#define CONSOLE_ON   2
+#define CONSOLE_OFF  3
 
 const short CONSOLE_TEXTBOX_WIDTH = CONSOLE_WIDTH - 16;
 const short CONSOLE_TEXTBOX_HEIGHT = CONSOLE_HEIGHT - 37;
@@ -12,6 +14,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 {
 	struct TIMER *timer;
 	struct TASK *task = task_now();
+	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct FILEINFO *finfo = (struct FILEINFO *) (ADR_DISKIMG + 0x002600);
 	int i, x, y, fifobuf[128], cursor_x = 16, cursor_y = WINDOW_TITLE_HEIGHT, cursor_c = -1;
@@ -145,6 +148,36 @@ type_next_file:
 									}
 								}
 							}
+							memman_free_4k(memman, (int) p, finfo[x].size);
+						} else {
+							putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, "File not found.");
+							cursor_y = console_newline(cursor_y, sheet);
+						}
+						cursor_y = console_newline(cursor_y, sheet);
+					} else if (strcmp(cmdline, "hlt") == 0) {
+						for (y = 0; y < 11; ++y) { s[y] = ' '; }
+						s[0] = 'H';
+						s[1] = 'L';
+						s[2] = 'T';
+						s[8] = 'R';
+						s[9] = 'U';
+						s[10] = 'B';
+						for (x = 0; x < 224;) {
+							if (finfo[x].name[0] == 0x00) { break; }
+							if ((finfo[x].type & 0x18) == 0) {
+								for (y = 0; y < 11; ++y) {
+									if (finfo[x].name[y] != s[y]) { goto hlt_next_file; }
+								}
+								break;
+							}
+hlt_next_file:
+							++x;
+						}
+						if (x < 224 && finfo[x].name[0] != 0x00) {
+							p = (char *) memman_alloc_4k(memman, finfo[x].size);
+							file_loadfile(finfo[x].cluster_no, finfo[x].size, p, fat, (char *) (ADR_DISKIMG + 0x003e00));
+							set_segmdesc(gdt + 1003, finfo[x].size - 1, (int) p, AR_CODE32_ER);
+							farjmp(0, 1003 * 8);
 							memman_free_4k(memman, (int) p, finfo[x].size);
 						} else {
 							putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, "File not found.");
