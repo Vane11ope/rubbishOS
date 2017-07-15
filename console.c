@@ -5,13 +5,16 @@
 #define CONSOLE_ON  2
 #define CONSOLE_OFF 3
 
+const short CONSOLE_TEXTBOX_WIDTH = CONSOLE_WIDTH - 16;
+const short CONSOLE_TEXTBOX_HEIGHT = CONSOLE_HEIGHT - 37;
+
 void console_task(struct SHEET *sheet, unsigned int memtotal)
 {
 	struct TIMER *timer;
 	struct TASK *task = task_now();
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct FILEINFO *finfo = (struct FILEINFO *) (ADR_DISKIMG + 0x002600);
-	int i, x, y, fifobuf[128], cursor_x = 16, cursor_y = 28, cursor_c = -1;
+	int i, x, y, fifobuf[128], cursor_x = 16, cursor_y = WINDOW_TITLE_HEIGHT, cursor_c = -1;
 	char s[64], cmdline[64], *p;
 
 	fifo32_init(&task->fifo, 128, fifobuf, task);
@@ -19,7 +22,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	timer_init(timer, &task->fifo, 1);
 	timer_settime(timer, 50);
 
-	putfonts8_asc_sht(sheet, 8, 28, COL8_FFFFFF, COL8_000000, ">");
+	putfonts8_asc_sht(sheet, 8, WINDOW_TITLE_HEIGHT, COL8_FFFFFF, COL8_000000, ">");
 	for (;;) {
 		io_cli();
 		if (fifo32_status(&task->fifo) == 0) {
@@ -42,7 +45,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 				cursor_c = COL8_FFFFFF;
 			}
 			if (i == CONSOLE_OFF) {
-				boxfill8(sheet->buf, sheet->bxsize, COL8_000000, cursor_x, 28, cursor_x + 7, 43);
+				boxfill8(sheet->buf, sheet->bxsize, COL8_000000, cursor_x, WINDOW_TITLE_HEIGHT, cursor_x + 7, 43);
 				cursor_c = -1;
 			}
 			if (256 <= i && i <= 511) {
@@ -115,11 +118,29 @@ type_next_file:
 							for (x = 0; x < y; ++x) {
 								s[0] = p[x];
 								s[1] = 0;
-								putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s);
-								cursor_x += 8;
-								if (cursor_x == 8 + CONSOLE_WIDTH - 16) {
+								if (s[0] == 0x09) {
+									for (;;) {
+										putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, " ");
+										cursor_x += 8;
+										if (cursor_x == 8 + CONSOLE_TEXTBOX_WIDTH) {
+											cursor_x = 8;
+											cursor_y = console_newline(cursor_y, sheet);
+										}
+										if (((cursor_x - 8) & 0x1f) == 0) {
+											break;
+										}
+									}
+								} else if (s[0] == 0x0a) {
 									cursor_x = 8;
 									cursor_y = console_newline(cursor_y, sheet);
+								} else if (s[0] == 0x0d) {
+								} else {
+									putfonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF, COL8_000000, s);
+									cursor_x += 8;
+									if (cursor_x == 8 + CONSOLE_TEXTBOX_WIDTH) {
+										cursor_x = 8;
+										cursor_y = console_newline(cursor_y, sheet);
+									}
 								}
 							}
 						} else {
@@ -135,7 +156,7 @@ type_next_file:
 					putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, ">");
 					cursor_x = 16;
 				} else {
-					if (cursor_x < 512) {
+					if (cursor_x < CONSOLE_TEXTBOX_WIDTH) {
 						s[0] = i - 256;
 						s[1] = 0;
 						cmdline[cursor_x / 8 - 2] = i - 256;
@@ -145,7 +166,7 @@ type_next_file:
 				}
 			} else if (i == 1111) {
 				console_ctrl_l(cursor_y, sheet);
-				cursor_y = 28;
+				cursor_y = WINDOW_TITLE_HEIGHT;
 			}
 			if (cursor_c >= 0) {
 				boxfill8(sheet->buf, sheet->bxsize, cursor_c, cursor_x, cursor_y, cursor_x + 7, cursor_y + 15);
@@ -158,21 +179,21 @@ type_next_file:
 int console_newline(int cursor_y, struct SHEET *sheet)
 {
 	int x, y;
-	short threshold = 28 + (CONSOLE_HEIGHT - 53);
+	short threshold = WINDOW_TITLE_HEIGHT + (CONSOLE_TEXTBOX_HEIGHT - 16);
 	if (cursor_y < threshold) {
 		cursor_y += 16;
 	} else {
-		for (y = 28; y < threshold; ++y) {
-			for (x = 8; x < 8 + CONSOLE_WIDTH; ++x) {
+		for (y = WINDOW_TITLE_HEIGHT; y < threshold; ++y) {
+			for (x = 8; x < 8 + CONSOLE_TEXTBOX_WIDTH; ++x) {
 				sheet->buf[x + y * sheet->bxsize] = sheet->buf[x + (y + 16) * sheet->bxsize];
 			}
 		}
 		for (y = threshold; y < threshold + 16; ++y) {
-			for (x = 8; x < 8 + 240; ++x) {
+			for (x = 8; x < 8 + CONSOLE_TEXTBOX_WIDTH; ++x) {
 				sheet->buf[x + y * sheet->bxsize] = COL8_000000;
 			}
 		}
-		sheet_refresh(sheet, 8, 28, 8 + CONSOLE_WIDTH, 28 + threshold + 16);
+		sheet_refresh(sheet, 8, WINDOW_TITLE_HEIGHT, 8 + CONSOLE_TEXTBOX_WIDTH, WINDOW_TITLE_HEIGHT + CONSOLE_TEXTBOX_HEIGHT);
 	}
 	return cursor_y;
 }
@@ -180,15 +201,15 @@ int console_newline(int cursor_y, struct SHEET *sheet)
 void console_ctrl_l(int cursor_y, struct SHEET *sheet)
 {
 	int x, y;
-	for (y = 28; y < 44; ++y) {
-		for (x = 8; x < 8 + CONSOLE_WIDTH - 16; ++x) {
-			sheet->buf[x + y * sheet->bxsize] = sheet->buf[x + (cursor_y + (y - 28))  * sheet->bxsize];
+	for (y = WINDOW_TITLE_HEIGHT; y < 44; ++y) {
+		for (x = 8; x < 8 + CONSOLE_TEXTBOX_WIDTH; ++x) {
+			sheet->buf[x + y * sheet->bxsize] = sheet->buf[x + (cursor_y + (y - WINDOW_TITLE_HEIGHT))  * sheet->bxsize];
 		}
 	}
-	for (y = 44; y < 44 + CONSOLE_HEIGHT - 53; ++y) {
-		for (x = 8; x < 8 + CONSOLE_WIDTH - 16; ++x) {
+	for (y = 44; y < 28 + CONSOLE_TEXTBOX_HEIGHT; ++y) {
+		for (x = 8; x < 8 + CONSOLE_TEXTBOX_WIDTH; ++x) {
 			sheet->buf[x + y * sheet->bxsize] = COL8_000000;
 		}
 	}
-	sheet_refresh(sheet, 8, 28, 8 + CONSOLE_WIDTH - 16, 28 + CONSOLE_HEIGHT - 37);
+	sheet_refresh(sheet, 8, WINDOW_TITLE_HEIGHT, 8 + CONSOLE_TEXTBOX_WIDTH, WINDOW_TITLE_HEIGHT + CONSOLE_TEXTBOX_HEIGHT);
 }

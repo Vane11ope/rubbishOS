@@ -23,6 +23,8 @@ void RubbMain(void)
 	struct TASK *task_a, *task_console;
 	unsigned char *sht_buf_back, sht_buf_mouse[256], *sht_buf_win, *sht_buf_win_sub, *sht_buf_console;
 	char s[40];
+	const short CONSOLE_TEXTBOX_WIDTH = CONSOLE_WIDTH - 16;
+	const short CONSOLE_TEXTBOX_HEIGHT = CONSOLE_HEIGHT - 37;
 	short tweetx = 11;
 	short tweety = binfo->scrny - 20;
 	unsigned int memtotal, count = 0;
@@ -118,7 +120,7 @@ void RubbMain(void)
 
 	// init console
 	make_window(sht_buf_console, CONSOLE_WIDTH, CONSOLE_HEIGHT, "terminal", 0);
-	make_textbox8(sht_console, 8, 28, CONSOLE_WIDTH - 16, CONSOLE_HEIGHT - 37, COL8_000000);
+	make_textbox8(sht_console, 8, WINDOW_TITLE_HEIGHT, CONSOLE_TEXTBOX_WIDTH, CONSOLE_TEXTBOX_HEIGHT, COL8_000000);
 	task_console = task_alloc();
 	task_console->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 12;
 	task_console->tss.eip = (int) &console_task;
@@ -139,7 +141,7 @@ void RubbMain(void)
 	putfonts8_asc(sht_buf_back, binfo->scrnx, tweetx, tweety, COL8_000000, "TWEET");
 
 	// make window
-	make_textbox8(sht_win_sub, 8, 28, 128, 16, COL8_FFFFFF);
+	make_textbox8(sht_win_sub, 8, WINDOW_TITLE_HEIGHT, 128, 16, COL8_FFFFFF);
 	win_cursor_x = 8;
 	win_cursor_color = COL8_FFFFFF;
 
@@ -205,7 +207,7 @@ void RubbMain(void)
 					if (key_to == 0) {
 						if (win_cursor_x < 128) {
 							s[1] = 0;
-							putfonts8_asc_sht(sht_win_sub, win_cursor_x, 28, COL8_000000, COL8_FFFFFF, s);
+							putfonts8_asc_sht(sht_win_sub, win_cursor_x, WINDOW_TITLE_HEIGHT, COL8_000000, COL8_FFFFFF, s);
 							win_cursor_x += 8;
 						}
 					} else {
@@ -219,7 +221,7 @@ void RubbMain(void)
 				if (i == 256 + 0x0e) {
 					if (key_to == 0) {
 						if (win_cursor_x > 8) {
-							putfonts8_asc_sht(sht_win_sub, win_cursor_x, 28, COL8_000000, COL8_FFFFFF, " ");
+							putfonts8_asc_sht(sht_win_sub, win_cursor_x, WINDOW_TITLE_HEIGHT, COL8_000000, COL8_FFFFFF, " ");
 							win_cursor_x -= 8;
 						}
 					} else {
@@ -232,7 +234,7 @@ void RubbMain(void)
 						make_window_title(sht_buf_win_sub, sht_win_sub->bxsize, "window", 0);
 						make_window_title(sht_buf_console, sht_console->bxsize, "terminal", 1);
 						win_cursor_color = -1;
-						boxfill8(sht_win_sub->buf, sht_win_sub->bxsize, COL8_FFFFFF, win_cursor_x, 28, win_cursor_x + 7, 43);
+						boxfill8(sht_win_sub->buf, sht_win_sub->bxsize, COL8_FFFFFF, win_cursor_x, WINDOW_TITLE_HEIGHT, win_cursor_x + 7, 43);
 						fifo32_put(&task_console->fifo, CONSOLE_ON);
 					} else {
 						key_to = 0;
@@ -290,9 +292,9 @@ void RubbMain(void)
 					}
 				}
 				if (win_cursor_color >= 0) {
-					boxfill8(sht_win_sub->buf, sht_win_sub->bxsize, win_cursor_color, win_cursor_x, 28, win_cursor_x + 7, 43);
+					boxfill8(sht_win_sub->buf, sht_win_sub->bxsize, win_cursor_color, win_cursor_x, WINDOW_TITLE_HEIGHT, win_cursor_x + 7, 43);
 				}
-				sheet_refresh(sht_win_sub, win_cursor_x, 28, win_cursor_x + 8, 44);
+				sheet_refresh(sht_win_sub, win_cursor_x, WINDOW_TITLE_HEIGHT, win_cursor_x + 8, 44);
 			} else if (512 <= i && i <= 767) {
 				if (mouse_decode(&mdec, i) != 0) {
 					sprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);
@@ -341,8 +343,8 @@ void RubbMain(void)
 				}
 				timer_settime(timer, 50);
 				if (win_cursor_color >= 0) {
-					boxfill8(sht_win_sub->buf, sht_win_sub->bxsize, win_cursor_color, win_cursor_x, 28,  win_cursor_x + 7, 43);
-					sheet_refresh(sht_win_sub, win_cursor_x, 28, win_cursor_x + 8, 44);
+					boxfill8(sht_win_sub->buf, sht_win_sub->bxsize, win_cursor_color, win_cursor_x, WINDOW_TITLE_HEIGHT,  win_cursor_x + 7, 43);
+					sheet_refresh(sht_win_sub, win_cursor_x, WINDOW_TITLE_HEIGHT, win_cursor_x + 8, 44);
 				}
 			}
 		}
