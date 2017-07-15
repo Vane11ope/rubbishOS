@@ -2,6 +2,7 @@
 #include "string.h"
 #define MEMMAN_ADDR 0x003c0000
 #define ADR_DISKIMG 0x00100000
+#define ALL_SECTORS 2880
 #define CONSOLE_ON  2
 #define CONSOLE_OFF 3
 
@@ -15,6 +16,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct FILEINFO *finfo = (struct FILEINFO *) (ADR_DISKIMG + 0x002600);
 	int i, x, y, fifobuf[128], cursor_x = 16, cursor_y = WINDOW_TITLE_HEIGHT, cursor_c = -1;
+	int *fat = (int *) memman_alloc_4k(memman, 4 * 2880);
 	char s[64], cmdline[64], *p;
 
 	fifo32_init(&task->fifo, 128, fifobuf, task);
@@ -112,11 +114,11 @@ type_next_file:
 							++x;
 						}
 						if (x < 224 && finfo[x].name[0] != 0x00) {
-							y = finfo[x].size;
-							p = (char *) (finfo[x].cluster_no * 512 + 0x003e00 + ADR_DISKIMG);
+							p = (char *) memman_alloc_4k(memman, finfo[x].size);
+							file_loadfile(finfo[x].cluster_no, finfo[x].size, p, fat, (char *) (ADR_DISKIMG + 0x003e00));
 							cursor_x = 8;
-							for (x = 0; x < y; ++x) {
-								s[0] = p[x];
+							for (y = 0; y < finfo[x].size; ++y) {
+								s[0] = p[y];
 								s[1] = 0;
 								if (s[0] == 0x09) {
 									for (;;) {
@@ -143,6 +145,7 @@ type_next_file:
 									}
 								}
 							}
+							memman_free_4k(memman, (int) p, finfo[x].size);
 						} else {
 							putfonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, "File not found.");
 							cursor_y = console_newline(cursor_y, sheet);
@@ -212,4 +215,36 @@ void console_ctrl_l(int cursor_y, struct SHEET *sheet)
 		}
 	}
 	sheet_refresh(sheet, 8, WINDOW_TITLE_HEIGHT, 8 + CONSOLE_TEXTBOX_WIDTH, WINDOW_TITLE_HEIGHT + CONSOLE_TEXTBOX_HEIGHT);
+}
+
+void file_readfat (int *fat, unsigned char *img)
+{
+	int i, j = 0;
+	for (i = 0; i < ALL_SECTORS; i += 2) {
+		fat[i + 0] = (img[j + 0] | img[j + 1] << 8) & 0xfff;
+		fat[i + 1] = (img[j + 1] >> 4 | img[j + 2] << 4) & 0xfff;
+		j += 3;
+	}
+	return;
+}
+
+void file_loadfile(int cluster_no, int size, char *buf, int *fat, char *img)
+{
+	int i;
+	const short CLUSTER_SIZE = 512;
+	for (;;) {
+		if (size <= CLUSTER_SIZE) {
+			for (i = 0; i < size; ++i) {
+				buf[i] = img[cluster_no * CLUSTER_SIZE + i];
+			}
+			break;
+		}
+		for (i = 0; i < CLUSTER_SIZE; ++i) {
+			buf[i] = img[cluster_no * CLUSTER_SIZE + i];
+		}
+		size -= CLUSTER_SIZE;
+		buf += CLUSTER_SIZE;
+		cluster_no = fat[cluster_no];
+	}
+	return;
 }

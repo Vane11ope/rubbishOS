@@ -239,6 +239,8 @@ struct FILEINFO {
 void console_task(struct SHEET *sheet, unsigned int memtotal);
 int console_newline(int cursor_y, struct SHEET *sheet);
 void console_ctrl_l(int cursor_y, struct SHEET *sheet);
+void file_readfat (int *fat, unsigned char *img);
+void file_loadfile(int cluster_no, int size, char *buf, int *fat, char *img);
 
 /* utility */
 static inline int max(int a, int b) { return a >= b ? a : b; }
