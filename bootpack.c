@@ -23,7 +23,7 @@ void RubbMain(void)
 	struct TASK *task_a, *task_console;
 	unsigned char *sht_buf_back, sht_buf_mouse[256], *sht_buf_win, *sht_buf_win_sub, *sht_buf_console;
 	char s[40];
-	const short CONSOLE_TEXTBOX_WIDTH = CONSOLE_WIDTH - 16;
+	const short CONSOLE_TEXTBOX_WIDTH = CONSOLE_WIDTH - CHAR_WIDTH * 2;
 	const short CONSOLE_TEXTBOX_HEIGHT = CONSOLE_HEIGHT - 37;
 	short tweetx = 11;
 	short tweety = binfo->scrny - 20;

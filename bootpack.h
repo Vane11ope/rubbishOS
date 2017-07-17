@@ -20,6 +20,8 @@
 #define MEMMAN_FREES         4090
 #define MAX_TIMER            500
 #define MAX_SHEETS           256
+#define CHAR_WIDTH           8
+#define CHAR_HEIGHT          16
 #define WINDOW_TITLE_HEIGHT  28
 #define CONSOLE_WIDTH        528
 #define CONSOLE_HEIGHT       677
@@ -230,6 +232,10 @@ void enable_mouse(struct FIFO32 *fifo, int data, struct MOUSE_DEC *mdec);
 int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
 
 /* console.c */
+struct CONSOLE {
+	struct SHEET *sheet;
+	int cursor_x, cursor_y, cursor_color;
+};
 struct FILEINFO {
 	unsigned char name[8], ext[3], type;
 	char reserve[10];
@@ -237,12 +243,19 @@ struct FILEINFO {
 	unsigned int size;
 };
 void console_task(struct SHEET *sheet, unsigned int memtotal);
-int console_newline(int cursor_y, struct SHEET *sheet);
-void console_ctrl_l(int cursor_y, struct SHEET *sheet);
+void console_newline(struct CONSOLE *console);
+void console_ctrl_l(struct CONSOLE *console);
+void console_putchar(struct CONSOLE *console, int chr, char move);
+void console_command(char *cmdline, struct CONSOLE *console, int *fat, unsigned int memtotal);
+void mem(struct CONSOLE *console, unsigned int memtotal);
+void ls(struct CONSOLE *console);
+void cat(struct CONSOLE *console, int *fat, char *cmdline);
+void hlt(struct CONSOLE *console, int *fat);
 
 /* file.c */
 void file_readfat (int *fat, unsigned char *img);
 void file_loadfile(int cluster_no, int size, char *buf, int *fat, char *img);
+struct FILEINFO* file_search(char *name, struct FILEINFO *finfo, int max);
 
 /* utility */
 static inline int max(int a, int b) { return a >= b ? a : b; }
