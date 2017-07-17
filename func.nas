@@ -12,6 +12,7 @@
 	GLOBAL _load_cr0, _store_cr0
 	GLOBAL _load_tr
 	GLOBAL _farjmp
+	GLOBAL _farcall
 	GLOBAL _asm_inthandler20, _asm_inthandler21, _asm_inthandler27, _asm_inthandler2c
 	GLOBAL _asm_console_putchar
 
@@ -108,7 +109,11 @@ _store_cr0: ; void store_cr0(int cr0);
 	RET
 
 _farjmp: ; void farjmp(int eip, int cs);
-	JMP FAR[ESP + 4]
+	JMP FAR [ESP + 4]
+	RET
+
+_farcall: ; void farcall(int eip, int cs);
+	CALL FAR [ESP + 4]
 	RET
 
 _asm_inthandler20:

@@ -249,7 +249,7 @@ void hlt(struct CONSOLE *console, int *fat)
 		p = (char *) memman_alloc_4k(memman, finfo->size);
 		file_loadfile(finfo->cluster_no, finfo->size, p, fat, (char *) (ADR_DISKIMG + 0x003e00));
 		set_segmdesc(gdt + 1003, finfo->size - 1, (int) p, AR_CODE32_ER);
-		farjmp(0, 1003 * 8);
+		farcall(0, 1003 * 8);
 		memman_free_4k(memman, (int) p, finfo->size);
 	} else {
 		putfonts8_asc_sht(console->sheet, CHAR_WIDTH, console->cursor_y, COL8_FFFFFF, COL8_000000, "File not found.");
