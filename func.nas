@@ -13,8 +13,9 @@
 	GLOBAL _load_tr
 	GLOBAL _farjmp
 	GLOBAL _asm_inthandler20, _asm_inthandler21, _asm_inthandler27, _asm_inthandler2c
+	GLOBAL _asm_console_putchar
 
-	EXTERN _inthandler20, _inthandler21, _inthandler27, _inthandler2c
+	EXTERN _inthandler20, _inthandler21, _inthandler27, _inthandler2c, _console_putchar
 
 [SECTION .text]
 
@@ -173,3 +174,12 @@ _asm_inthandler2c:
 	POP DS
 	POP ES
 	IRETD
+
+_asm_console_putchar:
+	PUSH 1
+	AND  EAX,0xff
+	PUSH EAX
+	PUSH DWORD [0x0fec]
+	CALL _console_putchar
+	ADD ESP,12
+	RETF

@@ -26,6 +26,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	console.cursor_x = CHAR_WIDTH;
 	console.cursor_y = WINDOW_TITLE_HEIGHT;
 	console.cursor_color = -1;
+	(*((int *) 0x0fec)) = (int) &console;
 
 	file_readfat(fat, (unsigned char *) (ADR_DISKIMG + 0x000200));
 	fifo32_init(&task->fifo, 128, fifobuf, task);
