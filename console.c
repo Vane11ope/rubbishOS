@@ -62,22 +62,25 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 				console.cursor_color = -1;
 			}
 			if (256 <= i && i <= 511) {
-				if (i == 8 + 256) { // delete
-					if (console.cursor_x > CHAR_WIDTH * 2) {
+				switch (i) {
+					case 8 + 256: // delete
+						if (console.cursor_x > CHAR_WIDTH * 2) {
+							console_putchar(&console, ' ', 0);
+							console.cursor_x -= CHAR_WIDTH;
+						}
+						break;
+					case 10 + 256: // Enter
 						console_putchar(&console, ' ', 0);
-						console.cursor_x -= CHAR_WIDTH;
-					}
-				} else if (i == 10 + 256) { // Enter
-					console_putchar(&console, ' ', 0);
-					cmdline[console.cursor_x / CHAR_WIDTH -2] = 0;
-					console_newline(&console);
-					console_command(cmdline, &console, fat, memtotal);
-					console_putchar(&console, '>', 1);
-				} else {
-					if (console.cursor_x < CONSOLE_TEXTBOX_WIDTH) {
-						cmdline[console.cursor_x / CHAR_WIDTH - 2] = i - 256;
-						console_putchar(&console, i - 256, 1);
-					}
+						cmdline[console.cursor_x / CHAR_WIDTH -2] = 0;
+						console_newline(&console);
+						console_command(cmdline, &console, fat, memtotal);
+						console_putchar(&console, '>', 1);
+						break;
+					default:
+						if (console.cursor_x < CONSOLE_TEXTBOX_WIDTH) {
+							cmdline[console.cursor_x / CHAR_WIDTH - 2] = i - 256;
+							console_putchar(&console, i - 256, 1);
+						}
 				}
 			} else if (i == 1111) {
 				console_ctrl_l(&console);
@@ -174,12 +177,12 @@ void console_command(char *cmdline, struct CONSOLE *console, int *fat, unsigned 
 		ls(console);
 	} else if (strncmp(cmdline, "cat ", 4) == 0) {
 		cat(console, fat, cmdline);
-	} else if (strcmp(cmdline, "hlt") == 0) {
-		hlt(console, fat);
 	} else if (cmdline[0] != 0) {
-		putfonts8_asc_sht(console->sheet, CHAR_WIDTH, console->cursor_y, COL8_FFFFFF, COL8_000000, "Bad command.");
-		console_newline(console);
-		console_newline(console);
+		if ( app(console, fat, cmdline) == 0) {
+			putfonts8_asc_sht(console->sheet, CHAR_WIDTH, console->cursor_y, COL8_FFFFFF, COL8_000000, "Bad command.");
+			console_newline(console);
+			console_newline(console);
+		}
 	}
 }
 
@@ -239,22 +242,36 @@ void cat(struct CONSOLE *console, int *fat, char *cmdline)
 	return;
 }
 
-void hlt(struct CONSOLE *console, int *fat)
+int app(struct CONSOLE *console, int *fat, char *cmdline)
 {
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
-	struct FILEINFO *finfo = file_search("HLT.RUB", (struct FILEINFO *) (ADR_DISKIMG + 0x002600), 224);
+	struct FILEINFO *finfo;
 	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
-	char *p;
+	char name[18], *p;
+	int i;
+
+	for (i = 0; i < 13; ++i) {
+		if (cmdline[i] <= ' ') { break; }
+		name[i] = cmdline[i];
+	}
+	name[i] = 0;
+	finfo = file_search(name, (struct FILEINFO *) (ADR_DISKIMG + 0x002600), 224);
+	if (finfo == 0 && name[i - 1] != '.') {
+		name[i] = '.';
+		name[i + 1] = 'R';
+		name[i + 2] = 'U';
+		name[i + 3] = 'B';
+		name[i + 4] = 0;
+		finfo = file_search(name, (struct FILEINFO *) (ADR_DISKIMG + 0x002600), 224);
+	}
 	if (finfo != 0) {
-		p = (char *) memman_alloc_4k(memman, finfo->size);
+		p = (char *)memman_alloc_4k(memman, finfo->size);
 		file_loadfile(finfo->cluster_no, finfo->size, p, fat, (char *) (ADR_DISKIMG + 0x003e00));
 		set_segmdesc(gdt + 1003, finfo->size - 1, (int) p, AR_CODE32_ER);
 		farcall(0, 1003 * 8);
 		memman_free_4k(memman, (int) p, finfo->size);
-	} else {
-		putfonts8_asc_sht(console->sheet, CHAR_WIDTH, console->cursor_y, COL8_FFFFFF, COL8_000000, "File not found.");
 		console_newline(console);
+		return 1;
 	}
-	console_newline(console);
-	return;
+	return 0;
 }

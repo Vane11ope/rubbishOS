@@ -252,7 +252,7 @@ void console_command(char *cmdline, struct CONSOLE *console, int *fat, unsigned 
 void mem(struct CONSOLE *console, unsigned int memtotal);
 void ls(struct CONSOLE *console);
 void cat(struct CONSOLE *console, int *fat, char *cmdline);
-void hlt(struct CONSOLE *console, int *fat);
+int app(struct CONSOLE *console, int *fat, char *cmdline);
 
 /* file.c */
 void file_readfat (int *fat, unsigned char *img);
