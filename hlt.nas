@@ -1,4 +1,4 @@
 [BITS 32]
 	MOV AL,'A'
-	CALL 2*8:0xdcc
+	INT 0x40
 	RETF

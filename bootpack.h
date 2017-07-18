@@ -123,6 +123,7 @@ void asm_inthandler20(void);
 void asm_inthandler21(void);
 void asm_inthandler27(void);
 void asm_inthandler2c(void);
+void asm_console_putchar(void);
 
 /* memory.c */
 struct FREEINFO {

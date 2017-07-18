@@ -181,10 +181,11 @@ _asm_inthandler2c:
 	IRETD
 
 _asm_console_putchar:
+	STI
 	PUSH 1
 	AND  EAX,0xff
 	PUSH EAX
 	PUSH DWORD [0x0fec]
 	CALL _console_putchar
 	ADD ESP,12
-	RETF
+	IRETD
