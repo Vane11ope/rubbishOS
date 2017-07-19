@@ -14,9 +14,9 @@
 	GLOBAL _farjmp
 	GLOBAL _farcall
 	GLOBAL _asm_inthandler20, _asm_inthandler21, _asm_inthandler27, _asm_inthandler2c
-	GLOBAL _asm_console_putchar
+	GLOBAL _asm_rub_api
 
-	EXTERN _inthandler20, _inthandler21, _inthandler27, _inthandler2c, _console_putchar
+	EXTERN _inthandler20, _inthandler21, _inthandler27, _inthandler2c, _rub_api
 
 [SECTION .text]
 
@@ -180,14 +180,11 @@ _asm_inthandler2c:
 	POP ES
 	IRETD
 
-_asm_console_putchar:
+_asm_rub_api:
 	STI
 	PUSHAD
-	PUSH 1
-	AND  EAX,0xff
-	PUSH EAX
-	PUSH DWORD [0x0fec]
-	CALL _console_putchar
-	ADD ESP,12
+	PUSHAD
+	CALL _rub_api
+	ADD ESP,32
 	POPAD
 	IRETD

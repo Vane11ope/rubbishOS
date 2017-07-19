@@ -123,7 +123,7 @@ void asm_inthandler20(void);
 void asm_inthandler21(void);
 void asm_inthandler27(void);
 void asm_inthandler2c(void);
-void asm_console_putchar(void);
+void asm_rub_api();
 
 /* memory.c */
 struct FREEINFO {
@@ -255,6 +255,7 @@ void mem(struct CONSOLE *console, unsigned int memtotal);
 void ls(struct CONSOLE *console);
 void cat(struct CONSOLE *console, int *fat, char *cmdline);
 int app(struct CONSOLE *console, int *fat, char *cmdline);
+void rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);
 
 /* file.c */
 void file_readfat (int *fat, unsigned char *img);

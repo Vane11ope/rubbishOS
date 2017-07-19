@@ -275,6 +275,7 @@ int app(struct CONSOLE *console, int *fat, char *cmdline)
 	}
 	if (finfo != 0) {
 		p = (char *)memman_alloc_4k(memman, finfo->size);
+		(*((int *)0xfe8)) = (int)p;
 		file_loadfile(finfo->cluster_no, finfo->size, p, fat, (char *) (ADR_DISKIMG + 0x003e00));
 		set_segmdesc(gdt + 1003, finfo->size - 1, (int) p, AR_CODE32_ER);
 		farcall(0, 1003 * 8);
@@ -283,4 +284,22 @@ int app(struct CONSOLE *console, int *fat, char *cmdline)
 		return 1;
 	}
 	return 0;
+}
+
+void rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax)
+{
+	struct CONSOLE *console = (struct CONSOLE *)(*(int *) 0xfec);
+	int cs_base = (*((int *)0xfe8));
+	switch (edx) {
+		case 1:
+			console_putchar(console, eax & 0xff, 1);
+			break;
+		case 2:
+			console_putstr(console, (char *)ebx + cs_base);
+			break;
+		case 3:
+			console_putstr_with_length(console, (char *)ebx + cs_base, ecx);
+			break;
+	}
+	return;
 }
