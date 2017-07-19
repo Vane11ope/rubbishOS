@@ -169,6 +169,23 @@ void console_putchar(struct CONSOLE *console, int chr, char move)
 	return;
 }
 
+void console_putstr(struct CONSOLE *console, char *s)
+{
+	for (; *s != 0; ++s) {
+		console_putchar(console, *s, 1);
+	}
+	return;
+}
+
+void console_putstr_with_length(struct CONSOLE *console, char *s, int length)
+{
+	int i;
+	for (i = 0; i < length; ++i) {
+		console_putchar(console, s[i], 1);
+	}
+	return;
+}
+
 void console_command(char *cmdline, struct CONSOLE *console, int *fat, unsigned int memtotal)
 {
 	if (strcmp(cmdline, "mem") == 0) {
@@ -179,24 +196,19 @@ void console_command(char *cmdline, struct CONSOLE *console, int *fat, unsigned 
 		cat(console, fat, cmdline);
 	} else if (cmdline[0] != 0) {
 		if ( app(console, fat, cmdline) == 0) {
-			putfonts8_asc_sht(console->sheet, CHAR_WIDTH, console->cursor_y, COL8_FFFFFF, COL8_000000, "Bad command.");
-			console_newline(console);
-			console_newline(console);
+			console_putstr(console, "Bad command.\n\n");
 		}
 	}
+	return;
 }
 
 void mem(struct CONSOLE *console, unsigned int memtotal)
 {
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	char s[30];
-	sprintf(s, "total   %dMB", memtotal / (1024 * 1024));
-	putfonts8_asc_sht(console->sheet, CHAR_WIDTH, console->cursor_y, COL8_FFFFFF, COL8_000000, s);
-	console_newline(console);
-	sprintf(s, "free %dKB", memman_total(memman) / 1024 );
-	putfonts8_asc_sht(console->sheet, CHAR_WIDTH, console->cursor_y, COL8_FFFFFF, COL8_000000, s);
-	console_newline(console);
-	console_newline(console);
+	sprintf(s, "total   %dMB\nfree %dKB\n\n", memtotal / (1024 * 1024), memman_total(memman) / 1024);
+	console_putstr(console, s);
+	return;
 }
 
 void ls(struct CONSOLE *console)
@@ -207,18 +219,18 @@ void ls(struct CONSOLE *console)
 	for (x = 0; x < 224; ++x) {
 		if (finfo[x].name[0] == 0x00) { break; }
 		if ((finfo[x].type & 0x18) == 0) {
-			sprintf(s, "filename.ext %7d", finfo[x].size);
+			sprintf(s, "filename.ext %7d\n", finfo[x].size);
 			for (y = 0; y < 8; ++y) {
 				s[y] = finfo[x].name[y];
 			}
 			s[9] = finfo[x].ext[0];
 			s[10] = finfo[x].ext[1];
 			s[11] = finfo[x].ext[2];
-			putfonts8_asc_sht(console->sheet, CHAR_WIDTH, console->cursor_y, COL8_FFFFFF, COL8_000000, s);
-			console_newline(console);
+			console_putstr(console, s);
 		}
 	}
 	console_newline(console);
+	return;
 }
 
 void cat(struct CONSOLE *console, int *fat, char *cmdline)
@@ -230,13 +242,10 @@ void cat(struct CONSOLE *console, int *fat, char *cmdline)
 	if (finfo != 0) {
 		p = (char *) memman_alloc_4k(memman, finfo->size);
 		file_loadfile(finfo->cluster_no, finfo->size, p, fat, (char *) (ADR_DISKIMG + 0x003e00));
-		for (i = 0; i < finfo->size; ++i) {
-			console_putchar(console, p[i], 1);
-		}
+		console_putstr_with_length(console, p, finfo->size);
 		memman_free_4k(memman, (int) p, finfo->size);
 	} else {
-		putfonts8_asc_sht(console->sheet, CHAR_WIDTH, console->cursor_y, COL8_FFFFFF, COL8_000000, "File not found.");
-		console_newline(console);
+		console_putstr(console, "File not found.\n");
 	}
 	console_newline(console);
 	return;

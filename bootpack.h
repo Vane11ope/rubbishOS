@@ -248,6 +248,8 @@ void console_task(struct SHEET *sheet, unsigned int memtotal);
 void console_newline(struct CONSOLE *console);
 void console_ctrl_l(struct CONSOLE *console);
 void console_putchar(struct CONSOLE *console, int chr, char move);
+void console_putstr(struct CONSOLE *console, char *s);
+void console_putstr_with_length(struct CONSOLE *console, char *s, int length);
 void console_command(char *cmdline, struct CONSOLE *console, int *fat, unsigned int memtotal);
 void mem(struct CONSOLE *console, unsigned int memtotal);
 void ls(struct CONSOLE *console);
