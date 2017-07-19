@@ -73,7 +73,7 @@ clean :
 	$(DEL) bootpack.map
 	$(DEL) bootpack.bim
 	$(DEL) bootpack.rub
-	$(DEL) hlt.rub
+	$(DEL) app.rub
 	$(DEL) rubbish.sys
 
 src_only :
