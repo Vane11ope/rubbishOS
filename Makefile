@@ -29,8 +29,11 @@ bootpack.bim : bootpack.obj func.obj hankaku.obj graphic.obj dsctbl.obj timer.ob
 bootpack.rub : bootpack.bim Makefile
 	$(BIM2RUB) bootpack.bim bootpack.rub 0
 
-app.rub : app.nas Makefile
-	$(NASK) app.nas app.rub app.lst
+app.bim: app.obj app_asm.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:app.bim map:app.map app.obj app_asm.obj
+
+app.rub : app.bim Makefile
+	$(BIM2RUB) app.bim app.rub 0
 
 rubbish.sys : asmhead.bin bootpack.rub Makefile
 	cat asmhead.bin  bootpack.rub > rubbish.sys
@@ -69,11 +72,10 @@ clean :
 	$(DEL) *.lst
 	$(DEL) *.gas
 	$(DEL) *.obj
+	$(DEL) *.map
+	$(DEL) *.bim
+	$(DEL) *.rub
 	$(DEL) bootpack.nas
-	$(DEL) bootpack.map
-	$(DEL) bootpack.bim
-	$(DEL) bootpack.rub
-	$(DEL) app.rub
 	$(DEL) rubbish.sys
 
 src_only :
