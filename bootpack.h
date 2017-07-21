@@ -41,6 +41,9 @@
 #define COL8_840084          13
 #define COL8_008484          14
 #define COL8_848484          15
+#define AR_INTGATE32         0x008e
+#define AR_CODE32_ER         0x409a
+#define AR_DATA32_RW         0x4092
 
 /* asmhead.nas */
 struct BOOTINFO {
@@ -124,6 +127,7 @@ void asm_inthandler21(void);
 void asm_inthandler27(void);
 void asm_inthandler2c(void);
 void asm_rub_api();
+void start_app(int eip, int cs, int esp, int ds);
 
 /* memory.c */
 struct FREEINFO {

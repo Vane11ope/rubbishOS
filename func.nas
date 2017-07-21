@@ -13,8 +13,8 @@
 	GLOBAL _load_tr
 	GLOBAL _farjmp
 	GLOBAL _farcall
-	GLOBAL _asm_inthandler20, _asm_inthandler21, _asm_inthandler27, _asm_inthandler2c
-	GLOBAL _asm_rub_api
+	GLOBAL _asm_inthandler20, _asm_inthandler21, _asm_inthandler27, _asm_inthandler2c, _asm_rub_api
+	GLOBAL _start_app
 
 	EXTERN _inthandler20, _inthandler21, _inthandler27, _inthandler2c, _rub_api
 
@@ -120,13 +120,36 @@ _asm_inthandler20:
 	PUSH ES
 	PUSH DS
 	PUSHAD
-	MOV  EAX,ESP
+	MOV AX,SS
+	CMP AX,1*8
+	JNE .from_app
+	MOV EAX,ESP
+	PUSH SS
 	PUSH EAX
-	MOV  AX,SS
-	MOV  DS,AX
-	MOV  ES,AX
+	MOV AX,SS
+	MOV DS,AX
+	MOV ES,AX
 	CALL _inthandler20
-	POP  EAX
+	ADD ESP,8
+	POPAD
+	POP DS
+	POP ES
+	IRETD
+.from_app:
+	MOV EAX,1*8
+	MOV DS,AX
+	MOV ECX,[0xfe4]
+	ADD ECX,-8
+	MOV [ECX+4],SS
+	MOV [ECX],ESP
+	MOV SS,AX
+	MOV ES,AX
+	MOV ESP,ECX
+	CALL _inthandler20
+	POP ECX
+	POP EAX
+	MOV SS,AX
+	MOV ESP,ECX
 	POPAD
 	POP DS
 	POP ES
@@ -136,13 +159,36 @@ _asm_inthandler21:
 	PUSH ES
 	PUSH DS
 	PUSHAD
-	MOV  EAX,ESP
+	MOV AX,SS
+	CMP AX,1*8
+	JNE .from_app
+	MOV EAX,ESP
+	PUSH SS
 	PUSH EAX
-	MOV  AX,SS
-	MOV  DS,AX
-	MOV  ES,AX
+	MOV AX,SS
+	MOV DS,AX
+	MOV ES,AX
 	CALL _inthandler21
-	POP  EAX
+	ADD ESP,8
+	POPAD
+	POP DS
+	POP ES
+	IRETD
+.from_app:
+	MOV EAX,1*8
+	MOV DS,AX
+	MOV ECX,[0xfe4]
+	ADD ECX,-8
+	MOV [ECX+4],SS
+	MOV [ECX],ESP
+	MOV SS,AX
+	MOV ES,AX
+	MOV ESP,ECX
+	CALL _inthandler21
+	POP ECX
+	POP EAX
+	MOV SS,AX
+	MOV ESP,ECX
 	POPAD
 	POP DS
 	POP ES
@@ -152,13 +198,36 @@ _asm_inthandler27:
 	PUSH ES
 	PUSH DS
 	PUSHAD
-	MOV  EAX,ESP
+	MOV AX,SS
+	CMP AX,1*8
+	JNE .from_app
+	MOV EAX,ESP
+	PUSH SS
 	PUSH EAX
-	MOV  AX,SS
-	MOV  DS,AX
-	MOV  ES,AX
+	MOV AX,SS
+	MOV DS,AX
+	MOV ES,AX
 	CALL _inthandler27
-	POP  EAX
+	ADD ESP,8
+	POPAD
+	POP DS
+	POP ES
+	IRETD
+.from_app:
+	MOV EAX,1*8
+	MOV DS,AX
+	MOV ECX,[0xfe4]
+	ADD ECX,-8
+	MOV [ECX+4],SS
+	MOV [ECX],ESP
+	MOV SS,AX
+	MOV ES,AX
+	MOV ESP,ECX
+	CALL _inthandler27
+	POP ECX
+	POP EAX
+	MOV SS,AX
+	MOV ESP,ECX
 	POPAD
 	POP DS
 	POP ES
@@ -168,23 +237,109 @@ _asm_inthandler2c:
 	PUSH ES
 	PUSH DS
 	PUSHAD
-	MOV  EAX,ESP
+	MOV AX,SS
+	CMP AX,1*8
+	JNE .from_app
+	MOV EAX,ESP
+	PUSH SS
 	PUSH EAX
-	MOV  AX,SS
-	MOV  DS,AX
-	MOV  ES,AX
+	MOV AX,SS
+	MOV DS,AX
+	MOV ES,AX
 	CALL _inthandler2c
-	POP  EAX
+	ADD ESP,8
+	POPAD
+	POP DS
+	POP ES
+	IRETD
+.from_app:
+	MOV EAX,1*8
+	MOV DS,AX
+	MOV ECX,[0xfe4]
+	ADD ECX,-8
+	MOV [ECX+4],SS
+	MOV [ECX],ESP
+	MOV SS,AX
+	MOV ES,AX
+	MOV ESP,ECX
+	CALL _inthandler2c
+	POP ECX
+	POP EAX
+	MOV SS,AX
+	MOV ESP,ECX
 	POPAD
 	POP DS
 	POP ES
 	IRETD
 
 _asm_rub_api:
+	PUSH DS
+	PUSH ES
+	PUSHAD
+	MOV EAX,1*8
+	MOV DS,AX
+	MOV ECX,[0xfe4]
+	ADD ECX,-40
+	MOV [ECX+32],ESP
+	MOV [ECX+36],SS
+	MOV EDX,[ESP]
+	MOV EBX,[ESP+4]
+	MOV [ECX],EDX
+	MOV [ECX+4],EBX
+	MOV EDX,[ESP+8]
+	MOV EBX,[ESP+12]
+	MOV [ECX+8],EDX
+	MOV [ECX+12],EBX
+	MOV EDX,[ESP+16]
+	MOV EBX,[ESP+20]
+	MOV [ECX+16],EDX
+	MOV [ECX+20],EBX
+	MOV EDX,[ESP+24]
+	MOV EBX,[ESP+28]
+	MOV [ECX+24],EDX
+	MOV [ECX+28],EBX
+	MOV ES,AX
+	MOV SS,AX
+	MOV ESP,ECX
 	STI
-	PUSHAD
-	PUSHAD
 	CALL _rub_api
-	ADD ESP,32
+	MOV ECX,[ESP+32]
+	MOV EAX,[ESP+36]
+	CLI
+	MOV SS,AX
+	MOV ESP,ECX
 	POPAD
+	POP ES
+	POP DS
 	IRETD
+
+_start_app: ; void start_app(int eip, int cs, int esp, int ds);
+	PUSHAD
+	MOV EAX,[ESP+36]
+	MOV ECX,[ESP+40]
+	MOV EDX,[ESP+44]
+	MOV EBX,[ESP+48]
+	MOV [0xfe4],ESP
+	CLI
+	MOV ES,BX
+	MOV SS,BX
+	MOV DS,BX
+	MOV FS,BX
+	MOV GS,BX
+	MOV ESP,EDX
+	STI
+	PUSH ECX
+	PUSH EAX
+	CALL FAR [ESP]
+
+	MOV EAX,1*8
+	CLI
+	MOV ES,AX
+	MOV SS,AX
+	MOV DS,AX
+	MOV FS,AX
+	MOV GS,AX
+	MOV ESP,[0xfe4]
+	STI
+	POPAD
+	RET

@@ -3,7 +3,6 @@
 #define MEMMAN_ADDR  0x003c0000
 #define ADR_GDT      0x00270000
 #define ADR_DISKIMG  0x00100000
-#define AR_CODE32_ER 0x409a
 #define CONSOLE_ON   2
 #define CONSOLE_OFF  3
 
@@ -256,8 +255,9 @@ int app(struct CONSOLE *console, int *fat, char *cmdline)
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct FILEINFO *finfo;
 	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
-	char name[18], *p;
+	char name[18], *p, *q;
 	int i;
+	const int ds_size = 64 * 1024;
 
 	for (i = 0; i < 13; ++i) {
 		if (cmdline[i] <= ' ') { break; }
@@ -275,9 +275,11 @@ int app(struct CONSOLE *console, int *fat, char *cmdline)
 	}
 	if (finfo != 0) {
 		p = (char *)memman_alloc_4k(memman, finfo->size);
+		q = (char *)memman_alloc_4k(memman, ds_size);
 		(*((int *)0xfe8)) = (int)p;
 		file_loadfile(finfo->cluster_no, finfo->size, p, fat, (char *) (ADR_DISKIMG + 0x003e00));
 		set_segmdesc(gdt + 1003, finfo->size - 1, (int) p, AR_CODE32_ER);
+		set_segmdesc(gdt + 1004, ds_size - 1, (int) q, AR_DATA32_RW);
 		if (finfo->size >= 8 && strncmp(p + 4, "main", 4) == 0) {
 			p[0] = 0xe8;
 			p[1] = 0x16;
@@ -286,8 +288,9 @@ int app(struct CONSOLE *console, int *fat, char *cmdline)
 			p[4] = 0x00;
 			p[5] = 0xcb;
 		}
-		farcall(0, 1003 * 8);
+		start_app(0, 1003 * 8, ds_size, 1004 * 8);
 		memman_free_4k(memman, (int) p, finfo->size);
+		memman_free_4k(memman, (int) q, ds_size);
 		console_newline(console);
 		return 1;
 	}
