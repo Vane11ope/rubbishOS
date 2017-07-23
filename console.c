@@ -315,7 +315,7 @@ void rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 	return;
 }
 
-void inthandler0d(void)
+int inthandler0d(int *esp)
 {
 	struct CONSOLE *console = (struct CONSOLE *)*((int *)0x0fec);
 	console_putstr(console, "\nINT 0D :\n General Protected Exception.\n");

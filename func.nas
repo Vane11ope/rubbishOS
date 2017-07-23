@@ -308,6 +308,7 @@ _asm_inthandler0d:
 	CALL _inthandler0d
 	CLI
 	CMP EAX,0
+	JNE .kill
 	POP ECX
 	POP EAX
 	MOV SS,AX
@@ -317,8 +318,8 @@ _asm_inthandler0d:
 	POP ES
 	ADD ESP,4
 	IRETD
-.kill
-	MOV EAX 1*8
+.kill:
+	MOV EAX,1*8
 	MOV ES,AX
 	MOV SS,AX
 	MOV DS,AX

@@ -261,7 +261,7 @@ void ls(struct CONSOLE *console);
 void cat(struct CONSOLE *console, int *fat, char *cmdline);
 int app(struct CONSOLE *console, int *fat, char *cmdline);
 void rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);
-void inthandler0d(void);
+int inthandler0d(int *esp);
 
 /* file.c */
 void file_readfat (int *fat, unsigned char *img);

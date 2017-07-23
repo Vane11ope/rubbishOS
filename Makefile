@@ -29,28 +29,25 @@ bootpack.bim : bootpack.obj func.obj hankaku.obj graphic.obj dsctbl.obj timer.ob
 bootpack.rub : bootpack.bim Makefile
 	$(BIM2RUB) bootpack.bim bootpack.rub 0
 
+rubbish.sys : asmhead.bin bootpack.rub Makefile
+	cat asmhead.bin  bootpack.rub > rubbish.sys
+
 app.bim: app.obj app_asm.obj Makefile
 	$(OBJ2BIM) @$(RULEFILE) out:app.bim map:app.map app.obj app_asm.obj
 
 app.rub : app.bim Makefile
 	$(BIM2RUB) app.bim app.rub 0
 
-crack.bim: crack.obj  Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:crack.bim map:crack.map crack.obj
+crack2.rub : crack2.nas Makefile
+	$(NASK) crack2.nas crack2.rub crack2.lst
 
-crack.rub : crack.bim Makefile
-	$(BIM2RUB) crack.bim crack.rub 0
-
-rubbish.sys : asmhead.bin bootpack.rub Makefile
-	cat asmhead.bin  bootpack.rub > rubbish.sys
-
-rubbish.img : ipl10.bin rubbish.sys app.rub crack.rub Makefile
+rubbish.img : ipl10.bin rubbish.sys app.rub crack2.rub Makefile
 	$(EDIMG) imgin:tools/fdimg0at.tek \
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:rubbish.sys to:@: \
 		copy from:ipl10.nas to:@: \
 		copy from:app.rub to:@: \
-		copy from:crack.rub to:@: \
+		copy from:crack2.rub to:@: \
 		imgout:rubbish.img
 
 %.gas : %.c Makefile
