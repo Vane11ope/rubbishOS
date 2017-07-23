@@ -128,7 +128,7 @@ void asm_inthandler27(void);
 void asm_inthandler2c(void);
 void asm_inthandler0d(void);
 void asm_rub_api();
-void start_app(int eip, int cs, int esp, int ds);
+void start_app(int eip, int cs, int esp, int ds, int *tss_esp0);
 
 /* memory.c */
 struct FREEINFO {
@@ -260,7 +260,7 @@ void mem(struct CONSOLE *console, unsigned int memtotal);
 void ls(struct CONSOLE *console);
 void cat(struct CONSOLE *console, int *fat, char *cmdline);
 int app(struct CONSOLE *console, int *fat, char *cmdline);
-void rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);
+int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);
 int inthandler0d(int *esp);
 
 /* file.c */

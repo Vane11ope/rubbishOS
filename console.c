@@ -255,6 +255,7 @@ int app(struct CONSOLE *console, int *fat, char *cmdline)
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct FILEINFO *finfo;
 	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
+	struct TASK *task = task_now();
 	char name[18], *p, *q;
 	int i;
 	const int ds_size = 64 * 1024;
@@ -278,8 +279,8 @@ int app(struct CONSOLE *console, int *fat, char *cmdline)
 		q = (char *)memman_alloc_4k(memman, ds_size);
 		(*((int *)0xfe8)) = (int)p;
 		file_loadfile(finfo->cluster_no, finfo->size, p, fat, (char *) (ADR_DISKIMG + 0x003e00));
-		set_segmdesc(gdt + 1003, finfo->size - 1, (int) p, AR_CODE32_ER);
-		set_segmdesc(gdt + 1004, ds_size - 1, (int) q, AR_DATA32_RW);
+		set_segmdesc(gdt + 1003, finfo->size - 1, (int) p, AR_CODE32_ER + 0x60);
+		set_segmdesc(gdt + 1004, ds_size - 1, (int) q, AR_DATA32_RW + 0x60);
 		if (finfo->size >= 8 && strncmp(p + 4, "main", 4) == 0) {
 			p[0] = 0xe8;
 			p[1] = 0x16;
@@ -288,7 +289,7 @@ int app(struct CONSOLE *console, int *fat, char *cmdline)
 			p[4] = 0x00;
 			p[5] = 0xcb;
 		}
-		start_app(0, 1003 * 8, ds_size, 1004 * 8);
+		start_app(0, 1003 * 8, ds_size, 1004 * 8, &(task->tss.esp0));
 		memman_free_4k(memman, (int) p, finfo->size);
 		memman_free_4k(memman, (int) q, ds_size);
 		console_newline(console);
@@ -297,9 +298,10 @@ int app(struct CONSOLE *console, int *fat, char *cmdline)
 	return 0;
 }
 
-void rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax)
+int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax)
 {
 	struct CONSOLE *console = (struct CONSOLE *)(*(int *) 0xfec);
+	struct TASK *task = task_now();
 	int cs_base = (*((int *)0xfe8));
 	switch (edx) {
 		case 1:
@@ -311,13 +313,16 @@ void rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 		case 3:
 			console_putstr_with_length(console, (char *)ebx + cs_base, ecx);
 			break;
+		case 4:
+			return &(task->tss.esp0);
 	}
-	return;
+	return 0;
 }
 
 int inthandler0d(int *esp)
 {
 	struct CONSOLE *console = (struct CONSOLE *)*((int *)0x0fec);
+	struct TASK *task = task_now();
 	console_putstr(console, "\nINT 0D :\n General Protected Exception.\n");
-	return 1;
+	return &(task->tss.esp0);
 }

@@ -23,7 +23,7 @@ void init_gdtidt(void)
 	set_gatedesc(idt + 0x27, (int)asm_inthandler27, 2*8, AR_INTGATE32);
 	set_gatedesc(idt + 0x2c, (int)asm_inthandler2c, 2*8, AR_INTGATE32);
 	set_gatedesc(idt + 0x0d, (int)asm_inthandler0d, 2*8, AR_INTGATE32);
-	set_gatedesc(idt + 0x40, (int)asm_rub_api, 2*8, AR_INTGATE32);
+	set_gatedesc(idt + 0x40, (int)asm_rub_api, 2*8, AR_INTGATE32 + 0x60);
 	load_idtr(0x7ff, 0x0026f800);
 	return;
 }
