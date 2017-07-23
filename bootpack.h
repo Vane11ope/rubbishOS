@@ -127,6 +127,7 @@ void asm_inthandler21(void);
 void asm_inthandler27(void);
 void asm_inthandler2c(void);
 void asm_inthandler0d(void);
+void asm_inthandler0c(void);
 void asm_rub_api();
 void start_app(int eip, int cs, int esp, int ds, int *tss_esp0);
 
@@ -262,6 +263,7 @@ void cat(struct CONSOLE *console, int *fat, char *cmdline);
 int app(struct CONSOLE *console, int *fat, char *cmdline);
 int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);
 int inthandler0d(int *esp);
+int inthandler0c(int *esp);
 
 /* file.c */
 void file_readfat (int *fat, unsigned char *img);

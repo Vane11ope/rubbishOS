@@ -38,16 +38,19 @@ app.bim: app.obj app_asm.obj Makefile
 app.rub : app.bim Makefile
 	$(BIM2RUB) app.bim app.rub 0
 
-crack2.rub : crack2.nas Makefile
-	$(NASK) crack2.nas crack2.rub crack2.lst
+bug.bim: bug.obj app_asm.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:bug.bim map:bug.map bug.obj app_asm.obj
 
-rubbish.img : ipl10.bin rubbish.sys app.rub crack2.rub Makefile
+bug.rub : bug.bim Makefile
+	$(BIM2RUB) bug.bim bug.rub 0
+
+rubbish.img : ipl10.bin rubbish.sys app.rub bug.rub Makefile
 	$(EDIMG) imgin:tools/fdimg0at.tek \
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:rubbish.sys to:@: \
 		copy from:ipl10.nas to:@: \
 		copy from:app.rub to:@: \
-		copy from:crack2.rub to:@: \
+		copy from:bug.rub to:@: \
 		imgout:rubbish.img
 
 %.gas : %.c Makefile

@@ -323,6 +323,14 @@ int inthandler0d(int *esp)
 {
 	struct CONSOLE *console = (struct CONSOLE *)*((int *)0x0fec);
 	struct TASK *task = task_now();
-	console_putstr(console, "\nINT 0D :\n General Protected Exception.\n");
+	console_putstr(console, "\nINT 0D :\nGeneral Protected Exception.\n");
+	return &(task->tss.esp0);
+}
+
+int inthandler0c(int *esp)
+{
+	struct CONSOLE *console = (struct CONSOLE *)*((int *)0x0fec);
+	struct TASK *task = task_now();
+	console_putstr(console, "\nINT 0D :\nStack Exception.\n");
 	return &(task->tss.esp0);
 }
