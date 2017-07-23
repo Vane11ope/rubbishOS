@@ -13,10 +13,10 @@
 	GLOBAL _load_tr
 	GLOBAL _farjmp
 	GLOBAL _farcall
-	GLOBAL _asm_inthandler20, _asm_inthandler21, _asm_inthandler27, _asm_inthandler2c, _asm_rub_api
+	GLOBAL _asm_inthandler20, _asm_inthandler21, _asm_inthandler27, _asm_inthandler2c, _asm_inthandler0d, _asm_rub_api
 	GLOBAL _start_app
 
-	EXTERN _inthandler20, _inthandler21, _inthandler27, _inthandler2c, _rub_api
+	EXTERN _inthandler20, _inthandler21, _inthandler27, _inthandler2c, _inthandler0d, _rub_api
 
 [SECTION .text]
 
@@ -271,6 +271,63 @@ _asm_inthandler2c:
 	POP DS
 	POP ES
 	IRETD
+
+_asm_inthandler0d:
+	STI
+	PUSH ES
+	PUSH DS
+	PUSHAD
+	MOV AX,SS
+	CMP AX,1*8
+	JNE .from_app
+	MOV EAX,ESP
+	PUSH SS
+	PUSH EAX
+	MOV AX,SS
+	MOV DS,AX
+	MOV ES,AX
+	CALL _inthandler0d
+	ADD ESP,8
+	POPAD
+	POP DS
+	POP ES
+	ADD ESP,4
+	IRETD
+.from_app:
+	CLI
+	MOV EAX,1*8
+	MOV DS,AX
+	MOV ECX,[0xfe4]
+	ADD ECX,-8
+	MOV [ECX+4],SS
+	MOV [ECX],ESP
+	MOV SS,AX
+	MOV ES,AX
+	MOV ESP,ECX
+	STI
+	CALL _inthandler0d
+	CLI
+	CMP EAX,0
+	POP ECX
+	POP EAX
+	MOV SS,AX
+	MOV ESP,ECX
+	POPAD
+	POP DS
+	POP ES
+	ADD ESP,4
+	IRETD
+.kill
+	MOV EAX 1*8
+	MOV ES,AX
+	MOV SS,AX
+	MOV DS,AX
+	MOV FS,AX
+	MOV GS,AX
+	MOV ESP,[0xfe4]
+	STI
+	POPAD
+	RET
 
 _asm_rub_api:
 	PUSH DS

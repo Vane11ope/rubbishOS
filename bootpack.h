@@ -126,6 +126,7 @@ void asm_inthandler20(void);
 void asm_inthandler21(void);
 void asm_inthandler27(void);
 void asm_inthandler2c(void);
+void asm_inthandler0d(void);
 void asm_rub_api();
 void start_app(int eip, int cs, int esp, int ds);
 
@@ -260,6 +261,7 @@ void ls(struct CONSOLE *console);
 void cat(struct CONSOLE *console, int *fat, char *cmdline);
 int app(struct CONSOLE *console, int *fat, char *cmdline);
 void rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);
+void inthandler0d(void);
 
 /* file.c */
 void file_readfat (int *fat, unsigned char *img);
