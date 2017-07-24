@@ -44,13 +44,27 @@ bug.bim: bug.obj app_asm.obj Makefile
 bug.rub : bug.bim Makefile
 	$(BIM2RUB) bug.bim bug.rub 0
 
-rubbish.img : ipl10.bin rubbish.sys app.rub bug.rub Makefile
+bug2.bim: bug2.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:bug2.bim map:bug2.map bug2.obj
+
+bug2.rub : bug2.bim Makefile
+	$(BIM2RUB) bug2.bim bug2.rub 0
+
+bug3.bim: bug3.obj app_asm.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:bug3.bim map:bug3.map bug3.obj app_asm.obj
+
+bug3.rub : bug3.bim Makefile
+	$(BIM2RUB) bug3.bim bug3.rub 0
+
+rubbish.img : ipl10.bin rubbish.sys app.rub bug.rub bug2.rub bug3.rub Makefile
 	$(EDIMG) imgin:tools/fdimg0at.tek \
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:rubbish.sys to:@: \
 		copy from:ipl10.nas to:@: \
 		copy from:app.rub to:@: \
 		copy from:bug.rub to:@: \
+		copy from:bug2.rub to:@: \
+		copy from:bug3.rub to:@: \
 		imgout:rubbish.img
 
 %.gas : %.c Makefile

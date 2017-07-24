@@ -13,7 +13,7 @@
 	GLOBAL _load_tr
 	GLOBAL _farjmp
 	GLOBAL _farcall
-	GLOBAL _asm_inthandler20, _asm_inthandler21, _asm_inthandler27, _asm_inthandler2c, _asm_inthandler0d, _asm_inthandler0c, _asm_rub_api
+	GLOBAL _asm_inthandler20, _asm_inthandler21, _asm_inthandler27, _asm_inthandler2c, _asm_inthandler0d, _asm_inthandler0c, _asm_rub_api, _asm_end_app
 	GLOBAL _start_app
 
 	EXTERN _inthandler20, _inthandler21, _inthandler27, _inthandler2c, _inthandler0d, _inthandler0c, _rub_api
@@ -239,6 +239,12 @@ _asm_rub_api:
 	IRETD
 end_app:
 	MOV ESP,[EAX]
+	POPAD
+	RET
+
+_asm_end_app:
+	MOV ESP,[EAX]
+	MOV DWORD [EAX+4],0
 	POPAD
 	RET
 

@@ -129,6 +129,7 @@ void asm_inthandler2c(void);
 void asm_inthandler0d(void);
 void asm_inthandler0c(void);
 void asm_rub_api();
+void asm_end_app();
 void start_app(int eip, int cs, int esp, int ds, int *tss_esp0);
 
 /* memory.c */

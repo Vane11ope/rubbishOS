@@ -21,6 +21,7 @@ void RubbMain(void)
 	struct FIFO32 fifo, keycmd;
 	struct TIMER *timer;
 	struct TASK *task_a, *task_console;
+	struct CONSOLE *console;
 	unsigned char *sht_buf_back, sht_buf_mouse[256], *sht_buf_win, *sht_buf_win_sub, *sht_buf_console;
 	char s[40];
 	const short CONSOLE_TEXTBOX_WIDTH = CONSOLE_WIDTH - CHAR_WIDTH * 2;
@@ -133,6 +134,7 @@ void RubbMain(void)
 	*((int *)(task_console->tss.esp + 4)) = (int) sht_console;
 	*((int *)(task_console->tss.esp + 8)) = (int) memtotal;
 	task_run(task_console, 2, 2);
+	console = (struct CONSOLE *)*((int *)0x0fec);
 
 	// drawing some information on the screen
 	sprintf(s, "memory %dMB free : %dKB", memtotal / (1024*1024), memman_total(memman) / 1024);
@@ -211,8 +213,18 @@ void RubbMain(void)
 							win_cursor_x += 8;
 						}
 					} else {
-						if ((s[0] == 'L' || s[0] == 'l') && key_ctrl != 0) {
-							fifo32_put(&task_console->fifo, 1111);
+						if (key_ctrl != 0 ) {
+							if ((s[0] == 'C' || s[0] == 'c')) {
+								console_putstr(console, "\nBreak(key) :\n");
+								io_cli();
+								task_console->tss.eax = (int) &(task_console->tss.esp0);
+								task_console->tss.eip = (int) asm_end_app;
+								io_sti();
+							} else if ((s[0] == 'L' || s[0] == 'l') && key_ctrl != 0) {
+								fifo32_put(&task_console->fifo, 1111);
+							} else {
+								fifo32_put(&task_console->fifo, s[0] + 256);
+							}
 						} else {
 							fifo32_put(&task_console->fifo, s[0] + 256);
 						}

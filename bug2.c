@@ -1,0 +1,4 @@
+void RubbMain(void)
+{
+	for (;;) {}
+}
