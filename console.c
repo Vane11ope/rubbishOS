@@ -303,20 +303,34 @@ int app(struct CONSOLE *console, int *fat, char *cmdline)
 int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax)
 {
 	struct CONSOLE *console = (struct CONSOLE *)(*(int *) 0xfec);
+	struct SHTCTL* shtctl = (struct SHTCTL *)(*(int *) 0xfe4);
 	struct TASK *task = task_now();
-	int cs_base = (*((int *)0xfe8));
-	char s[12];
+	struct SHEET *sheet;
+	int *reg = &eax + 1; /* rewrite the values assigned to each register */
+	int ds_base = (*((int *)0xfe8));
+	char s[30];
 	switch (edx) {
 		case 1:
 			console_putchar(console, eax & 0xff, 1);
 			break;
 		case 2:
-			console_putstr(console, (char *)ebx + cs_base);
+			console_putstr(console, (char *)ebx + ds_base);
 			break;
 		case 3:
-			console_putstr_with_length(console, (char *)ebx + cs_base, ecx);
+			console_putstr_with_length(console, (char *)ebx + ds_base, ecx);
 			break;
 		case 4:
+			return &(task->tss.esp0);
+		case 5:
+			sheet = sheet_alloc(shtctl);
+			sheet_setbuf(sheet, (char *)ebx + ds_base, esi, edi, eax);
+			make_window((char *)ebx + ds_base, esi, edi, (char *)ecx + ds_base, 0);
+			sheet_slide(sheet, 100, 50);
+			sheet_updown(sheet, 5);
+			reg[7] = (int)sheet;
+			break;
+		default:
+			console_putstr(console, "edx is illegal");
 			return &(task->tss.esp0);
 	}
 	return 0;

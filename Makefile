@@ -39,10 +39,16 @@ app.rub : app.bim Makefile
 	$(BIM2RUB) app.bim app.rub 0
 
 eff.bim: eff.obj app_asm.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:eff.bim map:eff.map eff.obj app_asm.obj
+	$(OBJ2BIM) @$(RULEFILE) out:eff.bim stack:1k map:eff.map eff.obj app_asm.obj
 
 eff.rub : eff.bim Makefile
 	$(BIM2RUB) eff.bim eff.rub 0
+
+window.bim: open_window.obj app_asm.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:window.bim stack:10k map:window.map open_window.obj app_asm.obj
+
+window.rub : window.bim Makefile
+	$(BIM2RUB) window.bim window.rub 0
 
 effasm.bim : effasm.obj Makefile
 	$(OBJ2BIM) @$(RULEFILE) out:effasm.bim stack:1k map:effasm.map effasm.obj
@@ -68,13 +74,14 @@ bug3.bim: bug3.obj app_asm.obj Makefile
 bug3.rub : bug3.bim Makefile
 	$(BIM2RUB) bug3.bim bug3.rub 0
 
-rubbish.img : ipl10.bin rubbish.sys app.rub eff.rub effasm.rub bug.rub bug2.rub bug3.rub Makefile
+rubbish.img : ipl10.bin rubbish.sys app.rub eff.rub window.rub effasm.rub bug.rub bug2.rub bug3.rub Makefile
 	$(EDIMG) imgin:tools/fdimg0at.tek \
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:rubbish.sys to:@: \
 		copy from:ipl10.nas to:@: \
 		copy from:app.rub to:@: \
 		copy from:eff.rub to:@: \
+		copy from:window.rub to:@: \
 		copy from:effasm.rub to:@: \
 		copy from:bug.rub to:@: \
 		copy from:bug2.rub to:@: \

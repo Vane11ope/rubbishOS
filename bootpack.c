@@ -89,6 +89,7 @@ void RubbMain(void)
 
 	// sheet settings
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
+	*((int *)0xfe4) = shtctl;
 	// sheet alloc
 	sht_back = sheet_alloc(shtctl);
 	sht_mouse = sheet_alloc(shtctl);
