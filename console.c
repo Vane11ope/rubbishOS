@@ -325,9 +325,19 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 			sheet = sheet_alloc(shtctl);
 			sheet_setbuf(sheet, (char *)ebx + ds_base, esi, edi, eax);
 			make_window((char *)ebx + ds_base, esi, edi, (char *)ecx + ds_base, 0);
-			sheet_slide(sheet, 100, 50);
+			sheet_slide(sheet, 700, 200);
 			sheet_updown(sheet, 5);
 			reg[7] = (int)sheet;
+			break;
+		case 6:
+			sheet = (struct SHEET *)ebx;
+			putfonts8_asc(sheet->buf, sheet->bxsize, esi, edi, eax, (char *) ebp + ds_base);
+			sheet_refresh(sheet, esi, edi, esi + ecx * 8, edi + 16);
+			break;
+		case 7:
+			sheet = (struct SHEET *)ebx;
+			boxfill8(sheet->buf, sheet->bxsize, ebp, eax, ecx, esi, edi);
+			sheet_refresh(sheet, esi, edi, esi + ecx * 8, edi + 16);
 			break;
 		default:
 			console_putstr(console, "edx is illegal");

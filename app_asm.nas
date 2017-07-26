@@ -3,7 +3,7 @@
 [BITS 32]
 [FILE "app.nas"]
 
-	GLOBAL _api_putchar, _api_putstr, _api_open_window, _api_end
+	GLOBAL _api_putchar, _api_putstr, _api_open_window, _api_putstr_on_window, _api_boxfill_on_window, _api_end
 
 [SECTION .text]
 
@@ -33,6 +33,44 @@ _api_open_window: ; int api_open_window(char *buf, int xsize, int ysize, int opa
 	MOV ECX,[ESP+32] ; title
 	INT 0x40
 	POP EBX
+	POP ESI
+	POP EDI
+	RET
+
+_api_putstr_on_window: ; void api_putstr_on_window(int win, int x, int y, int opacity, int len, char *str);
+	PUSH EDI
+	PUSH ESI
+	PUSH EBP
+	PUSH EBX
+	MOV EDX,6
+	MOV EBX,[ESP+20]
+	MOV ESI,[ESP+24]
+	MOV EDI,[ESP+28]
+	MOV EAX,[ESP+32]
+	MOV ECX,[ESP+36]
+	MOV EBP,[ESP+40]
+	INT 0x40
+	POP EBX
+	POP EBP
+	POP ESI
+	POP EDI
+	RET
+
+_api_boxfill_on_window: ; void api_boxfill_on_window(int win, int x0, int y0, int x1, int y1, int opacity);
+	PUSH EDI
+	PUSH ESI
+	PUSH EBP
+	PUSH EBX
+	MOV EDX,7
+	MOV EBX,[ESP+20]
+	MOV EAX,[ESP+24]
+	MOV ECX,[ESP+28]
+	MOV ESI,[ESP+32]
+	MOV EDI,[ESP+36]
+	MOV EBP,[ESP+40]
+	INT 0x40
+	POP EBX
+	POP EBP
 	POP ESI
 	POP EDI
 	RET
