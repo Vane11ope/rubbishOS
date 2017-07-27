@@ -48,7 +48,7 @@ window.bim: open_window.obj app_asm.obj Makefile
 	$(OBJ2BIM) @$(RULEFILE) out:window.bim stack:10k map:window.map open_window.obj app_asm.obj
 
 window.rub : window.bim Makefile
-	$(BIM2RUB) window.bim window.rub 0
+	$(BIM2RUB) window.bim window.rub 40
 
 effasm.bim : effasm.obj Makefile
 	$(OBJ2BIM) @$(RULEFILE) out:effasm.bim stack:1k map:effasm.map effasm.obj
