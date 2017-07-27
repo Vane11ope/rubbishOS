@@ -352,6 +352,11 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 			ecx = (ecx + 0x0f) & 0xfffffff0;
 			memman_free((struct MEMMAN *)(ebx + ds_base), eax, ecx);
 			break;
+		case 11:
+			sheet = (struct SHEET *)ebx;
+			sheet->buf[sheet->bxsize * edi + esi] = eax;
+			sheet_refresh(sheet, esi, edi, esi + 1, edi + 1);
+			break;
 		default:
 			console_putstr(console, "edx is illegal");
 			return &(task->tss.esp0);

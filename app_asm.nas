@@ -3,7 +3,7 @@
 [BITS 32]
 [FILE "app.nas"]
 
-	GLOBAL _api_init_malloc, _api_malloc, _api_free, _api_putchar, _api_putstr, _api_open_window, _api_putstr_on_window, _api_boxfill_on_window, _api_end
+	GLOBAL _api_init_malloc, _api_malloc, _api_free, _api_putchar, _api_putstr, _api_open_window, _api_putstr_on_window, _api_boxfill_on_window, _api_dot, _api_end
 
 [SECTION .text]
 
@@ -104,6 +104,21 @@ _api_free: ; void api_free(char *addr, int size);
 	MOV ECX,[ESP+12]
 	INT 0x40
 	POP EBX
+	RET
+
+_api_dot: ; void api_dot(int window, int x, int y, int opacity);
+	PUSH EDI
+	PUSH ESI
+	PUSH EBX
+	MOV EDX,11
+	MOV EBX,[ESP+16]
+	MOV ESI,[ESP+20]
+	MOV EDI,[ESP+24]
+	MOV EAX,[ESP+30]
+	INT 0x40
+	POP EBX
+	POP ESI
+	POP EDI
 	RET
 
 _api_end:
