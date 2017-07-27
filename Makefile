@@ -56,6 +56,12 @@ dot.bim: dot.obj app_asm.obj Makefile
 dot.rub : dot.bim Makefile
 	$(BIM2RUB) dot.bim dot.rub 47k
 
+dots.bim: dots.obj app_asm.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:dots.bim stack:10k map:dots.map dots.obj app_asm.obj
+
+dots.rub : dots.bim Makefile
+	$(BIM2RUB) dots.bim dots.rub 48k
+
 effasm.bim : effasm.obj Makefile
 	$(OBJ2BIM) @$(RULEFILE) out:effasm.bim stack:1k map:effasm.map effasm.obj
 
@@ -80,7 +86,7 @@ bug3.bim: bug3.obj app_asm.obj Makefile
 bug3.rub : bug3.bim Makefile
 	$(BIM2RUB) bug3.bim bug3.rub 0
 
-rubbish.img : ipl10.bin rubbish.sys app.rub eff.rub window.rub dot.rub effasm.rub bug.rub bug2.rub bug3.rub Makefile
+rubbish.img : ipl10.bin rubbish.sys app.rub eff.rub window.rub dot.rub dots.rub effasm.rub bug.rub bug2.rub bug3.rub Makefile
 	$(EDIMG) imgin:tools/fdimg0at.tek \
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:rubbish.sys to:@: \
@@ -89,6 +95,7 @@ rubbish.img : ipl10.bin rubbish.sys app.rub eff.rub window.rub dot.rub effasm.ru
 		copy from:eff.rub to:@: \
 		copy from:window.rub to:@: \
 		copy from:dot.rub to:@: \
+		copy from:dots.rub to:@: \
 		copy from:effasm.rub to:@: \
 		copy from:bug.rub to:@: \
 		copy from:bug2.rub to:@: \

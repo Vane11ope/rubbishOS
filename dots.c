@@ -4,17 +4,23 @@ int api_open_window(char *buf, int xsize, int ysize, int opacity, char *title);
 void api_boxfill_on_window(int win, int x0, int y0, int x1, int y1, int opacity);
 void api_dot(int window, int x, int y, int opacity);
 void api_end(void);
+int rand(void);
 
 void RubbMain(void)
 {
 	char *buf;
-	int window;
+	int window, i, x, y;
 
 	api_init_malloc();
 	buf = api_malloc(150 * 100);
-	window = api_open_window(buf, 150, 100, -1, "dot");
+	window = api_open_window(buf, 150, 100, -1, "dots");
 	api_boxfill_on_window(window, 6, 26, 143, 93, 0);
-	api_dot(window, 75, 59, 3);
+	for (i = 0; i < 50; ++i) {
+		x = (rand() % 137) + 6;
+		y = (rand() % 67) + 26;
+		api_dot(window, x, y, 3);
+	}
 	api_end();
 }
+
 
