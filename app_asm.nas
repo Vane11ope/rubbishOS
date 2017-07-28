@@ -3,7 +3,7 @@
 [BITS 32]
 [FILE "app.nas"]
 
-	GLOBAL _api_init_malloc, _api_malloc, _api_free, _api_putchar, _api_putstr, _api_open_window, _api_putstr_on_window, _api_boxfill_on_window, _api_dot, _api_end
+	GLOBAL _api_init_malloc, _api_malloc, _api_free, _api_putchar, _api_putstr, _api_open_window, _api_putstr_on_window, _api_boxfill_on_window, _api_dot, _api_refresh_window, _api_end
 
 [SECTION .text]
 
@@ -106,7 +106,7 @@ _api_free: ; void api_free(char *addr, int size);
 	POP EBX
 	RET
 
-_api_dot: ; void api_dot(int window, int x, int y, int opacity);
+_api_dot: ; void api_dot(int window, int x, int y, int color);
 	PUSH EDI
 	PUSH ESI
 	PUSH EBX
@@ -114,7 +114,23 @@ _api_dot: ; void api_dot(int window, int x, int y, int opacity);
 	MOV EBX,[ESP+16]
 	MOV ESI,[ESP+20]
 	MOV EDI,[ESP+24]
-	MOV EAX,[ESP+30]
+	MOV EAX,[ESP+28]
+	INT 0x40
+	POP EBX
+	POP ESI
+	POP EDI
+	RET
+
+_api_refresh_window: ; void api_refresh_window(int win, int x0, int y0, int x1, int y1);
+	PUSH EDI
+	PUSH ESI
+	PUSH EBX
+	MOV EDX,12
+	MOV EBX,[ESP+16]
+	MOV EAX,[ESP+20]
+	MOV ECX,[ESP+24]
+	MOV ESI,[ESP+28]
+	MOV EDI,[ESP+32]
 	INT 0x40
 	POP EBX
 	POP ESI

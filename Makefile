@@ -45,22 +45,28 @@ eff.rub : eff.bim Makefile
 	$(BIM2RUB) eff.bim eff.rub 0
 
 window.bim: open_window.obj app_asm.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:window.bim stack:10k map:window.map open_window.obj app_asm.obj
+	$(OBJ2BIM) @$(RULEFILE) out:window.bim stack:1k map:window.map open_window.obj app_asm.obj
 
 window.rub : window.bim Makefile
 	$(BIM2RUB) window.bim window.rub 40k
 
 dot.bim: dot.obj app_asm.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:dot.bim stack:10k map:dot.map dot.obj app_asm.obj
+	$(OBJ2BIM) @$(RULEFILE) out:dot.bim stack:1k map:dot.map dot.obj app_asm.obj
 
 dot.rub : dot.bim Makefile
 	$(BIM2RUB) dot.bim dot.rub 47k
 
 dots.bim: dots.obj app_asm.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:dots.bim stack:10k map:dots.map dots.obj app_asm.obj
+	$(OBJ2BIM) @$(RULEFILE) out:dots.bim stack:1k map:dots.map dots.obj app_asm.obj
 
 dots.rub : dots.bim Makefile
 	$(BIM2RUB) dots.bim dots.rub 48k
+
+dots2.bim: dots2.obj app_asm.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:dots2.bim stack:1k map:dots2.map dots2.obj app_asm.obj
+
+dots2.rub : dots2.bim Makefile
+	$(BIM2RUB) dots2.bim dots2.rub 48k
 
 effasm.bim : effasm.obj Makefile
 	$(OBJ2BIM) @$(RULEFILE) out:effasm.bim stack:1k map:effasm.map effasm.obj
@@ -86,7 +92,7 @@ bug3.bim: bug3.obj app_asm.obj Makefile
 bug3.rub : bug3.bim Makefile
 	$(BIM2RUB) bug3.bim bug3.rub 0
 
-rubbish.img : ipl10.bin rubbish.sys app.rub eff.rub window.rub dot.rub dots.rub effasm.rub bug.rub bug2.rub bug3.rub Makefile
+rubbish.img : ipl10.bin rubbish.sys app.rub eff.rub window.rub dot.rub dots.rub dots2.rub effasm.rub bug.rub bug2.rub bug3.rub Makefile
 	$(EDIMG) imgin:tools/fdimg0at.tek \
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:rubbish.sys to:@: \
@@ -96,6 +102,7 @@ rubbish.img : ipl10.bin rubbish.sys app.rub eff.rub window.rub dot.rub dots.rub 
 		copy from:window.rub to:@: \
 		copy from:dot.rub to:@: \
 		copy from:dots.rub to:@: \
+		copy from:dots2.rub to:@: \
 		copy from:effasm.rub to:@: \
 		copy from:bug.rub to:@: \
 		copy from:bug2.rub to:@: \

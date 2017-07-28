@@ -330,14 +330,18 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 			reg[7] = (int)sheet;
 			break;
 		case 6:
-			sheet = (struct SHEET *)ebx;
+			sheet = (struct SHEET *)(ebx & 0xfffffffe);
 			putfonts8_asc(sheet->buf, sheet->bxsize, esi, edi, eax, (char *) ebp + ds_base);
-			sheet_refresh(sheet, esi, edi, esi + ecx * 8, edi + 16);
+			if ((ebx & 1) == 0) {
+				sheet_refresh(sheet, esi, edi, esi + ecx * 8, edi + 16);
+			}
 			break;
 		case 7:
-			sheet = (struct SHEET *)ebx;
+			sheet = (struct SHEET *)(ebx & 0xfffffffe);
 			boxfill8(sheet->buf, sheet->bxsize, ebp, eax, ecx, esi, edi);
-			sheet_refresh(sheet, esi, edi, esi + ecx * 8, edi + 16);
+			if ((ebx & 1) == 0) {
+				sheet_refresh(sheet, eax, ecx, esi + 1, edi + 1);
+			}
 			break;
 		case 8:
 			memman_init((struct MEMMAN *)(ebx + ds_base));
@@ -353,9 +357,15 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 			memman_free((struct MEMMAN *)(ebx + ds_base), eax, ecx);
 			break;
 		case 11:
-			sheet = (struct SHEET *)ebx;
+			sheet = (struct SHEET *)(ebx & 0xfffffffe);
 			sheet->buf[sheet->bxsize * edi + esi] = eax;
-			sheet_refresh(sheet, esi, edi, esi + 1, edi + 1);
+			if ((ebx & 1) == 0) {
+				sheet_refresh(sheet, esi, edi, esi + 1, edi + 1);
+			}
+			break;
+		case 12:
+			sheet = (struct SHEET *)ebx;
+			sheet_refresh(sheet, eax, ecx, esi, edi);
 			break;
 		default:
 			console_putstr(console, "edx is illegal");
