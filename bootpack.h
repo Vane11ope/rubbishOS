@@ -229,6 +229,7 @@ void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
 void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s);
 void putfonts8_asc_sht(struct SHEET *sheet, int x, int y, int color, int backcolor, char *str);
 void putblock8_8 (char *vram, int vxsize, int pxsize, int pysize, int px0, int py0, char* buf, int bxsize);
+void drawline(struct SHEET *sheet, int x0, int y0, int x1, int y1, int color);
 
 /* keyboard.c */
 void inthandler21(int *esp);
