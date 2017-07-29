@@ -374,6 +374,9 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 				sheet_refresh(sheet, eax, ecx, esi + 1, edi + 1);
 			}
 			break;
+		case 14:
+			sheet_free((struct SHEET *) ebx);
+			break;
 		default:
 			console_putstr(console, "edx is illegal");
 			return &(task->tss.esp0);

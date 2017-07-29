@@ -3,7 +3,7 @@
 [BITS 32]
 [FILE "app.nas"]
 
-	GLOBAL _api_init_malloc, _api_malloc, _api_free, _api_putchar, _api_putstr, _api_open_window, _api_putstr_on_window, _api_boxfill_on_window, _api_dot, _api_refresh_window, _api_drawline, _api_end
+	GLOBAL _api_init_malloc, _api_malloc, _api_free, _api_putchar, _api_putstr, _api_open_window, _api_putstr_on_window, _api_boxfill_on_window, _api_dot, _api_refresh_window, _api_drawline, _api_close_window, _api_end
 
 [SECTION .text]
 
@@ -154,6 +154,14 @@ _api_drawline: ; void api_drawline(int window, int x0, int y0, int x1, int y1, i
 	POP EBP
 	POP ESI
 	POP EDI
+	RET
+
+_api_close_window: ; void api_close_window(int win);
+	PUSH EBX
+	MOV EDX,14
+	MOV EBX,[ESP+8]
+	INT 0x40
+	POP EBX
 	RET
 
 _api_end:
