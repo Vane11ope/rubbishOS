@@ -245,6 +245,7 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
 struct CONSOLE {
 	struct SHEET *sheet;
 	int cursor_x, cursor_y, cursor_color;
+	struct TIMER *timer;
 };
 struct FILEINFO {
 	unsigned char name[8], ext[3], type;
