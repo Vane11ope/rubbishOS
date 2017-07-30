@@ -189,30 +189,30 @@ void make_window_title(unsigned char *buf, int xsize, char *title, char isactive
 	return;
 }
 
-void putfont8(char *vram, int xsize, int x, int y, char c, char *font)
+void putfont8(char *vram, int xsize, int x, int y, char color, char *font)
 {
 	int i;
 	char *p, data;
 	for (i = 0; i < 16; ++i) {
 		p = vram + (y + i) * xsize + x;
 		data = font[i];
-		if ((data & 0x80) != 0) {p[0] = c;}
-		if ((data & 0x40) != 0) {p[1] = c;}
-		if ((data & 0x20) != 0) {p[2] = c;}
-		if ((data & 0x10) != 0) {p[3] = c;}
-		if ((data & 0x08) != 0) {p[4] = c;}
-		if ((data & 0x04) != 0) {p[5] = c;}
-		if ((data & 0x02) != 0) {p[6] = c;}
-		if ((data & 0x01) != 0) {p[7] = c;}
+		if ((data & 0x80) != 0) {p[0] = color;}
+		if ((data & 0x40) != 0) {p[1] = color;}
+		if ((data & 0x20) != 0) {p[2] = color;}
+		if ((data & 0x10) != 0) {p[3] = color;}
+		if ((data & 0x08) != 0) {p[4] = color;}
+		if ((data & 0x04) != 0) {p[5] = color;}
+		if ((data & 0x02) != 0) {p[6] = color;}
+		if ((data & 0x01) != 0) {p[7] = color;}
 	}
 	return;
 }
 
-void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s)
+void putfonts8_asc(char *vram, int xsize, int x, int y, char color, unsigned char *s)
 {
 	extern char hankaku[4096];
 	for (; *s != 0x00; ++s) {
-		putfont8(vram, xsize, x, y, c, hankaku + *s * 16);
+		putfont8(vram, xsize, x, y, color, hankaku + *s * 16);
 		x += 8;
 	}
 	return;

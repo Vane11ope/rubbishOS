@@ -37,7 +37,7 @@ _api_open_window: ; int api_open_window(char *buf, int xsize, int ysize, int opa
 	POP EDI
 	RET
 
-_api_putstr_on_window: ; void api_putstr_on_window(int win, int x, int y, int opacity, int len, char *str);
+_api_putstr_on_window: ; void api_putstr_on_window(int win, int x, int y, int color, int len, char *str);
 	PUSH EDI
 	PUSH ESI
 	PUSH EBP
