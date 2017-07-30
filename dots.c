@@ -1,10 +1,4 @@
-void api_init_malloc(void);
-char *api_malloc(int size);
-int api_open_window(char *buf, int xsize, int ysize, int opacity, char *title);
-void api_boxfill_on_window(int win, int x0, int y0, int x1, int y1, int opacity);
-void api_dot(int window, int x, int y, int color);
-void api_end(void);
-int rand(void);
+#include "app.h"
 
 void RubbMain(void)
 {

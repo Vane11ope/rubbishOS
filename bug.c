@@ -1,5 +1,4 @@
-void api_putchar(int c);
-void api_end(void);
+#include "app.h"
 
 void RubbMain(void)
 {
