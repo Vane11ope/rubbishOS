@@ -231,6 +231,9 @@ void RubbMain(void)
 						}
 					}
 				}
+				if (i == 256 + 0x3b && shtctl->top > 2) {
+					sheet_updown(shtctl->sheets[1], shtctl->top - 1);
+				}
 				if (i == 256 + 0x0e) {
 					if (key_to == 0) {
 						if (win_cursor_x > 8) {
