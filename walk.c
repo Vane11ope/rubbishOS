@@ -4,7 +4,7 @@ int api_open_window(char *buf, int xsize, int ysize, int opacity, char *title);
 void api_boxfill_on_window(int win, int x0, int y0, int x1, int y1, int opacity);
 void api_putstr_on_window(int win, int x, int y, int color, int len, char *str);
 void api_refresh_window(int win, int x0, int y0, int x1, int y1);
-void api_close_window(int window);
+//void api_close_window(int window);
 int api_getkey(int mode);
 void api_end(void);
 
@@ -29,7 +29,7 @@ void RubbMain(void)
 		if (i == 0x0a) { break; }
 		api_putstr_on_window(window, x, y, 3, 1, "*");
 	}
-	api_close_window(window);
+	//api_close_window(window);
 	api_end();
 }
 

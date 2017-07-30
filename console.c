@@ -255,6 +255,8 @@ int app(struct CONSOLE *console, int *fat, char *cmdline)
 	struct FILEINFO *finfo;
 	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
 	struct TASK *task = task_now();
+	struct SHTCTL *shtctl;
+	struct SHEET *sheet;
 	char name[18], *p, *q;
 	int i, segsize, datasize, esp, datarub;
 
@@ -288,6 +290,13 @@ int app(struct CONSOLE *console, int *fat, char *cmdline)
 				q[esp + i] = p[datarub + i];
 			}
 			start_app(0x1b, 1003 * 8, esp, 1004 * 8, &(task->tss.esp0));
+			shtctl = (struct SHTCTL *) *((int *)0x0fe4);
+			for (i = 0; i < MAX_SHEETS; ++i) {
+				sheet = &(shtctl->sheets0[i]);
+				if (sheet->flags != 0 && sheet->task == task) {
+					sheet_free(sheet);
+				}
+			}
 			memman_free_4k(memman, (int) q, segsize);
 		} else {
 			console_putstr(console, ".rub file format error.\n");
@@ -322,6 +331,7 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 			return &(task->tss.esp0);
 		case 5:
 			sheet = sheet_alloc(shtctl);
+			sheet->task = task;
 			sheet_setbuf(sheet, (char *)ebx + ds_base, esi, edi, eax);
 			make_window((char *)ebx + ds_base, esi, edi, (char *)ecx + ds_base, 0);
 			sheet_slide(sheet, 700, 200);

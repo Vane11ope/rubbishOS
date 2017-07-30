@@ -95,6 +95,7 @@ struct SHEET {
 	unsigned char *buf;
 	int bxsize, bysize, vx0, vy0, opacity, height, flags;
 	struct SHTCTL *shtctl;
+	struct TASK *task;
 };
 struct MOUSE_DEC {
 	unsigned char buf[3], phase;
