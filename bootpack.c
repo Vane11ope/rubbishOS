@@ -312,7 +312,24 @@ void RubbMain(void)
 				}
 				sheet_refresh(sht_win_sub, win_cursor_x, WINDOW_TITLE_HEIGHT, win_cursor_x + 8, 44);
 			} else if (512 <= i && i <= 767) {
-				if (mouse_decode(&mdec, i) != 0) {
+				if (mouse_decode(&mdec, i - 512) != 0) {
+					mouse_x += mdec.x;
+					mouse_y += mdec.y;
+					if (mouse_x < 0) {
+						mouse_x = 0;
+					}
+					if (mouse_y < 0) {
+						mouse_y = 0;
+					}
+					if (mouse_x > binfo->scrnx - mouse_offset) {
+						mouse_x = binfo->scrnx - mouse_offset;
+					}
+					if (mouse_y > binfo->scrny - mouse_offset) {
+						mouse_y = binfo->scrny - mouse_offset;
+					}
+					sprintf(s, "(%3d, %3d)", mouse_x, mouse_y);
+					putfonts8_asc_sht(sht_back, 0, 50, COL8_FFFFFF, COL8_000000, s);
+					sheet_slide(sht_mouse, mouse_x, mouse_y);
 					sprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);
 					if ((mdec.btn & 0x01) != 0) {
 						s[1] = 'L';
@@ -327,6 +344,16 @@ void RubbMain(void)
 										if (3 <= x && x < sheet->bxsize - 3 && 3 <= y && y < 21) {
 											mmx = mouse_x;
 											mmy = mouse_y;
+										}
+										if (sheet->bxsize - 21 <= x && x < sheet->bxsize - 5 && 5 <= y && y < 19) {
+											if (sheet->task != 0) {
+												console = (struct CONSOLE *)*((int *)(0x0fec));
+												console_putstr(console, "\nBreak(mouse) :\n");
+												io_cli();
+												task_console->tss.eax = (int)&(task_console->tss.esp0);
+												task_console->tss.eip = (int)asm_end_app;
+												io_sti();
+											}
 										}
 										break;
 									}
@@ -349,23 +376,6 @@ void RubbMain(void)
 						s[2] = 'C';
 					}
 					putfonts8_asc_sht(sht_back, 50, 0, COL8_FFFFFF, COL8_000000, s);
-					mouse_x += mdec.x;
-					mouse_y += mdec.y;
-					if (mouse_x < 0) {
-						mouse_x = 0;
-					}
-					if (mouse_y < 0) {
-						mouse_y = 0;
-					}
-					if (mouse_x > binfo->scrnx - mouse_offset) {
-						mouse_x = binfo->scrnx - mouse_offset;
-					}
-					if (mouse_y > binfo->scrny - mouse_offset) {
-						mouse_y = binfo->scrny - mouse_offset;
-					}
-					sprintf(s, "(%3d, %3d)", mouse_x, mouse_y);
-					putfonts8_asc_sht(sht_back, 0, 50, COL8_FFFFFF, COL8_000000, s);
-					sheet_slide(sht_mouse, mouse_x, mouse_y);
 				}
 			} else if (i <= 1) {
 				if (i != 0) {

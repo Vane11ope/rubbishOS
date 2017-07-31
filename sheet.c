@@ -90,11 +90,11 @@ void sheet_updown(struct SHEET *sht, int height)
 		} else {
 			for (h = sht->shtctl->top; h >= height; --h) {
 				sht->shtctl->sheets[h + 1] = sht->shtctl->sheets[h];
-				sht->shtctl->sheets[h + 1]->height = h;
+				sht->shtctl->sheets[h + 1]->height = h + 1;
 			}
+			sht->shtctl->sheets[height] = sht;
 			++sht->shtctl->top;
 		}
-		sht->shtctl->sheets[height] = sht;
 		sheet_refreshmap(sht->shtctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize, height);
 		sheet_refreshsub(sht->shtctl, sht->vx0, sht->vy0, sht->vx0 + sht->bxsize, sht->vy0 + sht->bysize, height, height);
 	}

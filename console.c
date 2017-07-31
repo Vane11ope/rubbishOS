@@ -335,7 +335,7 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 			sheet_setbuf(sheet, (char *)ebx + ds_base, esi, edi, eax);
 			make_window((char *)ebx + ds_base, esi, edi, (char *)ecx + ds_base, 0);
 			sheet_slide(sheet, 700, 200);
-			sheet_updown(sheet, 5);
+			sheet_updown(sheet, shtctl->top);
 			reg[7] = (int)sheet;
 			break;
 		case 6:

@@ -245,7 +245,7 @@ end_app:
 
 _asm_end_app:
 	MOV ESP,[EAX]
-	MOV DWORD [EAX+4],0
+	MOV DWORD[EAX+4],0
 	POPAD
 	RET
 
