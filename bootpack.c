@@ -17,7 +17,7 @@ void RubbMain(void)
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
 	struct SHTCTL *shtctl;
-	struct SHEET *sht_back, *sht_mouse, *sht_win, *sht_win_sub, *sht_console, *sheet;
+	struct SHEET *sht_back, *sht_mouse, *sht_win, *sht_win_sub, *sht_console, *sheet = 0;
 	struct FIFO32 fifo, keycmd;
 	struct TIMER *timer;
 	struct TASK *task_a, *task_console;
@@ -38,7 +38,7 @@ void RubbMain(void)
 	int mouse_offset = 5;
 	int win_cursor_x, win_cursor_color;
 	int key_to = 0, key_shift = 0, key_ctrl = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
-	int i = 0, j, x, y;
+	int i = 0, j, x, y, mmx = -1, mmy = -1;
 	// each key
 	static char keytable[0x80] = {
 		0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '^', 0,   0,
@@ -316,17 +316,31 @@ void RubbMain(void)
 					sprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);
 					if ((mdec.btn & 0x01) != 0) {
 						s[1] = 'L';
-						for (j = shtctl->top - 1; j > 0; --j) {
-							sheet = shtctl->sheets[j];
-							x = mouse_x - sheet->vx0;
-							y = mouse_y - sheet->vy0;
-							if (0 <= x && x < sheet->bxsize && 0 <= y && y < sheet->bysize) {
-								if (sheet->buf[y * sheet->bxsize + x] != sheet->opacity) {
-									sheet_updown(sheet, shtctl->top - 1);
-									break;
+						if (mmx < 0) {
+							for (j = shtctl->top - 1; j > 0; --j) {
+								sheet = shtctl->sheets[j];
+								x = mouse_x - sheet->vx0;
+								y = mouse_y - sheet->vy0;
+								if (0 <= x && x < sheet->bxsize && 0 <= y && y < sheet->bysize) {
+									if (sheet->buf[y * sheet->bxsize + x] != sheet->opacity) {
+										sheet_updown(sheet, shtctl->top - 1);
+										if (3 <= x && x < sheet->bxsize - 3 && 3 <= y && y < 21) {
+											mmx = mouse_x;
+											mmy = mouse_y;
+										}
+										break;
+									}
 								}
 							}
+						} else {
+							x = mouse_x - mmx;
+							y = mouse_y - mmy;
+							sheet_slide(sheet, sheet->vx0 + x, sheet->vy0 + y);
+							mmx = mouse_x;
+							mmy = mouse_y;
 						}
+					} else {
+						mmx = -1;
 					}
 					if ((mdec.btn & 0x02) != 0) {
 						s[3] = 'R';
@@ -352,9 +366,6 @@ void RubbMain(void)
 					sprintf(s, "(%3d, %3d)", mouse_x, mouse_y);
 					putfonts8_asc_sht(sht_back, 0, 50, COL8_FFFFFF, COL8_000000, s);
 					sheet_slide(sht_mouse, mouse_x, mouse_y);
-					if (mdec.btn & 0x01 != 0) {
-						sheet_slide(sht_win_sub, mouse_x - 80, mouse_y - 8);
-					}
 				}
 			} else if (i <= 1) {
 				if (i != 0) {
