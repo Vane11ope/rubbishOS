@@ -267,3 +267,33 @@ void drawline(struct SHEET *sheet, int x0, int y0, int x1, int y1, int color)
 	}
 	return;
 }
+
+void change_window_title(struct SHEET *sheet, char isactive)
+{
+	int x, y, xsize = sheet->bxsize;
+	char color, title_color_new, title_color_new_back, title_color_old, title_color_old_back, *buf = sheet->buf;
+	if (isactive != 0) {
+		title_color_new = COL8_FFFFFF;
+		title_color_new_back = COL8_000084;
+		title_color_old = COL8_C6C6C6;
+		title_color_old_back = COL8_848484;
+	} else {
+		title_color_new = COL8_C6C6C6;
+		title_color_new_back = COL8_848484;
+		title_color_old = COL8_FFFFFF;
+		title_color_old_back = COL8_000084;
+	}
+	for (y = 3; y <= 20; ++y) {
+		for (x = 3; x <= xsize - 4; ++x) {
+			color = buf[y * xsize + x];
+			if (color == title_color_old && x <= xsize - 22) {
+				color = title_color_new;
+			} else if (color == title_color_old_back) {
+				color = title_color_new_back;
+			}
+			buf[y * xsize + x] = color;
+		}
+	}
+	sheet_refresh(sheet, 3, 3, xsize, 21);
+	return;
+}

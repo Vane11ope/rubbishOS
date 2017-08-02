@@ -101,7 +101,8 @@ struct MOUSE_DEC {
 	unsigned char buf[3], phase;
 	int x, y, btn;
 };
-void task_b_main(struct SHEET *sheet);
+int keywin_on(struct SHEET *key_win, struct SHEET *sht_win, int cursor_color);
+int keywin_off(struct SHEET *key_win, struct SHEET *sht_win, int cursor_color, int cursor_x);
 
 /* func.nas */
 void io_hlt(void);
@@ -231,6 +232,7 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, char color, unsigned cha
 void putfonts8_asc_sht(struct SHEET *sheet, int x, int y, int color, int backcolor, char *str);
 void putblock8_8 (char *vram, int vxsize, int pxsize, int pysize, int px0, int py0, char* buf, int bxsize);
 void drawline(struct SHEET *sheet, int x0, int y0, int x1, int y1, int color);
+void change_window_title(struct SHEET *sheet, char isactive);
 
 /* keyboard.c */
 void inthandler21(int *esp);

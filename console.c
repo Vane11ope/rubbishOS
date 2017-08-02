@@ -293,7 +293,7 @@ int app(struct CONSOLE *console, int *fat, char *cmdline)
 			shtctl = (struct SHTCTL *) *((int *)0x0fe4);
 			for (i = 0; i < MAX_SHEETS; ++i) {
 				sheet = &(shtctl->sheets0[i]);
-				if (sheet->flags != 0 && sheet->task == task) {
+				if ((sheet->flags & 0x11) == 0x11 && sheet->task == task) {
 					sheet_free(sheet);
 				}
 			}
@@ -332,6 +332,7 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 		case 5:
 			sheet = sheet_alloc(shtctl);
 			sheet->task = task;
+			sheet->flags |= 0x10;
 			sheet_setbuf(sheet, (char *)ebx + ds_base, esi, edi, eax);
 			make_window((char *)ebx + ds_base, esi, edi, (char *)ecx + ds_base, 0);
 			sheet_slide(sheet, 700, 200);

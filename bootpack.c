@@ -17,7 +17,7 @@ void RubbMain(void)
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
 	struct SHTCTL *shtctl;
-	struct SHEET *sht_back, *sht_mouse, *sht_win, *sht_win_sub, *sht_console, *sheet = 0;
+	struct SHEET *sht_back, *sht_mouse, *sht_win, *sht_win_sub, *sht_console, *sheet = 0, *key_win;
 	struct FIFO32 fifo, keycmd;
 	struct TIMER *timer;
 	struct TASK *task_a, *task_console;
@@ -37,7 +37,7 @@ void RubbMain(void)
 	int mouse_s = 16;
 	int mouse_offset = 5;
 	int win_cursor_x, win_cursor_color;
-	int key_to = 0, key_shift = 0, key_ctrl = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
+	int key_shift = 0, key_ctrl = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
 	int i = 0, j, x, y, mmx = -1, mmy = -1;
 	// each key
 	static char keytable[0x80] = {
@@ -107,6 +107,7 @@ void RubbMain(void)
 	sheet_setbuf(sht_win, sht_buf_win, 160, 100, -1);
 	sheet_setbuf(sht_win_sub, sht_buf_win_sub, 144, 52, -1);
 	sheet_setbuf(sht_console, sht_buf_console, CONSOLE_WIDTH, CONSOLE_HEIGHT, -1);
+	key_win = sht_win_sub;
 
 	// init screens and mouse graphics after sheet settings
 	init_screen(sht_buf_back, binfo->scrnx, binfo->scrny);
@@ -136,6 +137,8 @@ void RubbMain(void)
 	*((int *)(task_console->tss.esp + 8)) = (int) memtotal;
 	task_run(task_console, 2, 2);
 	console = (struct CONSOLE *)*((int *)0x0fec);
+	sht_console->task = task_console;
+	sht_console->flags |= 0x20;
 
 	// drawing some information on the screen
 	sprintf(s, "memory %dMB free : %dKB", memtotal / (1024*1024), memman_total(memman) / 1024);
@@ -152,8 +155,8 @@ void RubbMain(void)
 	sheet_slide(sht_back, 0, 0);
 	sheet_slide(sht_mouse, mouse_x, mouse_y);
 	sheet_slide(sht_console, 64, 26);
-	sheet_slide(sht_win, 80, 72);
-	sheet_slide(sht_win_sub, 8, 56);
+	sheet_slide(sht_win, 600, 72);
+	sheet_slide(sht_win_sub, 600, 500);
 	sheet_updown(sht_back, 0);
 	sheet_updown(sht_win, 1);
 	sheet_updown(sht_console, 2);
@@ -189,6 +192,10 @@ void RubbMain(void)
 		} else {
 			i = fifo32_get(&fifo);
 			io_sti();
+			if (key_win->flags == 0) {
+				key_win = shtctl->sheets[shtctl->top - 1];
+				win_cursor_color = keywin_on(key_win, sht_win_sub, win_cursor_color);
+			}
 			if (256 <= i && i <= 511) {
 				sprintf(s, "%02X", i - 256);
 				putfonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_000000, s);
@@ -207,13 +214,13 @@ void RubbMain(void)
 					}
 				}
 				if (s[0] != 0) {
-					if (key_to == 0) {
+					if (key_win == sht_win_sub) {
 						if (win_cursor_x < 128) {
 							s[1] = 0;
 							putfonts8_asc_sht(sht_win_sub, win_cursor_x, WINDOW_TITLE_HEIGHT, COL8_000000, COL8_FFFFFF, s);
 							win_cursor_x += 8;
 						}
-					} else {
+					} else if (key_win != sht_win) {
 						if (key_ctrl != 0 ) {
 							if ((s[0] == 'C' || s[0] == 'c')) {
 								console_putstr(console, "\nBreak(key) :\n");
@@ -227,7 +234,7 @@ void RubbMain(void)
 								fifo32_put(&task_console->fifo, s[0] + 256);
 							}
 						} else {
-							fifo32_put(&task_console->fifo, s[0] + 256);
+							fifo32_put(&key_win->task->fifo, s[0] + 256);
 						}
 					}
 				}
@@ -235,32 +242,21 @@ void RubbMain(void)
 					sheet_updown(shtctl->sheets[1], shtctl->top - 1);
 				}
 				if (i == 256 + 0x0e) {
-					if (key_to == 0) {
+					if (key_win == sht_win_sub) {
 						if (win_cursor_x > 8) {
 							putfonts8_asc_sht(sht_win_sub, win_cursor_x, WINDOW_TITLE_HEIGHT, COL8_000000, COL8_FFFFFF, " ");
 							win_cursor_x -= 8;
 						}
 					} else {
-						fifo32_put(&task_console->fifo, 8 + 256);
+						fifo32_put(&key_win->task->fifo, 8 + 256);
 					}
 				}
 				if (i == 256 + 0x0f) {  // tab
-					if (key_to == 0) {
-						key_to = 1;
-						make_window_title(sht_buf_win_sub, sht_win_sub->bxsize, "window", 0);
-						make_window_title(sht_buf_console, sht_console->bxsize, "terminal", 1);
-						win_cursor_color = -1;
-						boxfill8(sht_win_sub->buf, sht_win_sub->bxsize, COL8_FFFFFF, win_cursor_x, WINDOW_TITLE_HEIGHT, win_cursor_x + 7, 43);
-						fifo32_put(&task_console->fifo, CONSOLE_ON);
-					} else {
-						key_to = 0;
-						make_window_title(sht_buf_win_sub, sht_win_sub->bxsize, "window", 1);
-						make_window_title(sht_buf_console, sht_console->bxsize, "terminal", 0);
-						win_cursor_color = COL8_000000;
-						fifo32_put(&task_console->fifo, CONSOLE_OFF);
-					}
-					sheet_refresh(sht_win_sub, 0, 0, sht_win_sub->bxsize, 21);
-					sheet_refresh(sht_console, 0, 0, sht_console->bxsize, 21);
+					win_cursor_color = keywin_off(key_win, sht_win_sub, win_cursor_color, win_cursor_x);
+					j = key_win->height - 1;
+					if (j == 0) { j = shtctl->top - 1; }
+					key_win = shtctl->sheets[j];
+					win_cursor_color = keywin_on(key_win, sht_win_sub, win_cursor_color);
 				}
 				if (i == 256 + 0x3a) {
 					key_leds ^= 4;
@@ -303,8 +299,8 @@ void RubbMain(void)
 					key_ctrl &= ~1;
 				}
 				if (i == 256 + 0x1c) { // Enter
-					if (key_to != 0) {
-						fifo32_put(&task_console->fifo, 10 + 256);
+					if (key_win != sht_win_sub) {
+						fifo32_put(&key_win->task->fifo, 10 + 256);
 					}
 				}
 				if (win_cursor_color >= 0) {
@@ -345,7 +341,7 @@ void RubbMain(void)
 											mmx = mouse_x;
 											mmy = mouse_y;
 										}
-										if (sheet->bxsize - 21 <= x && x < sheet->bxsize - 5 && 5 <= y && y < 19) {
+										if (sheet->bxsize - 21 <= x && x < sheet->bxsize - 5 && 5 <= y && y < 19 && (sheet->flags & 0x10) != 0) {
 											if (sheet->task != 0) {
 												console = (struct CONSOLE *)*((int *)(0x0fec));
 												console_putstr(console, "\nBreak(mouse) :\n");
@@ -397,4 +393,31 @@ void RubbMain(void)
 			}
 		}
 	}
+}
+
+int keywin_on(struct SHEET *key_win, struct SHEET *sht_win, int cursor_color)
+{
+	change_window_title(key_win, 1);
+	if (key_win == sht_win) {
+		cursor_color = COL8_000000;
+	} else {
+		if ((key_win->flags & 0x20) != 0) {
+			fifo32_put(&key_win->task->fifo, CONSOLE_ON);
+		}
+	}
+	return cursor_color;
+}
+
+int keywin_off(struct SHEET *key_win, struct SHEET *sht_win, int cursor_color, int cursor_x)
+{
+	change_window_title(key_win, 0);
+	if (key_win == sht_win) {
+		cursor_color = -1;
+		boxfill8(sht_win->buf, sht_win->bxsize, COL8_FFFFFF, cursor_x, 28, cursor_x + 7, 43);
+	} else {
+		if ((key_win->flags & 0x20) != 0) {
+			fifo32_put(&key_win->task->fifo, CONSOLE_OFF);
+		}
+	}
+	return cursor_color;
 }
