@@ -337,6 +337,11 @@ void RubbMain(void)
 								if (0 <= x && x < sheet->bxsize && 0 <= y && y < sheet->bysize) {
 									if (sheet->buf[y * sheet->bxsize + x] != sheet->opacity) {
 										sheet_updown(sheet, shtctl->top - 1);
+										if (sheet != key_win) {
+											win_cursor_color = keywin_off(key_win, sht_win_sub, win_cursor_color, win_cursor_x);
+											key_win = sheet;
+											win_cursor_color = keywin_on(key_win, sht_win_sub, win_cursor_color);
+										}
 										if (3 <= x && x < sheet->bxsize - 3 && 3 <= y && y < 21) {
 											mmx = mouse_x;
 											mmy = mouse_y;
