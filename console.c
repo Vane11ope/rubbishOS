@@ -411,11 +411,23 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 				if (i == CONSOLE_OFF) {
 					console->cursor_color = -1;
 				}
-				if (256 <= i && i <= 511) {
+				if (i >= 256) {
 					reg[7] = i - 256;
 					return 0;
 				}
 			}
+			break;
+		case 16:
+			reg[7] = (int) timer_alloc();
+			break;
+		case 17:
+			timer_init((struct TIMER *)ebx, &task->fifo, eax + 256);
+			break;
+		case 18:
+			timer_settime((struct TIMER *)ebx, eax);
+			break;
+		case 19:
+			timer_free((struct TIMER *)ebx);
 			break;
 		default:
 			console_putstr(console, "edx is illegal");

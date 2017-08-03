@@ -1,3 +1,4 @@
+#include <stdio.h>
 // memory
 void api_init_malloc(void);
 char *api_malloc(int size);
@@ -22,3 +23,9 @@ void api_dot(int window, int x, int y, int color);
 // system
 void api_end(void);
 int rand(void);
+
+// timer
+int api_alloc_timer(void);
+void api_init_timer(int timer, int data);
+void api_set_timer(int timer, int time);
+void api_free_timer(int timer);
