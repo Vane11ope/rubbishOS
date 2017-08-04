@@ -297,6 +297,7 @@ int app(struct CONSOLE *console, int *fat, char *cmdline)
 					sheet_free(sheet);
 				}
 			}
+			timer_cancelall(&task->fifo);
 			memman_free_4k(memman, (int) q, segsize);
 		} else {
 			console_putstr(console, ".rub file format error.\n");
@@ -419,6 +420,7 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 			break;
 		case 16:
 			reg[7] = (int) timer_alloc();
+			((struct TIMER *)reg[7])->flags2 = 1;
 			break;
 		case 17:
 			timer_init((struct TIMER *)ebx, &task->fifo, eax + 256);
