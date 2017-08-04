@@ -222,11 +222,12 @@ void RubbMain(void)
 						}
 					} else if (key_win != sht_win) {
 						if (key_ctrl != 0 ) {
-							if ((s[0] == 'C' || s[0] == 'c')) {
+							if (s[0] == 'c') {
 								console_putstr(console, "\nBreak(key) :\n");
 								io_cli();
 								task_console->tss.eax = (int) &(task_console->tss.esp0);
 								task_console->tss.eip = (int) asm_end_app;
+								timer_cancelall(&((struct TASK *)task_now())->fifo);
 								io_sti();
 							} else if ((s[0] == 'L' || s[0] == 'l') && key_ctrl != 0) {
 								fifo32_put(&task_console->fifo, 1111);
