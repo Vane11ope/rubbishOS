@@ -3,7 +3,7 @@
 [BITS 32]
 [FILE "app.nas"]
 
-	GLOBAL _api_init_malloc, _api_malloc, _api_free, _api_putchar, _api_putstr, _api_open_window, _api_putstr_on_window, _api_boxfill_on_window, _api_dot, _api_refresh_window, _api_drawline, _api_close_window, _api_getkey, _api_end, _api_alloc_timer, _api_init_timer, _api_set_timer, _api_free_timer
+	GLOBAL _api_init_malloc, _api_malloc, _api_free, _api_putchar, _api_putstr, _api_open_window, _api_putstr_on_window, _api_boxfill_on_window, _api_dot, _api_refresh_window, _api_drawline, _api_close_window, _api_getkey, _api_end, _api_alloc_timer, _api_init_timer, _api_set_timer, _api_free_timer, _api_beep
 
 [SECTION .text]
 
@@ -203,4 +203,10 @@ _api_free_timer: ; void api_free_timer(int timer);
 	MOV EBX,[ESP+8]
 	INT 0x40
 	POP EBX
+	RET
+
+_api_beep: ; void api_beep(int tone);
+	MOV EDX,20
+	MOV EAX,[ESP+4]
+	INT 0x40
 	RET

@@ -431,6 +431,19 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 		case 19:
 			timer_free((struct TIMER *)ebx);
 			break;
+		case 20:
+			if (eax == 0) {
+				i = io_in8(0x61);
+				io_out8(0x61, i & 0x0d);
+			} else {
+				i = 1193180000 / eax;
+				io_out8(0x43, 0xb6);
+				io_out8(0x42, i & 0xff);
+				io_out8(0x42, i >> 8);
+				i = io_in8(0x61);
+				io_out8(0x61, (i | 0x03) & 0x0f);
+			}
+			break;
 		default:
 			console_putstr(console, "edx is illegal");
 			return &(task->tss.esp0);

@@ -86,6 +86,12 @@ noodle.bim: noodle.obj app_asm.obj Makefile
 noodle.rub : noodle.bim Makefile
 	$(BIM2RUB) noodle.bim noodle.rub 48k
 
+beep.bim: beep.obj app_asm.obj Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:beep.bim stack:1k map:beep.map beep.obj app_asm.obj
+
+beep.rub : beep.bim Makefile
+	$(BIM2RUB) beep.bim beep.rub 48k
+
 effasm.bim : effasm.obj Makefile
 	$(OBJ2BIM) @$(RULEFILE) out:effasm.bim stack:1k map:effasm.map effasm.obj
 
@@ -110,7 +116,7 @@ bug3.bim: bug3.obj app_asm.obj Makefile
 bug3.rub : bug3.bim Makefile
 	$(BIM2RUB) bug3.bim bug3.rub 0
 
-rubbish.img : ipl10.bin rubbish.sys app.rub eff.rub window.rub dot.rub dots.rub dots2.rub line.rub walk.rub noodle.rub effasm.rub bug.rub bug2.rub bug3.rub Makefile
+rubbish.img : ipl10.bin rubbish.sys app.rub eff.rub window.rub dot.rub dots.rub dots2.rub line.rub walk.rub noodle.rub beep.rub effasm.rub bug.rub bug2.rub bug3.rub Makefile
 	$(EDIMG) imgin:tools/fdimg0at.tek \
 		wbinimg src:ipl10.bin len:512 from:0 to:0 \
 		copy from:rubbish.sys to:@: \
@@ -124,6 +130,7 @@ rubbish.img : ipl10.bin rubbish.sys app.rub eff.rub window.rub dot.rub dots.rub 
 		copy from:line.rub to:@: \
 		copy from:walk.rub to:@: \
 		copy from:noodle.rub to:@: \
+		copy from:beep.rub to:@: \
 		copy from:effasm.rub to:@: \
 		copy from:bug.rub to:@: \
 		copy from:bug2.rub to:@: \
