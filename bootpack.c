@@ -17,12 +17,12 @@ void RubbMain(void)
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
 	struct SHTCTL *shtctl;
-	struct SHEET *sht_back, *sht_mouse, *sht_win, *sht_win_sub, *sht_console, *sheet = 0, *key_win;
+	struct SHEET *sht_back, *sht_mouse, *sht_win, *sht_win_sub, *sht_console[2], *sheet = 0, *key_win;
 	struct FIFO32 fifo, keycmd;
 	struct TIMER *timer;
-	struct TASK *task_a, *task_console;
+	struct TASK *task_a, *task_console[2];
 	struct CONSOLE *console;
-	unsigned char *sht_buf_back, sht_buf_mouse[256], *sht_buf_win, *sht_buf_win_sub, *sht_buf_console;
+	unsigned char *sht_buf_back, sht_buf_mouse[256], *sht_buf_win, *sht_buf_win_sub, *sht_buf_console[2];
 	char s[40];
 	const short CONSOLE_TEXTBOX_WIDTH = CONSOLE_WIDTH - CHAR_WIDTH * 2;
 	const short CONSOLE_TEXTBOX_HEIGHT = CONSOLE_HEIGHT - 37;
@@ -95,19 +95,38 @@ void RubbMain(void)
 	sht_mouse = sheet_alloc(shtctl);
 	sht_win = sheet_alloc(shtctl);
 	sht_win_sub = sheet_alloc(shtctl);
-	sht_console = sheet_alloc(shtctl);
 	// sheet buf memory alloc
 	sht_buf_back = (unsigned char *)memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);
 	sht_buf_win = (unsigned char *)memman_alloc_4k(memman, 160 * 100);
 	sht_buf_win_sub = (unsigned char *)memman_alloc_4k(memman, 144 * 52);
-	sht_buf_console = (unsigned char *)memman_alloc_4k(memman, CONSOLE_WIDTH * CONSOLE_HEIGHT);
 	// set buf for each sheet
 	sheet_setbuf(sht_back, sht_buf_back, binfo->scrnx, binfo->scrny, -1);
 	sheet_setbuf(sht_mouse, sht_buf_mouse, 16, 16, 99);
 	sheet_setbuf(sht_win, sht_buf_win, 160, 100, -1);
 	sheet_setbuf(sht_win_sub, sht_buf_win_sub, 144, 52, -1);
-	sheet_setbuf(sht_console, sht_buf_console, CONSOLE_WIDTH, CONSOLE_HEIGHT, -1);
 	key_win = sht_win_sub;
+	// console settings
+	for (i = 0; i < 2; ++i) {
+		sht_console[i] = sheet_alloc(shtctl);
+		sht_buf_console[i] = (unsigned char *)memman_alloc_4k(memman, CONSOLE_WIDTH * CONSOLE_HEIGHT);
+		sheet_setbuf(sht_console[i], sht_buf_console[i], CONSOLE_WIDTH, CONSOLE_HEIGHT, -1);
+		make_window(sht_buf_console[i], CONSOLE_WIDTH, CONSOLE_HEIGHT, "terminal", 0);
+		make_textbox8(sht_console[i], 8, WINDOW_TITLE_HEIGHT, CONSOLE_TEXTBOX_WIDTH, CONSOLE_TEXTBOX_HEIGHT, COL8_000000);
+		task_console[i] = task_alloc();
+		task_console[i]->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 12;
+		task_console[i]->tss.eip = (int) &console_task;
+		task_console[i]->tss.es = 1 * 8;
+		task_console[i]->tss.cs = 2 * 8;
+		task_console[i]->tss.ss = 1 * 8;
+		task_console[i]->tss.ds = 1 * 8;
+		task_console[i]->tss.fs = 1 * 8;
+		task_console[i]->tss.gs = 1 * 8;
+		*((int *)(task_console[i]->tss.esp + 4)) = (int) sht_console[i];
+		*((int *)(task_console[i]->tss.esp + 8)) = (int) memtotal;
+		task_run(task_console[i], 2, 2);
+		sht_console[i]->task = task_console[i];
+		sht_console[i]->flags |= 0x20;
+	}
 
 	// init screens and mouse graphics after sheet settings
 	init_screen(sht_buf_back, binfo->scrnx, binfo->scrny);
@@ -120,25 +139,6 @@ void RubbMain(void)
 	putfonts8_asc(sht_buf_win, 160, tempX + 16, tempY + 16, COL8_000000, "Number");
 	putfonts8_asc(sht_buf_win, 160, tempX + 32, tempY + 32, COL8_000000, "Gorilla");
 	putfonts8_asc(sht_buf_win, 160, tempX + 48, tempY + 48, COL8_000000, "Vanellope");
-
-	// init console
-	make_window(sht_buf_console, CONSOLE_WIDTH, CONSOLE_HEIGHT, "terminal", 0);
-	make_textbox8(sht_console, 8, WINDOW_TITLE_HEIGHT, CONSOLE_TEXTBOX_WIDTH, CONSOLE_TEXTBOX_HEIGHT, COL8_000000);
-	task_console = task_alloc();
-	task_console->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 12;
-	task_console->tss.eip = (int) &console_task;
-	task_console->tss.es = 1 * 8;
-	task_console->tss.cs = 2 * 8;
-	task_console->tss.ss = 1 * 8;
-	task_console->tss.ds = 1 * 8;
-	task_console->tss.fs = 1 * 8;
-	task_console->tss.gs = 1 * 8;
-	*((int *)(task_console->tss.esp + 4)) = (int) sht_console;
-	*((int *)(task_console->tss.esp + 8)) = (int) memtotal;
-	task_run(task_console, 2, 2);
-	console = (struct CONSOLE *)*((int *)0x0fec);
-	sht_console->task = task_console;
-	sht_console->flags |= 0x20;
 
 	// drawing some information on the screen
 	sprintf(s, "memory %dMB free : %dKB", memtotal / (1024*1024), memman_total(memman) / 1024);
@@ -154,14 +154,16 @@ void RubbMain(void)
 	// sheet positionings(refresh included)
 	sheet_slide(sht_back, 0, 0);
 	sheet_slide(sht_mouse, mouse_x, mouse_y);
-	sheet_slide(sht_console, 64, 26);
+	sheet_slide(sht_console[0], 500, 26);
+	sheet_slide(sht_console[1], 0, 26);
 	sheet_slide(sht_win, 600, 72);
 	sheet_slide(sht_win_sub, 600, 500);
 	sheet_updown(sht_back, 0);
 	sheet_updown(sht_win, 1);
-	sheet_updown(sht_console, 2);
-	sheet_updown(sht_win_sub, 3);
-	sheet_updown(sht_mouse, 4);
+	sheet_updown(sht_console[1], 2);
+	sheet_updown(sht_console[0], 3);
+	sheet_updown(sht_win_sub, 4);
+	sheet_updown(sht_mouse, 5);
 
 	// set each timer
 	timer = timer_alloc();
@@ -222,17 +224,18 @@ void RubbMain(void)
 						}
 					} else if (key_win != sht_win) {
 						if (key_ctrl != 0 ) {
-							if (s[0] == 'c') {
+							if (s[0] == 'c' && task_console[0]->tss.ss0 != 0) {
+								console = (struct CONSOLE *)*((int *)0x0fec);
 								console_putstr(console, "\nBreak(key) :\n");
 								io_cli();
-								task_console->tss.eax = (int) &(task_console->tss.esp0);
-								task_console->tss.eip = (int) asm_end_app;
+								task_console[0]->tss.eax = (int) &(task_console[0]->tss.esp0);
+								task_console[0]->tss.eip = (int) asm_end_app;
 								timer_cancelall(&((struct TASK *)task_now())->fifo);
 								io_sti();
 							} else if ((s[0] == 'L' || s[0] == 'l') && key_ctrl != 0) {
-								fifo32_put(&task_console->fifo, 1111);
+								fifo32_put(&task_console[0]->fifo, 1111);
 							} else {
-								fifo32_put(&task_console->fifo, s[0] + 256);
+								fifo32_put(&task_console[0]->fifo, s[0] + 256);
 							}
 						} else {
 							fifo32_put(&key_win->task->fifo, s[0] + 256);
@@ -352,8 +355,8 @@ void RubbMain(void)
 												console = (struct CONSOLE *)*((int *)(0x0fec));
 												console_putstr(console, "\nBreak(mouse) :\n");
 												io_cli();
-												task_console->tss.eax = (int)&(task_console->tss.esp0);
-												task_console->tss.eip = (int)asm_end_app;
+												task_console[0]->tss.eax = (int)&(task_console[0]->tss.esp0);
+												task_console[0]->tss.eip = (int)asm_end_app;
 												io_sti();
 											}
 										}
