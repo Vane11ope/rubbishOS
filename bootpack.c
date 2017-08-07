@@ -8,6 +8,8 @@
 #define CONSOLE_OFF 3
 
 extern struct TIMERCTL timerctl;
+int keywin_on(struct SHEET *key_win, struct SHEET *sht_win, int cursor_color);
+int keywin_off(struct SHEET *key_win, struct SHEET *sht_win, int cursor_color, int cursor_x);
 
 void RubbMain(void)
 {
@@ -85,7 +87,7 @@ void RubbMain(void)
 	// multitasking
 	task_a = task_init(memman);
 	fifo.task = task_a;
-	task_run(task_a, 1, 0);
+	task_run(task_a, 1, 2);
 
 	// sheet settings
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
@@ -104,7 +106,6 @@ void RubbMain(void)
 	sheet_setbuf(sht_mouse, sht_buf_mouse, 16, 16, 99);
 	sheet_setbuf(sht_win, sht_buf_win, 160, 100, -1);
 	sheet_setbuf(sht_win_sub, sht_buf_win_sub, 144, 52, -1);
-	key_win = sht_win_sub;
 	// console settings
 	for (i = 0; i < 2; ++i) {
 		sht_console[i] = sheet_alloc(shtctl);
@@ -164,6 +165,7 @@ void RubbMain(void)
 	sheet_updown(sht_console[0], 3);
 	sheet_updown(sht_win_sub, 4);
 	sheet_updown(sht_mouse, 5);
+	key_win = sht_win_sub;
 
 	// set each timer
 	timer = timer_alloc();
@@ -222,7 +224,7 @@ void RubbMain(void)
 							putfonts8_asc_sht(sht_win_sub, win_cursor_x, WINDOW_TITLE_HEIGHT, COL8_000000, COL8_FFFFFF, s);
 							win_cursor_x += 8;
 						}
-					} else if (key_win != sht_win) {
+					} else if (key_win == sht_console[0] || key_win == sht_console[1]) {
 						if (key_ctrl != 0 ) {
 							if (s[0] == 'c' && task_console[0]->tss.ss0 != 0) {
 								console = (struct CONSOLE *)*((int *)0x0fec);
@@ -240,6 +242,8 @@ void RubbMain(void)
 						} else {
 							fifo32_put(&key_win->task->fifo, s[0] + 256);
 						}
+					} else {
+						fifo32_put(&key_win->task->fifo, s[0] + 256);
 					}
 				}
 				if (i == 256 + 0x3b && shtctl->top > 2) {
