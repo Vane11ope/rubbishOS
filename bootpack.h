@@ -74,8 +74,10 @@ int fifo32_status(struct FIFO32 *fifo);
 struct TASK {
 	struct FIFO32 fifo;
 	struct TSS32 tss;
+	struct CONSOLE *console;
 	int sel, flags;
 	int level, priority;
+	int ds_base;
 };
 
 struct TASKLEVEL {

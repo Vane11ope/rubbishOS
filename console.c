@@ -24,6 +24,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	console.cursor_x = CHAR_WIDTH;
 	console.cursor_y = WINDOW_TITLE_HEIGHT;
 	console.cursor_color = -1;
+	task->console = &console;
 	(*((int *) 0x0fec)) = (int) &console;
 
 	file_readfat(fat, (unsigned char *) (ADR_DISKIMG + 0x000200));
@@ -283,7 +284,7 @@ int app(struct CONSOLE *console, int *fat, char *cmdline)
 			datasize = *((int *) (p + 0x0010));
 			datarub = *((int *) (p + 0x0014));
 			q = (char *)memman_alloc_4k(memman, segsize);
-			(*((int *)0xfe8)) = (int)q;
+			task->ds_base = (int)q;
 			set_segmdesc(gdt + 1003, finfo->size - 1, (int) p, AR_CODE32_ER + 0x60);
 			set_segmdesc(gdt + 1004, segsize - 1, (int) q, AR_DATA32_RW + 0x60);
 			for (i = 0; i < datasize; ++i) {
@@ -311,12 +312,12 @@ int app(struct CONSOLE *console, int *fat, char *cmdline)
 
 int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax)
 {
-	struct CONSOLE *console = (struct CONSOLE *)(*(int *) 0xfec);
 	struct SHTCTL* shtctl = (struct SHTCTL *)(*(int *) 0xfe4);
 	struct TASK *task = task_now();
+	struct CONSOLE *console = task->console;
 	struct SHEET *sheet;
 	int *reg = &eax + 1; /* rewrite the values assigned to each register */
-	int i, ds_base = (*((int *)0xfe8));
+	int i, ds_base = task->ds_base;
 	char s[30];
 	switch (edx) {
 		case 1:
@@ -453,8 +454,8 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 
 int inthandler0d(int *esp)
 {
-	struct CONSOLE *console = (struct CONSOLE *)*((int *)0x0fec);
 	struct TASK *task = task_now();
+	struct CONSOLE *console = task->console;
 	char s[30];
 	console_putstr(console, "\nINT 0D :\nGeneral Protected Exception.\n");
 	sprintf(s, "EIP = %08X\n", esp[11]);
@@ -464,8 +465,8 @@ int inthandler0d(int *esp)
 
 int inthandler0c(int *esp)
 {
-	struct CONSOLE *console = (struct CONSOLE *)*((int *)0x0fec);
 	struct TASK *task = task_now();
+	struct CONSOLE *console = task->console;
 	char s[30];
 	console_putstr(console, "\nINT 0D :\nStack Exception.\n");
 	sprintf(s, "EIP = %08X\n", esp[11]);
