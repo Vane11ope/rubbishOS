@@ -235,9 +235,9 @@ void RubbMain(void)
 								timer_cancelall(&task->fifo);
 								io_sti();
 							} else if ((s[0] == 'L' || s[0] == 'l') && key_ctrl != 0) {
-								fifo32_put(&task_console[0]->fifo, 1111);
+								fifo32_put(&task->fifo, 1111);
 							} else {
-								fifo32_put(&task_console[0]->fifo, s[0] + 256);
+								fifo32_put(&task->fifo, s[0] + 256);
 							}
 						} else {
 							fifo32_put(&key_win->task->fifo, s[0] + 256);

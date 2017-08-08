@@ -23,8 +23,8 @@
 #define CHAR_WIDTH           8
 #define CHAR_HEIGHT          16
 #define WINDOW_TITLE_HEIGHT  28
-#define CONSOLE_WIDTH        528
-#define CONSOLE_HEIGHT       677
+#define CONSOLE_WIDTH        400
+#define CONSOLE_HEIGHT       517
 #define COL8_000000          0
 #define COL8_FF0000          1
 #define COL8_00FF00          2
