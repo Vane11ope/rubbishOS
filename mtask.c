@@ -112,8 +112,8 @@ void task_sleep(struct TASK *task)
 {
 	struct TASK *now_task;
 	if (task->flags == TASK_RUNNING) {
-		task_remove(task);
 		now_task = task_now();
+		task_remove(task);
 		if (task == now_task) {
 			task_switchsub();
 			now_task = task_now();
