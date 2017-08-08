@@ -22,7 +22,7 @@ void RubbMain(void)
 	struct SHEET *sht_back, *sht_mouse, *sht_win, *sht_win_sub, *sht_console[2], *sheet = 0, *key_win;
 	struct FIFO32 fifo, keycmd;
 	struct TIMER *timer;
-	struct TASK *task_a, *task_console[2];
+	struct TASK *task_a, *task_console[2], *task;
 	struct CONSOLE *console;
 	unsigned char *sht_buf_back, sht_buf_mouse[256], *sht_buf_win, *sht_buf_win_sub, *sht_buf_console[2];
 	char s[40];
@@ -226,13 +226,13 @@ void RubbMain(void)
 						}
 					} else if (key_win == sht_console[0] || key_win == sht_console[1]) {
 						if (key_ctrl != 0 ) {
-							if (s[0] == 'c' && task_console[0]->tss.ss0 != 0) {
-								console = (struct CONSOLE *)*((int *)0x0fec);
-								console_putstr(console, "\nBreak(key) :\n");
+							task = key_win->task;
+							if (s[0] == 'c' && task->tss.ss0 != 0) {
+								console_putstr(task->console, "\nBreak(key) :\n");
 								io_cli();
-								task_console[0]->tss.eax = (int) &(task_console[0]->tss.esp0);
-								task_console[0]->tss.eip = (int) asm_end_app;
-								timer_cancelall(&((struct TASK *)task_now())->fifo);
+								task->tss.eax = (int) &(task->tss.esp0);
+								task->tss.eip = (int) asm_end_app;
+								timer_cancelall(&task->fifo);
 								io_sti();
 							} else if ((s[0] == 'L' || s[0] == 'l') && key_ctrl != 0) {
 								fifo32_put(&task_console[0]->fifo, 1111);
@@ -355,14 +355,12 @@ void RubbMain(void)
 											mmy = mouse_y;
 										}
 										if (sheet->bxsize - 21 <= x && x < sheet->bxsize - 5 && 5 <= y && y < 19 && (sheet->flags & 0x10) != 0) {
-											if (sheet->task != 0) {
-												console = (struct CONSOLE *)*((int *)(0x0fec));
-												console_putstr(console, "\nBreak(mouse) :\n");
-												io_cli();
-												task_console[0]->tss.eax = (int)&(task_console[0]->tss.esp0);
-												task_console[0]->tss.eip = (int)asm_end_app;
-												io_sti();
-											}
+											task = sheet->task;
+											console_putstr(task->console, "\nBreak(mouse) :\n");
+											io_cli();
+											task->tss.eax = (int)&(task->tss.esp0);
+											task->tss.eip = (int)asm_end_app;
+											io_sti();
 										}
 										break;
 									}
