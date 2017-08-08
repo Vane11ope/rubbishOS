@@ -103,8 +103,6 @@ struct MOUSE_DEC {
 	unsigned char buf[3], phase;
 	int x, y, btn;
 };
-int keywin_on(struct SHEET *key_win, struct SHEET *sht_win, int cursor_color);
-int keywin_off(struct SHEET *key_win, struct SHEET *sht_win, int cursor_color, int cursor_x);
 
 /* func.nas */
 void io_hlt(void);
