@@ -38,7 +38,7 @@ void RubbMain(void)
 	int mouse_s = 16;
 	int mouse_offset = 5;
 	int key_shift = 0, key_ctrl = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
-	int i = 0, j, x, y, mmx = -1, mmy = -1;
+	int i = 0, j, x, y, mmx = -1, mmy = -1, mmx2 = 0;
 	// each key
 	static char keytable[0x80] = {
 		0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '^', 0x08, 0,
@@ -300,6 +300,7 @@ void RubbMain(void)
 										if (3 <= x && x < sheet->bxsize - 3 && 3 <= y && y < 21) {
 											mmx = mouse_x;
 											mmy = mouse_y;
+											mmx2 = sheet->vx0;
 										}
 										if (sheet->bxsize - 21 <= x && x < sheet->bxsize - 5 && 5 <= y && y < 19 && (sheet->flags & 0x10) != 0) {
 											task = sheet->task;
@@ -316,8 +317,7 @@ void RubbMain(void)
 						} else {
 							x = mouse_x - mmx;
 							y = mouse_y - mmy;
-							sheet_slide(sheet, sheet->vx0 + x, sheet->vy0 + y);
-							mmx = mouse_x;
+							sheet_slide(sheet, (mmx2 + x + 2) & ~3, sheet->vy0 + y);
 							mmy = mouse_y;
 						}
 					} else {

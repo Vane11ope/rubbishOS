@@ -143,7 +143,7 @@ void sheet_refreshsub(struct SHTCTL *shtctl, int vx0, int vy0, int vx1, int vy1,
 
 void sheet_refreshmap(struct SHTCTL *shtctl, int vx0, int vy0, int vx1, int vy1, int height)
 {
-	int h, bx, by, vx, vy, bx0, by0, bx1, by1;
+	int h, bx, by, vx, vy, bx0, by0, bx1, by1, sid4, *p;
 	unsigned char *buf, sid, *map = shtctl->map;
 	struct SHEET *sht;
 	vx0 = max(vx0, 0);
@@ -159,11 +159,24 @@ void sheet_refreshmap(struct SHTCTL *shtctl, int vx0, int vy0, int vx1, int vy1,
 		bx1 = min(vx1 - sht->vx0, sht->bxsize);
 		by1 = min(vy1 - sht->vy0, sht->bysize);
 		if (sht->opacity == -1) {
-			for (by = by0; by < by1; ++by) {
-				vy = sht->vy0 + by;
-				for (bx = bx0; bx < bx1; ++bx) {
-					vx = sht->vx0 + bx;
-					map[vy * shtctl->xsize + vx] = sid;
+			if ((sht->vx0 & 3) == 0 && (bx0 & 3) == 0 && (bx1 & 3) == 0) {
+				bx1 = (bx1 - bx0) / 4;
+				sid4 = sid | sid << 8 | sid << 16 | sid << 24;
+				for (by = by0; by < by1; ++by) {
+					vy = sht->vy0 + by;
+					vx = sht->vx0 + bx0;
+					p = (int *)&map[vy * shtctl->xsize + vx];
+					for (bx = 0; bx < bx1; ++bx) {
+						p[bx] = sid4;
+					}
+				}
+			} else {
+				for (by = by0; by < by1; ++by) {
+					vy = sht->vy0 + by;
+					for (bx = bx0; bx < bx1; ++bx) {
+						vx = sht->vx0 + bx;
+						map[vy * shtctl->xsize + vx] = sid;
+					}
 				}
 			}
 		} else {
