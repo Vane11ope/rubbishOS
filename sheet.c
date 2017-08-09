@@ -158,12 +158,22 @@ void sheet_refreshmap(struct SHTCTL *shtctl, int vx0, int vy0, int vx1, int vy1,
 		by0 = max(vy0 - sht->vy0, 0);
 		bx1 = min(vx1 - sht->vx0, sht->bxsize);
 		by1 = min(vy1 - sht->vy0, sht->bysize);
-		for (by = by0; by < by1; ++by) {
-			vy = sht->vy0 + by;
-			for (bx = bx0; bx < bx1; ++bx) {
-				vx = sht->vx0 + bx;
-				if (buf[by * sht->bxsize + bx] != sht->opacity) {
+		if (sht->opacity == -1) {
+			for (by = by0; by < by1; ++by) {
+				vy = sht->vy0 + by;
+				for (bx = bx0; bx < bx1; ++bx) {
+					vx = sht->vx0 + bx;
 					map[vy * shtctl->xsize + vx] = sid;
+				}
+			}
+		} else {
+			for (by = by0; by < by1; ++by) {
+				vy = sht->vy0 + by;
+				for (bx = bx0; bx < bx1; ++bx) {
+					vx = sht->vx0 + bx;
+					if (buf[by * sht->bxsize + bx] != sht->opacity) {
+						map[vy * shtctl->xsize + vx] = sid;
+					}
 				}
 			}
 		}
