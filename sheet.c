@@ -112,7 +112,7 @@ void sheet_refresh(struct SHEET *sht, int bx0, int by0, int bx1, int by1)
 
 void sheet_refreshsub(struct SHTCTL *shtctl, int vx0, int vy0, int vx1, int vy1, int height0, int height1)
 {
-	int h, bx, by, vx, vy, bx0, by0, bx1, by1;
+	int h, bx, by, vx, vy, bx0, by0, bx1, by1, bx2, sid4, i, ii, *p, *q, *r;
 	unsigned char *buf, c, *vram = shtctl->vram, *map = shtctl->map, sid;
 	struct SHEET *sht;
 	vx0 = max(vx0, 0);
@@ -127,13 +127,58 @@ void sheet_refreshsub(struct SHTCTL *shtctl, int vx0, int vy0, int vx1, int vy1,
 		bx1 = min(vx1 - sht->vx0, sht->bxsize);
 		by1 = min(vy1 - sht->vy0, sht->bysize);
 		sid = sht - shtctl->sheets0;
-		for (by = by0; by < by1; ++by) {
-			vy = sht->vy0 + by;
-			for (bx = bx0; bx < bx1; ++bx) {
+		if ((sht->vx0 & 3) == 0) {
+			i = (bx0 + 3) / 4;
+			ii = bx1 / 4;
+			ii -= i;
+			sid4 = sid | sid << 8 | sid << 16 | sid << 24;
+			for (by = by0; by < by1; ++by) {
+				vy = sht->vy0 + by;
+				for (bx = bx0; bx < bx1 && (bx & 3) != 0; ++bx) {
+					vx = sht->vx0 + bx;
+					if (map[vy * shtctl->xsize + vx] == sid) {
+						vram[vy * shtctl->xsize + vx] = buf[by * sht->bxsize + bx];
+					}
+				}
 				vx = sht->vx0 + bx;
-				c = buf[by * sht->bxsize + bx];
-				if (map[vy * shtctl->xsize + vx] == sid) {
-					vram[vy * shtctl->xsize + vx] = buf[by * sht->bxsize + bx];
+				p = (int *)&map[vy * shtctl->xsize + vx];
+				q = (int *)&vram[vy * shtctl->xsize + vx];
+				r = (int *)&buf[by * sht->bxsize + bx];
+				for (i = 0; i < ii; ++i) {
+					if (p[i] == sid4) {
+						q[i] = r[i];
+					} else {
+						bx2 = bx + i * 4;
+						vx = sht->vx0 + bx2;
+						if (map[vy * shtctl->xsize + vx + 0] == sid) {
+							vram[vy * shtctl->xsize + vx + 0] = buf[by * sht->bxsize + bx2 + 0];
+						}
+						if (map[vy * shtctl->xsize + vx + 1] == sid) {
+							vram[vy * shtctl->xsize + vx + 1] = buf[by * sht->bxsize + bx2 + 1];
+						}
+						if (map[vy * shtctl->xsize + vx + 2] == sid) {
+							vram[vy * shtctl->xsize + vx + 2] = buf[by * sht->bxsize + bx2 + 2];
+						}
+						if (map[vy * shtctl->xsize + vx + 3] == sid) {
+							vram[vy * shtctl->xsize + vx + 3] = buf[by * sht->bxsize + bx2 + 3];
+						}
+					}
+				}
+				for (bx += ii * 4; bx < bx1; ++bx) {
+					vx = sht->vx0 + bx;
+					if (map[vy * shtctl->xsize + vx] == sid) {
+						vram[vy * shtctl->xsize + vx] = buf[by * sht->bxsize + bx];
+					}
+				}
+			}
+		} else {
+			for (by = by0; by < by1; ++by) {
+				vy = sht->vy0 + by;
+				for (bx = bx0; bx < bx1; ++bx) {
+					vx = sht->vx0 + bx;
+					if (map[vy * shtctl->xsize + vx] == sid) {
+						vram[vy * shtctl->xsize + vx] = buf[by * sht->bxsize + bx];
+					}
 				}
 			}
 		}
