@@ -38,7 +38,7 @@ void RubbMain(void)
 	int mouse_s = 16;
 	int mouse_offset = 5;
 	int key_shift = 0, key_ctrl = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
-	int i = 0, j, x, y, mmx = -1, mmy = -1, mmx2 = 0;
+	int i = 0, j, x, y, mmx = -1, mmy = -1, mmx2 = 0, new_mouse_y = 0, new_mouse_x = -1, new_window_x = 0x7fffffff, new_window_y = 0;
 	// each key
 	static char keytable[0x80] = {
 		0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '^', 0x08, 0,
@@ -164,8 +164,18 @@ void RubbMain(void)
 		}
 		io_cli();
 		if (fifo32_status(&fifo) <= 0) {
-			task_sleep(task_a);
-			io_sti();
+			if (new_mouse_x >= 0) {
+				io_sti();
+				sheet_slide(sht_mouse, new_mouse_x, new_mouse_y);
+				new_mouse_x = -1;
+			} else if (new_window_x != 0x7fffffff) {
+				io_sti();
+				sheet_slide(sheet, new_window_x, new_window_y);
+				new_window_x = 0x7fffffff;
+			} else {
+				task_sleep(task_a);
+				io_sti();
+			}
 		} else {
 			i = fifo32_get(&fifo);
 			io_sti();
@@ -282,6 +292,8 @@ void RubbMain(void)
 					putfonts8_asc_sht(sht_back, 0, 50, COL8_FFFFFF, COL8_000000, s);
 					sheet_slide(sht_mouse, mouse_x, mouse_y);
 					sprintf(s, "[lcr %4d %4d]", mdec.x, mdec.y);
+					new_mouse_x = mouse_x;
+					new_mouse_y = mouse_y;
 					if ((mdec.btn & 0x01) != 0) {
 						s[1] = 'L';
 						if (mmx < 0) {
@@ -301,6 +313,7 @@ void RubbMain(void)
 											mmx = mouse_x;
 											mmy = mouse_y;
 											mmx2 = sheet->vx0;
+											new_window_y = sheet->vy0;
 										}
 										if (sheet->bxsize - 21 <= x && x < sheet->bxsize - 5 && 5 <= y && y < 19 && (sheet->flags & 0x10) != 0) {
 											task = sheet->task;
@@ -317,11 +330,16 @@ void RubbMain(void)
 						} else {
 							x = mouse_x - mmx;
 							y = mouse_y - mmy;
-							sheet_slide(sheet, (mmx2 + x + 2) & ~3, sheet->vy0 + y);
+							new_window_x = (mmx2 + x + 2) & ~3;
+							new_window_y = new_window_y + y;
 							mmy = mouse_y;
 						}
 					} else {
 						mmx = -1;
+						if (new_window_x != 0x7fffffff) {
+							sheet_slide(sheet, new_window_x, new_window_y);
+							new_window_x = 0x7fffffff;
+						}
 					}
 					if ((mdec.btn & 0x02) != 0) {
 						s[3] = 'R';
