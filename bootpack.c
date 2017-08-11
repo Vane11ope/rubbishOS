@@ -8,8 +8,11 @@
 #define CONSOLE_OFF 3
 
 extern struct TIMERCTL timerctl;
+extern const short CONSOLE_TEXTBOX_WIDTH;
+extern const short CONSOLE_TEXTBOX_HEIGHT;
 void keywin_on(struct SHEET *key_win);
 void keywin_off(struct SHEET *key_win);
+struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal);
 
 void RubbMain(void)
 {
@@ -25,8 +28,6 @@ void RubbMain(void)
 	struct CONSOLE *console;
 	unsigned char *sht_buf_back, sht_buf_mouse[256], *sht_buf_console[2];
 	char s[40];
-	const short CONSOLE_TEXTBOX_WIDTH = CONSOLE_WIDTH - CHAR_WIDTH * 2;
-	const short CONSOLE_TEXTBOX_HEIGHT = CONSOLE_HEIGHT - 37;
 	short tweetx = 11;
 	short tweety = binfo->scrny - 20;
 	unsigned int memtotal, count = 0;
@@ -37,7 +38,7 @@ void RubbMain(void)
 	int mouse_h = 16;
 	int mouse_s = 16;
 	int mouse_offset = 5;
-	int key_shift = 0, key_ctrl = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
+	int key_shift = 0, key_ctrl = 0, key_command = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
 	int i = 0, j, x, y, mmx = -1, mmy = -1, mmx2 = 0, new_mouse_y = 0, new_mouse_x = -1, new_window_x = 0x7fffffff, new_window_y = 0;
 	// each key
 	static char keytable[0x80] = {
@@ -99,29 +100,8 @@ void RubbMain(void)
 	sheet_setbuf(sht_back, sht_buf_back, binfo->scrnx, binfo->scrny, -1);
 	sheet_setbuf(sht_mouse, sht_buf_mouse, 16, 16, 99);
 	// console settings
-	for (i = 0; i < 2; ++i) {
-		sht_console[i] = sheet_alloc(shtctl);
-		sht_buf_console[i] = (unsigned char *)memman_alloc_4k(memman, CONSOLE_WIDTH * CONSOLE_HEIGHT);
-		sheet_setbuf(sht_console[i], sht_buf_console[i], CONSOLE_WIDTH, CONSOLE_HEIGHT, -1);
-		make_window(sht_buf_console[i], CONSOLE_WIDTH, CONSOLE_HEIGHT, "terminal", 0);
-		make_textbox8(sht_console[i], 8, WINDOW_TITLE_HEIGHT, CONSOLE_TEXTBOX_WIDTH, CONSOLE_TEXTBOX_HEIGHT, COL8_000000);
-		task_console[i] = task_alloc();
-		task_console[i]->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 12;
-		task_console[i]->tss.eip = (int) &console_task;
-		task_console[i]->tss.es = 1 * 8;
-		task_console[i]->tss.cs = 2 * 8;
-		task_console[i]->tss.ss = 1 * 8;
-		task_console[i]->tss.ds = 1 * 8;
-		task_console[i]->tss.fs = 1 * 8;
-		task_console[i]->tss.gs = 1 * 8;
-		*((int *)(task_console[i]->tss.esp + 4)) = (int) sht_console[i];
-		*((int *)(task_console[i]->tss.esp + 8)) = (int) memtotal;
-		task_run(task_console[i], 2, 2);
-		sht_console[i]->task = task_console[i];
-		sht_console[i]->flags |= 0x20;
-		cons_fifo[i] = (int *)memman_alloc_4k(memman, 128 * 4);
-		fifo32_init(&task_console[i]->fifo, 128, cons_fifo[i], task_console[i]);
-	}
+	sht_console[0] = open_console(shtctl, memtotal);
+	sht_console[1] = 0;
 
 	// init screens and mouse graphics after sheet settings
 	init_screen(sht_buf_back, binfo->scrnx, binfo->scrny);
@@ -136,12 +116,10 @@ void RubbMain(void)
 	// sheet positionings(refresh included)
 	sheet_slide(sht_back, 0, 0);
 	sheet_slide(sht_mouse, mouse_x, mouse_y);
-	sheet_slide(sht_console[0], 500, 26);
-	sheet_slide(sht_console[1], 0, 26);
+	sheet_slide(sht_console[0], 16, 32);
 	sheet_updown(sht_back, 0);
-	sheet_updown(sht_console[1], 1);
-	sheet_updown(sht_console[0], 2);
-	sheet_updown(sht_mouse, 3);
+	sheet_updown(sht_console[0], 1);
+	sheet_updown(sht_mouse, 2);
 	key_win = sht_console[0];
 	keywin_on(key_win);
 
@@ -200,6 +178,15 @@ void RubbMain(void)
 					}
 				}
 				if (s[0] != 0) {
+					if (key_command != 0 && key_win == sht_console[0] && sht_console[1] == 0 && s[0] == 'n') { // open new console
+						sht_console[1] = open_console(shtctl, memtotal);
+						sheet_slide(sht_console[1], 200, 16);
+						sheet_updown(sht_console[1], shtctl->top);
+						keywin_off(key_win);
+						key_win = sht_console[1];
+						keywin_on(key_win);
+						continue;
+					}
 					if (key_win == sht_console[0] || key_win == sht_console[1]) {
 						if (key_ctrl != 0 ) {
 							task = key_win->task;
@@ -270,6 +257,12 @@ void RubbMain(void)
 					key_ctrl |= 1;
 				}
 				if (i == 256 + 0x9d) {
+					key_ctrl &= ~1;
+				}
+				if (i == 256 + 0x5b) {
+					key_command |= 1;
+				}
+				if (i == 256 + 0xdb) {
 					key_ctrl &= ~1;
 				}
 			} else if (512 <= i && i <= 767) {
@@ -368,4 +361,31 @@ void keywin_off(struct SHEET *key_win)
 	if ((key_win->flags & 0x20) != 0) {
 		fifo32_put(&key_win->task->fifo, CONSOLE_OFF);
 	}
+}
+
+struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal)
+{
+	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+	struct SHEET *sheet = sheet_alloc(shtctl);
+	unsigned char *buf = (unsigned char *)memman_alloc_4k(memman, CONSOLE_WIDTH * CONSOLE_HEIGHT);
+	struct TASK *task = task_alloc();
+	int *console_fifo = (int *)memman_alloc_4k(memman, 128 * 4);
+	sheet_setbuf(sheet, buf, CONSOLE_WIDTH, CONSOLE_HEIGHT, -1);
+	make_window(buf, CONSOLE_WIDTH, CONSOLE_HEIGHT, "console", 0);
+	make_textbox8(sheet, CHAR_WIDTH, WINDOW_TITLE_HEIGHT, CONSOLE_TEXTBOX_WIDTH, CONSOLE_TEXTBOX_HEIGHT, COL8_000000);
+	task->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 12;
+	task->tss.eip = (int) &console_task;
+	task->tss.es = 1 * 8;
+	task->tss.cs = 2 * 8;
+	task->tss.ss = 1 * 8;
+	task->tss.ds = 1 * 8;
+	task->tss.fs = 1 * 8;
+	task->tss.gs = 1 * 8;
+	*((int *) (task->tss.esp + 4)) = (int) sheet;
+	*((int *) (task->tss.esp + 8)) = (int) memtotal;
+	task_run(task, 2, 2);
+	sheet->task = task;
+	sheet->flags |= 0x20;
+	fifo32_init(&task->fifo, 128, console_fifo, task);
+	return sheet;
 }
