@@ -22,7 +22,7 @@ void RubbMain(void)
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
 	struct SHTCTL *shtctl;
-	struct SHEET *sht_back, *sht_mouse, *sht_console[2], *sheet = 0, *key_win;
+	struct SHEET *sht_back, *sht_mouse, *sheet = 0, *key_win;
 	struct FIFO32 fifo, keycmd;
 	struct TASK *task_a, *task_console[2], *task;
 	struct CONSOLE *console;
@@ -99,9 +99,6 @@ void RubbMain(void)
 	// set buf for each sheet
 	sheet_setbuf(sht_back, sht_buf_back, binfo->scrnx, binfo->scrny, -1);
 	sheet_setbuf(sht_mouse, sht_buf_mouse, 16, 16, 99);
-	// console settings
-	sht_console[0] = open_console(shtctl, memtotal);
-	sht_console[1] = 0;
 
 	// init screens and mouse graphics after sheet settings
 	init_screen(sht_buf_back, binfo->scrnx, binfo->scrny);
@@ -113,14 +110,16 @@ void RubbMain(void)
 	putfonts8_asc(sht_buf_back, binfo->scrnx, 240, 192, COL8_FFFFFF, "VANELLOPE");
 	putfonts8_asc(sht_buf_back, binfo->scrnx, tweetx, tweety, COL8_000000, "TWEET");
 
+	// console
+	key_win = open_console(shtctl, memtotal);
+
 	// sheet positionings(refresh included)
 	sheet_slide(sht_back, 0, 0);
 	sheet_slide(sht_mouse, mouse_x, mouse_y);
-	sheet_slide(sht_console[0], 16, 32);
+	sheet_slide(key_win, 16, 32);
 	sheet_updown(sht_back, 0);
-	sheet_updown(sht_console[0], 1);
+	sheet_updown(key_win, 1);
 	sheet_updown(sht_mouse, 2);
-	key_win = sht_console[0];
 	keywin_on(key_win);
 
 	// keyboard
@@ -178,16 +177,15 @@ void RubbMain(void)
 					}
 				}
 				if (s[0] != 0) {
-					if (key_command != 0 && key_win == sht_console[0] && sht_console[1] == 0 && s[0] == 'n') { // open new console
-						sht_console[1] = open_console(shtctl, memtotal);
-						sheet_slide(sht_console[1], 200, 16);
-						sheet_updown(sht_console[1], shtctl->top);
+					if (key_command != 0 && (key_win->flags & 0x20) != 0 && s[0] == 'n') { // open new console
 						keywin_off(key_win);
-						key_win = sht_console[1];
+						key_win = open_console(shtctl, memtotal);
+						sheet_slide(key_win, 200, 16);
+						sheet_updown(key_win, shtctl->top);
 						keywin_on(key_win);
 						continue;
 					}
-					if (key_win == sht_console[0] || key_win == sht_console[1]) {
+					if (key_win->flags & 0x20) {
 						if (key_ctrl != 0 ) {
 							task = key_win->task;
 							if (s[0] == 'c' && task->tss.ss0 != 0) {
@@ -263,7 +261,7 @@ void RubbMain(void)
 					key_command |= 1;
 				}
 				if (i == 256 + 0xdb) {
-					key_ctrl &= ~1;
+					key_command &= ~1;
 				}
 			} else if (512 <= i && i <= 767) {
 				if (mouse_decode(&mdec, i - 512) != 0) {
