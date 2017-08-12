@@ -185,7 +185,7 @@ void RubbMain(void)
 						keywin_on(key_win);
 						continue;
 					}
-					if (key_win->flags & 0x20) {
+					if ((key_win->flags & 0x20) != 0) {
 						if (key_ctrl != 0 ) {
 							task = key_win->task;
 							if (s[0] == 'c' && task->tss.ss0 != 0) {
@@ -369,7 +369,7 @@ struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal)
 	struct TASK *task = task_alloc();
 	int *console_fifo = (int *)memman_alloc_4k(memman, 128 * 4);
 	sheet_setbuf(sheet, buf, CONSOLE_WIDTH, CONSOLE_HEIGHT, -1);
-	make_window(buf, CONSOLE_WIDTH, CONSOLE_HEIGHT, "console", 0);
+	make_window(buf, CONSOLE_WIDTH, CONSOLE_HEIGHT, "Terminal", 0);
 	make_textbox8(sheet, CHAR_WIDTH, WINDOW_TITLE_HEIGHT, CONSOLE_TEXTBOX_WIDTH, CONSOLE_TEXTBOX_HEIGHT, COL8_000000);
 	task->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 12;
 	task->tss.eip = (int) &console_task;
