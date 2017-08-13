@@ -77,7 +77,7 @@ struct TASK {
 	struct CONSOLE *console;
 	int sel, flags;
 	int level, priority;
-	int ds_base;
+	int ds_base, console_stack;
 };
 
 struct TASKLEVEL {

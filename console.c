@@ -20,6 +20,8 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	int *fat = (int *) memman_alloc_4k(memman, 4 * 2880);
 	char s[64], cmdline[64], *p;
 
+	*((int *)0xfec) = (int)fat;
+
 	console.sheet = sheet;
 	console.cursor_x = CHAR_WIDTH;
 	console.cursor_y = WINDOW_TITLE_HEIGHT;

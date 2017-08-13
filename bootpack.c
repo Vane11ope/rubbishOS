@@ -13,6 +13,8 @@ extern const short CONSOLE_TEXTBOX_HEIGHT;
 void keywin_on(struct SHEET *key_win);
 void keywin_off(struct SHEET *key_win);
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal);
+void close_console_task(struct TASK *task);
+void close_console(struct SHEET* sheet);
 
 void RubbMain(void)
 {
@@ -156,8 +158,13 @@ void RubbMain(void)
 		} else {
 			i = fifo32_get(&fifo);
 			io_sti();
-			if (key_win->flags == 0) {
-				key_win = shtctl->sheets[shtctl->top - 1];
+			if (key_win != 0 && key_win->flags == 0) {
+				if (shtctl->top == 1) {
+					key_win = 0;
+				} else {
+					key_win = shtctl->sheets[shtctl->top - 1];
+					keywin_on(key_win);
+				}
 			}
 			if (256 <= i && i <= 511) {
 				sprintf(s, "%02X", i - 256);
@@ -176,14 +183,25 @@ void RubbMain(void)
 						s[0] += 0x20;
 					}
 				}
-				if (s[0] != 0) {
-					if (key_command != 0 && (key_win->flags & 0x20) != 0 && s[0] == 'n') { // open new console
-						keywin_off(key_win);
-						key_win = open_console(shtctl, memtotal);
-						sheet_slide(key_win, 200, 16);
-						sheet_updown(key_win, shtctl->top);
-						keywin_on(key_win);
-						continue;
+				if (s[0] != 0 && key_win != 0) {
+					if (key_command != 0 && (key_win->flags & 0x20) != 0) { // open new console
+						if (s[0] == 'n') {
+							keywin_off(key_win);
+							key_win = open_console(shtctl, memtotal);
+							sheet_slide(key_win, 200, 16);
+							sheet_updown(key_win, shtctl->top);
+							keywin_on(key_win);
+							continue;
+						} else if (s[0] == 'w') { // close console
+							task = key_win->task;
+							int fat = *((int *)0xfec);
+							timer_cancel(task->console->timer);
+							memman_free_4k(memman, (int) fat, 4 * 2880);
+							io_cli();
+							fifo32_put(&task->fifo, console->sheet - shtctl->sheets0 + 768);
+							io_sti();
+							close_console(task->console->sheet);
+						}
 					}
 					if ((key_win->flags & 0x20) != 0) {
 						if (key_ctrl != 0 ) {
@@ -210,7 +228,7 @@ void RubbMain(void)
 				if (i == 256 + 0x3b && shtctl->top > 2) {
 					sheet_updown(shtctl->sheets[1], shtctl->top - 1);
 				}
-				if (i == 256 + 0x0f) {  // tab
+				if (i == 256 + 0x0f && key_win != 0) {  // tab
 					keywin_off(key_win);
 					j = key_win->height - 1;
 					if (j == 0) { j = shtctl->top - 1; }
@@ -371,7 +389,8 @@ struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal)
 	sheet_setbuf(sheet, buf, CONSOLE_WIDTH, CONSOLE_HEIGHT, -1);
 	make_window(buf, CONSOLE_WIDTH, CONSOLE_HEIGHT, "Terminal", 0);
 	make_textbox8(sheet, CHAR_WIDTH, WINDOW_TITLE_HEIGHT, CONSOLE_TEXTBOX_WIDTH, CONSOLE_TEXTBOX_HEIGHT, COL8_000000);
-	task->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 12;
+	task->console_stack = memman_alloc_4k(memman, 64 * 1024);
+	task->tss.esp = task->console_stack + 64 * 1024 - 12;
 	task->tss.eip = (int) &console_task;
 	task->tss.es = 1 * 8;
 	task->tss.cs = 2 * 8;
@@ -386,4 +405,24 @@ struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal)
 	sheet->flags |= 0x20;
 	fifo32_init(&task->fifo, 128, console_fifo, task);
 	return sheet;
+}
+
+void close_console_task(struct TASK *task)
+{
+	struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
+	task_sleep(task);
+	memman_free_4k(memman, task->console_stack, 64 * 1024);
+	memman_free_4k(memman, (int) task->fifo.buf, 128 * 4);
+	task->flags = 0;
+	return;
+}
+
+void close_console(struct SHEET* sheet)
+{
+	struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
+	struct TASK *task = sheet->task;
+	memman_free_4k(memman, (int) sheet->buf, CONSOLE_WIDTH * CONSOLE_HEIGHT);
+	sheet_free(sheet);
+	close_console_task(task);
+	return;
 }
