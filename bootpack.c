@@ -84,6 +84,7 @@ void RubbMain(void)
 	// fifo init
 	fifo32_init(&fifo, 128, fifobuf, 0);
 	fifo32_init(&keycmd, 32, keycmd_buf, 0);
+	*((int *)0x0fec) = (int)&fifo;
 
 	// multitasking
 	task_a = task_init(memman);
@@ -184,8 +185,8 @@ void RubbMain(void)
 					}
 				}
 				if (s[0] != 0 && key_win != 0) {
-					if (key_command != 0 && (key_win->flags & 0x20) != 0) { // open new console
-						if (s[0] == 'n') {
+					if (key_command != 0 && (key_win->flags & 0x20) != 0) {
+						if (s[0] == 'n') { // open new console
 							keywin_off(key_win);
 							key_win = open_console(shtctl, memtotal);
 							sheet_slide(key_win, 200, 16);
@@ -193,14 +194,7 @@ void RubbMain(void)
 							keywin_on(key_win);
 							continue;
 						} else if (s[0] == 'w') { // close console
-							task = key_win->task;
-							int fat = *((int *)0xfec);
-							timer_cancel(task->console->timer);
-							memman_free_4k(memman, (int) fat, 4 * 2880);
-							io_cli();
-							fifo32_put(&task->fifo, console->sheet - shtctl->sheets0 + 768);
-							io_sti();
-							close_console(task->console->sheet);
+							fifo32_put(&key_win->task->fifo, 768);
 						}
 					}
 					if ((key_win->flags & 0x20) != 0) {
@@ -358,6 +352,8 @@ void RubbMain(void)
 					}
 					putfonts8_asc_sht(sht_back, 50, 0, COL8_FFFFFF, COL8_000000, s);
 				}
+			} else if (768 <= i && i <= 1023) {
+				close_console(shtctl->sheets0 + (i - 768));
 			}
 		}
 	}

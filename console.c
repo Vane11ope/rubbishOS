@@ -20,19 +20,16 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	int *fat = (int *) memman_alloc_4k(memman, 4 * 2880);
 	char s[64], cmdline[64], *p;
 
-	*((int *)0xfec) = (int)fat;
-
 	console.sheet = sheet;
 	console.cursor_x = CHAR_WIDTH;
 	console.cursor_y = WINDOW_TITLE_HEIGHT;
 	console.cursor_color = -1;
 	task->console = &console;
-
 	file_readfat(fat, (unsigned char *) (ADR_DISKIMG + 0x000200));
+
 	console.timer = timer_alloc();
 	timer_init(console.timer, &task->fifo, 1);
 	timer_settime(console.timer, 50);
-
 	console_putchar(&console, '>', 1);
 
 	for (;;) {
@@ -80,6 +77,19 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 							cmdline[console.cursor_x / CHAR_WIDTH - 2] = i - 256;
 							console_putchar(&console, i - 256, 1);
 						}
+				}
+			} else if (i == 768) {
+				struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
+				struct TASK *task = task_now();
+				struct SHTCTL *shtctl = (struct SHTCTL *) *((int *) 0x0fe4);
+				struct FIFO32 *fifo = (struct FIFO32 *) *((int *) 0x0fec);
+				timer_cancel(console.timer);
+				memman_free_4k(memman, (int) fat, 4 * 2880);
+				io_cli();
+				fifo32_put(fifo, console.sheet - shtctl->sheets0 + 768);	/* 768〜1023 */
+				io_sti();
+				for (;;) {
+					task_sleep(task);
 				}
 			} else if (i == 1111) {
 				console_ctrl_l(&console);
