@@ -72,7 +72,7 @@ int memman_free(struct MEMMAN *memman, unsigned int addr, unsigned int size)
 	}
 	if (memman->frees < MEMMAN_FREES) {
 		for (j = memman->frees; j > i; --j) {
-			memman->free[i] = memman->free[i - 1];
+			memman->free[j] = memman->free[j - 1];
 		}
 		++memman->frees;
 		if (memman->maxfrees < memman->frees) {
