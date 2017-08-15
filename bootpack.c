@@ -84,7 +84,6 @@ void RubbMain(void)
 	// fifo init
 	fifo32_init(&fifo, 128, fifobuf, 0);
 	fifo32_init(&keycmd, 32, keycmd_buf, 0);
-	*((int *)0x0fec) = (int)&fifo;
 
 	// multitasking
 	task_a = task_init(memman);
@@ -195,7 +194,12 @@ void RubbMain(void)
 								keywin_on(key_win);
 								continue;
 							} else if (s[0] == 'w') { // close console
-								fifo32_put(&key_win->task->fifo, 768);
+								task = key_win->task;
+								console = task->console;
+								timer_cancel(console->timer);
+								memman_free_4k(memman, (int)console->fat, 4 * 2880);
+								task_sleep(task);
+								close_console(console->sheet);
 								continue;
 							}
 						} else if (key_ctrl != 0 ) {
@@ -350,8 +354,6 @@ void RubbMain(void)
 					}
 					putfonts8_asc_sht(sht_back, 50, 0, COL8_FFFFFF, COL8_000000, s);
 				}
-			} else if (768 <= i && i <= 1023) {
-				close_console(shtctl->sheets0 + (i - 768));
 			}
 		}
 	}
