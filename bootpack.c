@@ -320,13 +320,22 @@ void RubbMain(void)
 											mmx2 = sheet->vx0;
 											new_window_y = sheet->vy0;
 										}
-										if (sheet->bxsize - 21 <= x && x < sheet->bxsize - 5 && 5 <= y && y < 19 && (sheet->flags & 0x10) != 0) {
-											task = sheet->task;
-											console_putstr(task->console, "\nBreak(mouse) :\n");
-											io_cli();
-											task->tss.eax = (int)&(task->tss.esp0);
-											task->tss.eip = (int)asm_end_app;
-											io_sti();
+										if (sheet->bxsize - 21 <= x && x < sheet->bxsize - 5 && 5 <= y && y < 19) {
+											if ((sheet->flags & 0x10) != 0) {
+												task = sheet->task;
+												console_putstr(task->console, "\nBreak(mouse) :\n");
+												io_cli();
+												task->tss.eax = (int)&(task->tss.esp0);
+												task->tss.eip = (int)asm_end_app;
+												io_sti();
+											} else if ((sheet->flags & 0x20) != 0) {
+												task = sheet->task;
+												console = task->console;
+												timer_cancel(console->timer);
+												memman_free_4k(memman, (int)console->fat, 4 * 2880);
+												task_sleep(task);
+												close_console(console->sheet);
+											}
 										}
 										break;
 									}
