@@ -191,6 +191,8 @@ void console_command(char *cmdline, struct CONSOLE *console, int *fat, unsigned 
 		ls(console);
 	} else if (strncmp(cmdline, "cat ", 4) == 0) {
 		cat(console, fat, cmdline);
+	} else if (strncmp(cmdline, "start ", 6) == 0) {
+		start(console, cmdline, memtotal);
 	} else if (cmdline[0] != 0) {
 		if ( app(console, fat, cmdline) == 0) {
 			console_putstr(console, "Bad command.\n\n");
@@ -244,6 +246,22 @@ void cat(struct CONSOLE *console, int *fat, char *cmdline)
 	} else {
 		console_putstr(console, "File not found.\n");
 	}
+	console_newline(console);
+	return;
+}
+
+void start(struct CONSOLE *console, char *cmdline, int memtotal)
+{
+	struct SHTCTL *shtctl = (struct SHTCTL *)*((int *)0x0fe4);
+	struct SHEET *sheet = open_console(shtctl, memtotal);
+	struct FIFO32 *fifo = &sheet->task->fifo;
+	int i;
+	sheet_slide(sheet, 200, 16);
+	sheet_updown(sheet, shtctl->top);
+	for(i = 6; cmdline[i] != 0; ++i) {
+		fifo32_put(fifo, cmdline[i] + 256);
+	}
+	fifo32_put(fifo, 10 + 256);
 	console_newline(console);
 	return;
 }

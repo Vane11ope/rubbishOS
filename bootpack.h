@@ -268,6 +268,7 @@ void console_command(char *cmdline, struct CONSOLE *console, int *fat, unsigned 
 void mem(struct CONSOLE *console, unsigned int memtotal);
 void ls(struct CONSOLE *console);
 void cat(struct CONSOLE *console, int *fat, char *cmdline);
+void start(struct CONSOLE *console, char *cmdline, int memtotal);
 int app(struct CONSOLE *console, int *fat, char *cmdline);
 int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);
 int inthandler0d(int *esp);
