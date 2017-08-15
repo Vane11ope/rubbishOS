@@ -79,8 +79,6 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 						}
 				}
 			} else if (i == 768) {
-				struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
-				struct TASK *task = task_now();
 				struct SHTCTL *shtctl = (struct SHTCTL *) *((int *) 0x0fe4);
 				struct FIFO32 *fifo = (struct FIFO32 *) *((int *) 0x0fec);
 				timer_cancel(console.timer);
