@@ -185,20 +185,20 @@ void RubbMain(void)
 					}
 				}
 				if (s[0] != 0 && key_win != 0) {
-					if (key_command != 0 && (key_win->flags & 0x20) != 0) {
-						if (s[0] == 'n') { // open new console
-							keywin_off(key_win);
-							key_win = open_console(shtctl, memtotal);
-							sheet_slide(key_win, 200, 16);
-							sheet_updown(key_win, shtctl->top);
-							keywin_on(key_win);
-							continue;
-						} else if (s[0] == 'w') { // close console
-							fifo32_put(&key_win->task->fifo, 768);
-						}
-					}
 					if ((key_win->flags & 0x20) != 0) {
-						if (key_ctrl != 0 ) {
+						if (key_command != 0) {
+							if (s[0] == 'n') { // open new console
+								keywin_off(key_win);
+								key_win = open_console(shtctl, memtotal);
+								sheet_slide(key_win, 200, 16);
+								sheet_updown(key_win, shtctl->top);
+								keywin_on(key_win);
+								continue;
+							} else if (s[0] == 'w') { // close console
+								fifo32_put(&key_win->task->fifo, 768);
+								continue;
+							}
+						} else if (key_ctrl != 0 ) {
 							task = key_win->task;
 							if (s[0] == 'c' && task->tss.ss0 != 0) {
 								console_putstr(task->console, "\nBreak(key) :\n");
@@ -215,8 +215,6 @@ void RubbMain(void)
 						} else {
 							fifo32_put(&key_win->task->fifo, s[0] + 256);
 						}
-					} else {
-						fifo32_put(&key_win->task->fifo, s[0] + 256);
 					}
 				}
 				if (i == 256 + 0x3b && shtctl->top > 2) {
