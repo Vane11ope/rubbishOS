@@ -196,11 +196,19 @@ void RubbMain(void)
 							} else if (s[0] == 'w') { // close console
 								task = key_win->task;
 								console = task->console;
-								timer_cancel(console->timer);
-								memman_free_4k(memman, (int)console->fat, 4 * 2880);
-								task_sleep(task);
-								close_console(console->sheet);
-								continue;
+								for (i = 0; i < MAX_SHEETS; ++i) {
+									sheet = &(shtctl->sheets0[i]);
+									if ((sheet->flags & 0x11) == 0x11 && sheet->task == task) {
+										break;
+									}
+								}
+								if (i == MAX_SHEETS) {
+									timer_cancel(console->timer);
+									memman_free_4k(memman, (int)console->fat, 4 * 2880);
+									task_sleep(task);
+									close_console(console->sheet);
+									continue;
+								}
 							}
 						} else if (key_ctrl != 0 ) {
 							task = key_win->task;
@@ -331,10 +339,18 @@ void RubbMain(void)
 											} else if ((sheet->flags & 0x20) != 0) {
 												task = sheet->task;
 												console = task->console;
-												timer_cancel(console->timer);
-												memman_free_4k(memman, (int)console->fat, 4 * 2880);
-												task_sleep(task);
-												close_console(console->sheet);
+												for (i = 0; i < MAX_SHEETS; ++i) {
+													sheet = &(shtctl->sheets0[i]);
+													if ((sheet->flags & 0x11) == 0x11 && sheet->task == task) {
+														break;
+													}
+												}
+												if (i == MAX_SHEETS) {
+													timer_cancel(console->timer);
+													memman_free_4k(memman, (int)console->fat, 4 * 2880);
+													task_sleep(task);
+													close_console(console->sheet);
+												}
 											}
 										}
 										break;
