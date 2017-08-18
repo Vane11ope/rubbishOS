@@ -249,7 +249,7 @@ int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
 /* console.c */
 struct CONSOLE {
 	struct SHEET *sheet;
-	int cursor_x, cursor_y, cursor_color, fat;
+	int cursor_x, cursor_y, cursor_color;
 	struct TIMER *timer;
 };
 struct FILEINFO {

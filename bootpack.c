@@ -4,8 +4,9 @@
 #define PORT_KEYDAT 0x0060
 #define KEYCMD_LED  0xed
 #define MEMMAN_ADDR 0x003c0000
-#define CONSOLE_ON  2
-#define CONSOLE_OFF 3
+#define CONSOLE_ON   2
+#define CONSOLE_OFF  3
+#define CONSOLE_SHUT 4
 
 extern struct TIMERCTL timerctl;
 extern struct TASKCTL *taskctl;
@@ -197,21 +198,7 @@ void RubbMain(void)
 								keywin_on(key_win);
 								continue;
 							} else if (s[0] == 'w') { // close console
-								task = key_win->task;
-								console = task->console;
-								for (i = 0; i < MAX_SHEETS; ++i) {
-									sheet = &(shtctl->sheets0[i]);
-									if ((sheet->flags & 0x11) == 0x11 && sheet->task == task) {
-										break;
-									}
-								}
-								if (i == MAX_SHEETS) {
-									timer_cancel(console->timer);
-									memman_free_4k(memman, (int)console->fat, 4 * 2880);
-									task_sleep(task);
-									close_console(console->sheet);
-									continue;
-								}
+								fifo32_put(&key_win->task->fifo, CONSOLE_SHUT);
 							}
 						} else if (key_ctrl != 0 ) {
 							task = key_win->task;
@@ -342,20 +329,7 @@ void RubbMain(void)
 												io_sti();
 												task_run(task, -1, 0);
 											} else if ((sheet->flags & 0x20) != 0) {
-												task = sheet->task;
-												console = task->console;
-												for (i = 0; i < MAX_SHEETS; ++i) {
-													sheet = &(shtctl->sheets0[i]);
-													if ((sheet->flags & 0x11) == 0x11 && sheet->task == task) {
-														break;
-													}
-												}
-												if (i == MAX_SHEETS) {
-													timer_cancel(console->timer);
-													memman_free_4k(memman, (int)console->fat, 4 * 2880);
-													task_sleep(task);
-													close_console(console->sheet);
-												}
+												fifo32_put(&key_win->task->fifo, CONSOLE_SHUT);
 											}
 										}
 										break;
@@ -384,6 +358,8 @@ void RubbMain(void)
 					}
 					putfonts8_asc_sht(sht_back, 50, 0, COL8_FFFFFF, COL8_000000, s);
 				}
+			} else if (768 <= i && i <= 1023) {
+				close_console(shtctl->sheets0 + (i - 768));
 			} else if (1024 <= i && i <= 2023) {
 				close_console_task(taskctl->tasks + (i - 1024));
 			}

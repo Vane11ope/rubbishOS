@@ -5,6 +5,7 @@
 #define ADR_DISKIMG  0x00100000
 #define CONSOLE_ON   2
 #define CONSOLE_OFF  3
+#define CONSOLE_SHUT 4
 
 extern struct TASKCTL *taskctl;
 const short CONSOLE_TEXTBOX_WIDTH = CONSOLE_WIDTH - (CHAR_WIDTH * 2);
@@ -26,7 +27,6 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	console.cursor_x = CHAR_WIDTH;
 	console.cursor_y = WINDOW_TITLE_HEIGHT;
 	console.cursor_color = -1;
-	console.fat = (int)fat;
 	task->console = &console;
 
 	if (sheet != 0) {
@@ -60,6 +60,9 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 			if (i == CONSOLE_OFF) {
 				boxfill8(sheet->buf, sheet->bxsize, COL8_000000, console.cursor_x, WINDOW_TITLE_HEIGHT, console.cursor_x + 7, 43);
 				console.cursor_color = -1;
+			}
+			if (i == CONSOLE_SHUT) {
+				shut(&console, fat);
 			}
 			if (256 <= i && i <= 511) {
 				switch (i) {
@@ -303,6 +306,10 @@ void shut(struct CONSOLE *console, int *fat)
 		fifo32_put(fifo, console->sheet - shtctl->sheets0 + 768);
 	} else {
 		fifo32_put(fifo, task - taskctl->tasks + 1024);
+	}
+	io_sti();
+	for (;;) {
+		task_sleep(task);
 	}
 }
 
