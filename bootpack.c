@@ -388,7 +388,6 @@ struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal)
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SHEET *sheet = sheet_alloc(shtctl);
 	unsigned char *buf = (unsigned char *)memman_alloc_4k(memman, CONSOLE_WIDTH * CONSOLE_HEIGHT);
-	int *console_fifo = (int *)memman_alloc_4k(memman, 128 * 4);
 	sheet_setbuf(sheet, buf, CONSOLE_WIDTH, CONSOLE_HEIGHT, -1);
 	make_window(buf, CONSOLE_WIDTH, CONSOLE_HEIGHT, "Terminal", 0);
 	make_textbox8(sheet, CHAR_WIDTH, WINDOW_TITLE_HEIGHT, CONSOLE_TEXTBOX_WIDTH, CONSOLE_TEXTBOX_HEIGHT, COL8_000000);
