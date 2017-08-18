@@ -222,6 +222,7 @@ void RubbMain(void)
 								task->tss.eip = (int) asm_end_app;
 								timer_cancelall(&task->fifo);
 								io_sti();
+								task_run(task, -1, 0);
 							} else if ((s[0] == 'L' || s[0] == 'l') && key_ctrl != 0) {
 								fifo32_put(&task->fifo, 1111);
 							} else {
@@ -339,6 +340,7 @@ void RubbMain(void)
 												task->tss.eax = (int)&(task->tss.esp0);
 												task->tss.eip = (int)asm_end_app;
 												io_sti();
+												task_run(task, -1, 0);
 											} else if ((sheet->flags & 0x20) != 0) {
 												task = sheet->task;
 												console = task->console;
