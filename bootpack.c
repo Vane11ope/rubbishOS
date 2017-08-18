@@ -8,11 +8,13 @@
 #define CONSOLE_OFF 3
 
 extern struct TIMERCTL timerctl;
+extern struct TASKCTL *taskctl;
 extern const short CONSOLE_TEXTBOX_WIDTH;
 extern const short CONSOLE_TEXTBOX_HEIGHT;
 void keywin_on(struct SHEET *key_win);
 void keywin_off(struct SHEET *key_win);
 struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal);
+struct TASK* open_console_task(struct SHEET *sheet, unsigned int memtotal);
 void close_console_task(struct TASK *task);
 void close_console(struct SHEET* sheet);
 
@@ -84,6 +86,7 @@ void RubbMain(void)
 	// fifo init
 	fifo32_init(&fifo, 128, fifobuf, 0);
 	fifo32_init(&keycmd, 32, keycmd_buf, 0);
+	*((int *)0x0fec) = (int)&fifo;
 
 	// multitasking
 	task_a = task_init(memman);
@@ -379,6 +382,8 @@ void RubbMain(void)
 					}
 					putfonts8_asc_sht(sht_back, 50, 0, COL8_FFFFFF, COL8_000000, s);
 				}
+			} else if (1024 <= i && i <= 2023) {
+				close_console_task(taskctl->tasks + (i - 1024));
 			}
 		}
 	}
@@ -405,14 +410,23 @@ struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal)
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SHEET *sheet = sheet_alloc(shtctl);
 	unsigned char *buf = (unsigned char *)memman_alloc_4k(memman, CONSOLE_WIDTH * CONSOLE_HEIGHT);
-	struct TASK *task = task_alloc();
 	int *console_fifo = (int *)memman_alloc_4k(memman, 128 * 4);
 	sheet_setbuf(sheet, buf, CONSOLE_WIDTH, CONSOLE_HEIGHT, -1);
 	make_window(buf, CONSOLE_WIDTH, CONSOLE_HEIGHT, "Terminal", 0);
 	make_textbox8(sheet, CHAR_WIDTH, WINDOW_TITLE_HEIGHT, CONSOLE_TEXTBOX_WIDTH, CONSOLE_TEXTBOX_HEIGHT, COL8_000000);
+	sheet->task = open_console_task(sheet, memtotal);
+	sheet->flags |= 0x20;
+	return sheet;
+}
+
+struct TASK* open_console_task(struct SHEET *sheet, unsigned int memtotal)
+{
+	struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
+	struct TASK *task = task_alloc();
+	int console_fifo = (int *)memman_alloc_4k(memman, 128 * 4);
 	task->console_stack = memman_alloc_4k(memman, 64 * 1024);
 	task->tss.esp = task->console_stack + 64 * 1024 - 12;
-	task->tss.eip = (int) &console_task;
+	task->tss.eip = (int)&console_task;
 	task->tss.es = 1 * 8;
 	task->tss.cs = 2 * 8;
 	task->tss.ss = 1 * 8;
@@ -422,10 +436,8 @@ struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal)
 	*((int *) (task->tss.esp + 4)) = (int) sheet;
 	*((int *) (task->tss.esp + 8)) = (int) memtotal;
 	task_run(task, 2, 2);
-	sheet->task = task;
-	sheet->flags |= 0x20;
 	fifo32_init(&task->fifo, 128, console_fifo, task);
-	return sheet;
+	return task;
 }
 
 void close_console_task(struct TASK *task)

@@ -6,6 +6,7 @@
 #define CONSOLE_ON   2
 #define CONSOLE_OFF  3
 
+extern struct TASKCTL *taskctl;
 const short CONSOLE_TEXTBOX_WIDTH = CONSOLE_WIDTH - (CHAR_WIDTH * 2);
 const short CONSOLE_TEXTBOX_HEIGHT = CONSOLE_HEIGHT - 37;
 
@@ -28,11 +29,13 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	console.fat = (int)fat;
 	task->console = &console;
 
-	console.timer = timer_alloc();
-	timer_init(console.timer, &task->fifo, 1);
-	timer_settime(console.timer, 50);
-	console_putchar(&console, '>', 1);
+	if (sheet != 0) {
+		console.timer = timer_alloc();
+		timer_init(console.timer, &task->fifo, 1);
+		timer_settime(console.timer, 50);
+	}
 
+	console_putchar(&console, '>', 1);
 	for (;;) {
 		io_cli();
 		if (fifo32_status(&task->fifo) == 0) {
@@ -98,17 +101,19 @@ void console_newline(struct CONSOLE *console)
 	if (console->cursor_y < threshold) {
 		console->cursor_y += CHAR_HEIGHT;
 	} else {
-		for (y = WINDOW_TITLE_HEIGHT; y < threshold; ++y) {
-			for (x = CHAR_WIDTH; x < CHAR_WIDTH + CONSOLE_TEXTBOX_WIDTH; ++x) {
-				console->sheet->buf[x + y * console->sheet->bxsize] = console->sheet->buf[x + (y + CHAR_HEIGHT) * console->sheet->bxsize];
+		if (console->sheet != 0) {
+			for (y = WINDOW_TITLE_HEIGHT; y < threshold; ++y) {
+				for (x = CHAR_WIDTH; x < CHAR_WIDTH + CONSOLE_TEXTBOX_WIDTH; ++x) {
+					console->sheet->buf[x + y * console->sheet->bxsize] = console->sheet->buf[x + (y + CHAR_HEIGHT) * console->sheet->bxsize];
+				}
 			}
-		}
-		for (y = threshold; y < threshold + CHAR_HEIGHT; ++y) {
-			for (x = CHAR_WIDTH; x < CHAR_WIDTH + CONSOLE_TEXTBOX_WIDTH; ++x) {
-				console->sheet->buf[x + y * console->sheet->bxsize] = COL8_000000;
+			for (y = threshold; y < threshold + CHAR_HEIGHT; ++y) {
+				for (x = CHAR_WIDTH; x < CHAR_WIDTH + CONSOLE_TEXTBOX_WIDTH; ++x) {
+					console->sheet->buf[x + y * console->sheet->bxsize] = COL8_000000;
+				}
 			}
+			sheet_refresh(console->sheet, CHAR_WIDTH, WINDOW_TITLE_HEIGHT, CHAR_WIDTH + CONSOLE_TEXTBOX_WIDTH, WINDOW_TITLE_HEIGHT + CONSOLE_TEXTBOX_HEIGHT);
 		}
-		sheet_refresh(console->sheet, CHAR_WIDTH, WINDOW_TITLE_HEIGHT, CHAR_WIDTH + CONSOLE_TEXTBOX_WIDTH, WINDOW_TITLE_HEIGHT + CONSOLE_TEXTBOX_HEIGHT);
 	}
 	console->cursor_x = CHAR_WIDTH;
 	return;
@@ -138,7 +143,9 @@ void console_putchar(struct CONSOLE *console, int chr, char move)
 	switch (s[0]) {
 		case 0x09:
 			for (;;) {
-				putfonts8_asc_sht(console->sheet, console->cursor_x, console->cursor_y, COL8_FFFFFF, COL8_000000, " ");
+				if (console->sheet != 0) {
+					putfonts8_asc_sht(console->sheet, console->cursor_x, console->cursor_y, COL8_FFFFFF, COL8_000000, " ");
+				}
 				console->cursor_x += CHAR_WIDTH;
 				if (console->cursor_x == CHAR_WIDTH + CONSOLE_TEXTBOX_WIDTH) {
 					console_newline(console);
@@ -154,7 +161,9 @@ void console_putchar(struct CONSOLE *console, int chr, char move)
 		case 0x0d:
 			break;
 		default:
-			putfonts8_asc_sht(console->sheet, console->cursor_x, console->cursor_y, COL8_FFFFFF, COL8_000000, s);
+			if (console->sheet != 0) {
+				putfonts8_asc_sht(console->sheet, console->cursor_x, console->cursor_y, COL8_FFFFFF, COL8_000000, s);
+			}
 			if (move != 0) {
 				console->cursor_x += CHAR_WIDTH;
 				if (console->cursor_x == CHAR_WIDTH + CONSOLE_TEXTBOX_WIDTH) {
@@ -185,14 +194,16 @@ void console_putstr_with_length(struct CONSOLE *console, char *s, int length)
 
 void console_command(char *cmdline, struct CONSOLE *console, int *fat, unsigned int memtotal)
 {
-	if (strcmp(cmdline, "mem") == 0) {
+	if (strcmp(cmdline, "mem") == 0 && console->sheet != 0) {
 		mem(console, memtotal);
-	} else if (strcmp(cmdline, "ls") == 0) {
+	} else if (strcmp(cmdline, "ls") == 0 && console->sheet != 0) {
 		ls(console);
-	} else if (strncmp(cmdline, "cat ", 4) == 0) {
+	} else if (strncmp(cmdline, "cat ", 4) == 0 && console->sheet != 0) {
 		cat(console, fat, cmdline);
 	} else if (strncmp(cmdline, "start ", 6) == 0) {
 		start(console, cmdline, memtotal);
+	} else if (strncmp(cmdline, "ncst ", 5) == 0) {
+		ncst(console, cmdline, memtotal);
 	} else if (cmdline[0] != 0) {
 		if ( app(console, fat, cmdline) == 0) {
 			console_putstr(console, "Bad command.\n\n");
@@ -264,6 +275,35 @@ void start(struct CONSOLE *console, char *cmdline, int memtotal)
 	fifo32_put(fifo, 10 + 256);
 	console_newline(console);
 	return;
+}
+
+void ncst(struct CONSOLE *console, char *cmdline, int memtotal)
+{
+	struct TASK *task = open_console_task(0, memtotal);
+	struct FIFO32 *fifo = &task->fifo;
+	int i;
+	for (i = 5; cmdline[i] != 0; ++i) {
+		fifo32_put(fifo, cmdline[i] + 256);
+	}
+	fifo32_put(fifo, 10 + 256);
+	console_newline(console);
+	return;
+}
+
+void shut(struct CONSOLE *console, int *fat)
+{
+	struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
+	struct TASK *task = task_now();
+	struct SHTCTL *shtctl = (struct SHTCTL *)*((int *)0x0fe4);
+	struct FIFO32 *fifo = (struct FIFO32 *)*((int *)0x0fec);
+	if (console->sheet != 0) { timer_cancel(console->timer); }
+	memman_free_4k(memman, (int )fat, 4 * 2880);
+	io_cli();
+	if (console->sheet != 0) {
+		fifo32_put(fifo, console->sheet - shtctl->sheets0 + 768);
+	} else {
+		fifo32_put(fifo, task - taskctl->tasks + 1024);
+	}
 }
 
 int app(struct CONSOLE *console, int *fat, char *cmdline)
