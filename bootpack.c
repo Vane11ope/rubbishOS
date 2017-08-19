@@ -188,36 +188,45 @@ void RubbMain(void)
 					}
 				}
 				if (s[0] != 0 && key_win != 0) {
-					if ((key_win->flags & 0x20) != 0) {
-						if (key_command != 0) {
-							if (s[0] == 'n') { // open new console
-								keywin_off(key_win);
-								key_win = open_console(shtctl, memtotal);
-								sheet_slide(key_win, 200, 16);
-								sheet_updown(key_win, shtctl->top);
-								keywin_on(key_win);
-								continue;
-							} else if (s[0] == 'w') { // close console
-								fifo32_put(&key_win->task->fifo, CONSOLE_SHUT);
-							}
-						} else if (key_ctrl != 0 ) {
-							task = key_win->task;
-							if (s[0] == 'c' && task->tss.ss0 != 0) {
-								console_putstr(task->console, "\nBreak(key) :\n");
+					if (key_command != 0) {
+						if (s[0] == 'n' && (key_win->flags & 0x20) != 0) { // open new console
+							keywin_off(key_win);
+							key_win = open_console(shtctl, memtotal);
+							sheet_slide(key_win, 200, 16);
+							sheet_updown(key_win, shtctl->top);
+							keywin_on(key_win);
+							continue;
+						} else if (s[0] == 'w') { // close console
+							if ((key_win->flags & 0x20) != 0) {
 								io_cli();
-								task->tss.eax = (int) &(task->tss.esp0);
-								task->tss.eip = (int) asm_end_app;
-								timer_cancelall(&task->fifo);
+								fifo32_put(&key_win->task->fifo, CONSOLE_SHUT);
 								io_sti();
-								task_run(task, -1, 0);
-							} else if ((s[0] == 'L' || s[0] == 'l') && key_ctrl != 0) {
-								fifo32_put(&task->fifo, 1111);
-							} else {
-								fifo32_put(&task->fifo, s[0] + 256);
+							} else if ((key_win->flags & 0x10) != 0) {
+								io_cli();
+								key_win->task->tss.eax = (int) &(key_win->task->tss.esp0);
+								key_win->task->tss.eip = (int) asm_end_app;
+								timer_cancelall(&key_win->task->fifo);
+								io_sti();
+								task_run(key_win->task, -1, 0);
 							}
-						} else {
-							fifo32_put(&key_win->task->fifo, s[0] + 256);
 						}
+					} else if (key_ctrl != 0 && (key_win->flags & 0x20) != 0) {
+						task = key_win->task;
+						if (s[0] == 'c' && task->tss.ss0 != 0) {
+							console_putstr(task->console, "\nBreak(key) :\n");
+							io_cli();
+							task->tss.eax = (int) &(task->tss.esp0);
+							task->tss.eip = (int) asm_end_app;
+							timer_cancelall(&task->fifo);
+							io_sti();
+							task_run(task, -1, 0);
+						} else if ((s[0] == 'L' || s[0] == 'l') && key_ctrl != 0) {
+							fifo32_put(&task->fifo, 1111);
+						} else {
+							fifo32_put(&task->fifo, s[0] + 256);
+						}
+					} else if ((key_win->flags & 0x20) != 0) {
+						fifo32_put(&key_win->task->fifo, s[0] + 256);
 					}
 				}
 				if (i == 256 + 0x3b && shtctl->top > 2) {
