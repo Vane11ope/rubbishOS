@@ -19,7 +19,9 @@ struct TASK *task_init(struct MEMMAN *memman)
 	for (i = 0; i < MAX_TASKS; ++i) {
 		taskctl->tasks[i].flags = TASK_INIT;
 		taskctl->tasks[i].sel = (TASK_GDT0 + i) * 8;
+		taskctl->tasks[i].tss.ldtr = (TASK_GDT0 + MAX_TASKS + i) * 8;
 		set_segmdesc(gdt + TASK_GDT0 + i, 103, (int) &taskctl->tasks[i].tss, AR_TSS32);
+		set_segmdesc(gdt + TASK_GDT0 + MAX_TASKS + i, 15, (int) taskctl->tasks[i].ldt, AR_LDT);
 	}
 	for (i = 0; i < MAX_TASKLEVEL; ++i) {
 		taskctl->tasklevels[i].activetasks = 0;
@@ -68,7 +70,6 @@ struct TASK *task_alloc(void)
 			task->tss.ds = 0;
 			task->tss.fs = 0;
 			task->tss.gs = 0;
-			task->tss.ldtr = 0;
 			task->tss.iomap = 0x40000000;
 			task->tss.ss0 = 0;
 			return task;

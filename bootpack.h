@@ -44,6 +44,7 @@
 #define AR_INTGATE32         0x008e
 #define AR_CODE32_ER         0x409a
 #define AR_DATA32_RW         0x4092
+#define AR_LDT               0x0082
 
 /* asmhead.nas */
 struct BOOTINFO {
@@ -60,6 +61,24 @@ struct TSS32 {
 	int ldtr, iomap;
 };
 
+/* dsctbl.c */
+struct SEGMENT_DESCRIPTOR {
+	short limit_low, base_low;
+	char base_mid, access_right;
+	char limit_high, base_high;
+};
+
+struct GATE_DESCRIPTOR {
+	short offset_low, selector;
+	char dw_count, access_right;
+	short offset_high;
+};
+
+void init_gdtidt(void);
+void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);
+void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
+
+
 /* fifo.c */
 struct FIFO32 {
 	struct TASK *task;
@@ -75,6 +94,7 @@ struct TASK {
 	struct FIFO32 fifo;
 	struct TSS32 tss;
 	struct CONSOLE *console;
+	struct SEGMENT_DESCRIPTOR ldt[2];
 	int sel, flags;
 	int level, priority;
 	int ds_base, console_stack;
@@ -148,23 +168,6 @@ unsigned int memman_alloc(struct MEMMAN *memman, unsigned int size);
 int memman_free(struct MEMMAN *memman, unsigned int addr, unsigned int size);
 unsigned int memtest(unsigned int start, unsigned int end);
 unsigned int memtest_sub(unsigned int start, unsigned int end);
-
-/* dsctbl.c */
-struct SEGMENT_DESCRIPTOR {
-	short limit_low, base_low;
-	char base_mid, access_right;
-	char limit_high, base_high;
-};
-
-struct GATE_DESCRIPTOR {
-	short offset_low, selector;
-	char dw_count, access_right;
-	short offset_high;
-};
-
-void init_gdtidt(void);
-void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);
-void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 
 /* int.c */
 void init_pic(void);
