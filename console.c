@@ -44,7 +44,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 		} else {
 			i = fifo32_get(&task->fifo);
 			io_sti();
-			if (i <= 1) {
+			if (i <= 1 && console.sheet != 0) {
 				if (i != 0) {
 					timer_init(console.timer, &task->fifo, 0);
 					if (console.cursor_color >= 0) { console.cursor_color = COL8_FFFFFF; }
@@ -58,7 +58,9 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 				console.cursor_color = COL8_FFFFFF;
 			}
 			if (i == CONSOLE_OFF) {
-				boxfill8(sheet->buf, sheet->bxsize, COL8_000000, console.cursor_x, WINDOW_TITLE_HEIGHT, console.cursor_x + 7, 43);
+				if (console.sheet != 0) {
+					boxfill8(sheet->buf, sheet->bxsize, COL8_000000, console.cursor_x, WINDOW_TITLE_HEIGHT, console.cursor_x + 7, 43);
+				}
 				console.cursor_color = -1;
 			}
 			if (i == CONSOLE_SHUT) {
@@ -77,6 +79,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 						cmdline[console.cursor_x / CHAR_WIDTH -2] = 0;
 						console_newline(&console);
 						console_command(cmdline, &console, fat, memtotal);
+						if (console.sheet == 0) { shut(&console, fat); }
 						console_putchar(&console, '>', 1);
 						break;
 					default:
@@ -89,10 +92,12 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 				console_ctrl_l(&console);
 				console.cursor_y = WINDOW_TITLE_HEIGHT;
 			}
-			if (console.cursor_color >= 0) {
-				boxfill8(sheet->buf, sheet->bxsize, console.cursor_color, console.cursor_x, console.cursor_y, console.cursor_x + CHAR_WIDTH - 1, console.cursor_y + CHAR_HEIGHT - 1);
+			if (console.sheet != 0) {
+				if (console.cursor_color >= 0) {
+					boxfill8(console.sheet->buf, console.sheet->bxsize, console.cursor_color, console.cursor_x, console.cursor_y, console.cursor_x + CHAR_WIDTH - 1, console.cursor_y + CHAR_HEIGHT - 1);
+				}
+				sheet_refresh(console.sheet, console.cursor_x, console.cursor_y, console.cursor_x + CHAR_WIDTH, console.cursor_y + CHAR_HEIGHT);
 			}
-			sheet_refresh(sheet, console.cursor_x, console.cursor_y, console.cursor_x + CHAR_WIDTH, console.cursor_y + CHAR_HEIGHT);
 		}
 	}
 }
@@ -379,6 +384,7 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 	struct TASK *task = task_now();
 	struct CONSOLE *console = task->console;
 	struct SHEET *sheet;
+	struct FIFO32 *sys_fifo = (struct FIFO32 *)*((int *)0x0fec);
 	int *reg = &eax + 1; /* rewrite the values assigned to each register */
 	int i, ds_base = task->ds_base;
 	char s[30];
@@ -475,6 +481,13 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 				}
 				if (i == CONSOLE_OFF) {
 					console->cursor_color = -1;
+				}
+				if (i == CONSOLE_SHUT) {
+					timer_cancel(console->timer);
+					io_cli();
+					fifo32_put(sys_fifo, console->sheet - shtctl->sheets0 + 2024);
+					console->sheet = 0;
+					io_sti();
 				}
 				if (i >= 256) {
 					reg[7] = i - 256;

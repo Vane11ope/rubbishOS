@@ -27,7 +27,7 @@ void RubbMain(void)
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
 	struct SHTCTL *shtctl;
-	struct SHEET *sht_back, *sht_mouse, *sheet = 0, *key_win;
+	struct SHEET *sht_back, *sht_mouse, *sheet = 0, *sheet2, *key_win;
 	struct FIFO32 fifo, keycmd;
 	struct TASK *task_a, *task_console[2], *task;
 	struct CONSOLE *console;
@@ -329,7 +329,13 @@ void RubbMain(void)
 												io_sti();
 												task_run(task, -1, 0);
 											} else if ((sheet->flags & 0x20) != 0) {
+												sheet_updown(sheet, -1);
+												keywin_off(key_win);
+												key_win = shtctl->sheets[shtctl->top - 1];
+												keywin_on(key_win);
+												io_cli();
 												fifo32_put(&key_win->task->fifo, CONSOLE_SHUT);
+												io_sti();
 											}
 										}
 										break;
@@ -362,6 +368,10 @@ void RubbMain(void)
 				close_console(shtctl->sheets0 + (i - 768));
 			} else if (1024 <= i && i <= 2023) {
 				close_console_task(taskctl->tasks + (i - 1024));
+			} else if (2024 <= i && i <= 2279) {
+				sheet2 = shtctl->sheets0 + (i - 2024);
+				memman_free_4k(memman, (int) sheet2->buf, CONSOLE_WIDTH * CONSOLE_HEIGHT);
+				sheet_free(sheet2);
 			}
 		}
 	}
