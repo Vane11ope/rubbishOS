@@ -1,14 +1,14 @@
 #include "../app.h"
 
+char buf[150 * 50];
+
 void RubbMain(void)
 {
-	char *buf;
 	int window;
 
-	api_init_malloc();
-	buf = api_malloc(150 * 50);
 	window = api_open_window(buf, 150, 50, -1, "fuck you");
-	api_boxfill_on_window(window, 8, 36, 141, 43, 3);
-	api_putstr_on_window(window, 28, 28, 0, 12, "Hell Above");
+	for (;;) {
+		if (api_getkey(1) == 0x0a) { break; }
+	}
 	api_end();
 }
