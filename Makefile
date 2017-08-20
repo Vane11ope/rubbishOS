@@ -11,7 +11,7 @@ default :
 rubbish.img : rubbish/ipl10.nas rubbish/rubbish.sys Makefile \
 		a/a.rub beep/beep.rub color/color.rub color2/color2.rub \
 		dot/dot.rub dots/dots.rub dots2/dots2.rub eff/eff.rub line/line.rub \
-		noodle/noodle.rub open_window/window.rub walk/walk.rub
+		noodle/noodle.rub open_window/window.rub walk/walk.rub sosu/sosu.rub
 	$(EDIMG) imgin:tools/fdimg0at.tek \
 		wbinimg src:rubbish/ipl10.bin len:512 from:0 to:0 \
 		copy from:rubbish/rubbish.sys to:@: \
@@ -28,6 +28,7 @@ rubbish.img : rubbish/ipl10.nas rubbish/rubbish.sys Makefile \
 		copy from:beep/beep.rub to:@: \
 		copy from:color/color.rub to:@: \
 		copy from:color2/color2.rub to:@: \
+		copy from:sosu/sosu.rub to:@: \
 		imgout:rubbish.img
 
 run :
@@ -50,6 +51,7 @@ full :
 	$(MAKE) -C beep
 	$(MAKE) -C color
 	$(MAKE) -C color2
+	$(MAKE) -C sosu
 	$(MAKE) rubbish.img
 
 run_full :
@@ -82,6 +84,7 @@ clean_full :
 	$(MAKE) -C beep        clean
 	$(MAKE) -C color       clean
 	$(MAKE) -C color2      clean
+	$(MAKE) -C sosu        clean
 
 src_only_full :
 	$(MAKE) -C rubbish     src_only
@@ -98,6 +101,7 @@ src_only_full :
 	$(MAKE) -C beep        src_only
 	$(MAKE) -C color       src_only
 	$(MAKE) -C color2      src_only
+	$(MAKE) -C sosu        src_only
 	$(DEL) rubbish.img
 
 refresh :
