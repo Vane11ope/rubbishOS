@@ -12,6 +12,7 @@ EDIMG    = tools/edimg
 IMGTOL   = tools/imgtol
 DEL      = rm -f
 MAKEFONT = tools/makefont
+OBJS_API = api001.obj api002.obj api003.obj api004.obj api005.obj api006.obj api007.obj api008.obj api009.obj api010.obj api011.obj api012.obj api013.obj api014.obj api015.obj api016.obj api017.obj api018.obj api019.obj
 
 default :
 	$(MAKE) img
@@ -32,74 +33,74 @@ bootpack.rub : bootpack.bim Makefile
 rubbish.sys : asmhead.bin bootpack.rub Makefile
 	cat asmhead.bin  bootpack.rub > rubbish.sys
 
-app.bim: app.obj app_asm.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:app.bim map:app.map app.obj app_asm.obj
+app.bim: app.obj $(OBJS_API) Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:app.bim map:app.map app.obj $(OBJS_API)
 
 app.rub : app.bim Makefile
 	$(BIM2RUB) app.bim app.rub 0
 
-eff.bim: eff.obj app_asm.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:eff.bim stack:1k map:eff.map eff.obj app_asm.obj
+eff.bim: eff.obj $(OBJS_API) Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:eff.bim stack:1k map:eff.map eff.obj $(OBJS_API)
 
 eff.rub : eff.bim Makefile
 	$(BIM2RUB) eff.bim eff.rub 0
 
-window.bim: open_window.obj app_asm.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:window.bim stack:1k map:window.map open_window.obj app_asm.obj
+window.bim: open_window.obj $(OBJS_API) Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:window.bim stack:1k map:window.map open_window.obj $(OBJS_API)
 
 window.rub : window.bim Makefile
 	$(BIM2RUB) window.bim window.rub 40k
 
-dot.bim: dot.obj app_asm.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:dot.bim stack:1k map:dot.map dot.obj app_asm.obj
+dot.bim: dot.obj $(OBJS_API) Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:dot.bim stack:1k map:dot.map dot.obj $(OBJS_API)
 
 dot.rub : dot.bim Makefile
 	$(BIM2RUB) dot.bim dot.rub 47k
 
-dots.bim: dots.obj app_asm.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:dots.bim stack:1k map:dots.map dots.obj app_asm.obj
+dots.bim: dots.obj $(OBJS_API) Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:dots.bim stack:1k map:dots.map dots.obj $(OBJS_API)
 
 dots.rub : dots.bim Makefile
 	$(BIM2RUB) dots.bim dots.rub 48k
 
-dots2.bim: dots2.obj app_asm.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:dots2.bim stack:1k map:dots2.map dots2.obj app_asm.obj
+dots2.bim: dots2.obj $(OBJS_API) Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:dots2.bim stack:1k map:dots2.map dots2.obj $(OBJS_API)
 
 dots2.rub : dots2.bim Makefile
 	$(BIM2RUB) dots2.bim dots2.rub 48k
 
-line.bim: line.obj app_asm.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:line.bim stack:1k map:line.map line.obj app_asm.obj
+line.bim: line.obj $(OBJS_API) Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:line.bim stack:1k map:line.map line.obj $(OBJS_API)
 
 line.rub : line.bim Makefile
 	$(BIM2RUB) line.bim line.rub 48k
 
-walk.bim: walk.obj app_asm.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:walk.bim stack:1k map:walk.map walk.obj app_asm.obj
+walk.bim: walk.obj $(OBJS_API) Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:walk.bim stack:1k map:walk.map walk.obj $(OBJS_API)
 
 walk.rub : walk.bim Makefile
 	$(BIM2RUB) walk.bim walk.rub 48k
 
-noodle.bim: noodle.obj app_asm.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:noodle.bim stack:1k map:noodle.map noodle.obj app_asm.obj
+noodle.bim: noodle.obj $(OBJS_API) Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:noodle.bim stack:1k map:noodle.map noodle.obj $(OBJS_API)
 
 noodle.rub : noodle.bim Makefile
 	$(BIM2RUB) noodle.bim noodle.rub 48k
 
-beep.bim: beep.obj app_asm.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:beep.bim stack:1k map:beep.map beep.obj app_asm.obj
+beep.bim: beep.obj $(OBJS_API) Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:beep.bim stack:1k map:beep.map beep.obj $(OBJS_API)
 
 beep.rub : beep.bim Makefile
 	$(BIM2RUB) beep.bim beep.rub 48k
 
-color.bim: color.obj app_asm.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:color.bim stack:1k map:color.map color.obj app_asm.obj
+color.bim: color.obj $(OBJS_API) Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:color.bim stack:1k map:color.map color.obj $(OBJS_API)
 
 color.rub : color.bim Makefile
 	$(BIM2RUB) color.bim color.rub 60k
 
-color2.bim: color2.obj app_asm.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:color2.bim stack:1k map:color2.map color2.obj app_asm.obj
+color2.bim: color2.obj $(OBJS_API) Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:color2.bim stack:1k map:color2.map color2.obj $(OBJS_API)
 
 color2.rub : color2.bim Makefile
 	$(BIM2RUB) color2.bim color2.rub 60k
@@ -116,8 +117,8 @@ crack.bim : crack.obj Makefile
 crack.rub : crack.bim Makefile
 	$(BIM2RUB) crack.bim crack.rub 0
 
-bug.bim: bug.obj app_asm.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:bug.bim map:bug.map bug.obj app_asm.obj
+bug.bim: bug.obj $(OBJS_API) Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:bug.bim map:bug.map bug.obj $(OBJS_API)
 
 bug.rub : bug.bim Makefile
 	$(BIM2RUB) bug.bim bug.rub 0
@@ -128,8 +129,8 @@ bug2.bim: bug2.obj Makefile
 bug2.rub : bug2.bim Makefile
 	$(BIM2RUB) bug2.bim bug2.rub 0
 
-bug3.bim: bug3.obj app_asm.obj Makefile
-	$(OBJ2BIM) @$(RULEFILE) out:bug3.bim map:bug3.map bug3.obj app_asm.obj
+bug3.bim: bug3.obj $(OBJS_API) Makefile
+	$(OBJ2BIM) @$(RULEFILE) out:bug3.bim map:bug3.map bug3.obj $(OBJS_API)
 
 bug3.rub : bug3.bim Makefile
 	$(BIM2RUB) bug3.bim bug3.rub 0
