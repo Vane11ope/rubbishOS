@@ -1,6 +1,6 @@
 #include "../app.h"
 
-#define MAX 1000
+#define MAX 10000
 
 void RubbMain(void)
 {

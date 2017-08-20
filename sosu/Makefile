@@ -1,5 +1,5 @@
 APP      = sosu
-STACK    = 1k
+STACK    = 11k
 MALLOC   = 0k
 
 include ../app_make.txt
