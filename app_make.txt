@@ -1,0 +1,69 @@
+RUBPATH  = ../tools/rubbish/
+APILIBPATH = ../apilib/
+RUBBISHPATH = ../rubbish/
+
+MAKE     = make -r
+NASK     = ../tools/nask
+CC1      = ../tools/gocc1 -I$(RUBPATH) -Os -Wall -quiet
+GAS2NASK = ../tools/gas2nask -a
+OBJ2BIM  = ../tools/obj2bim
+BIM2RUB  = ../tools/bim2rub
+BIN2OBJ  = ../tools/bin2obj
+RULEFILE = ../tools/rubbish/rubbish.rul
+EDIMG    = ../tools/edimg
+IMGTOL   = ../tools/imgtol
+DEL      = rm -f
+MAKEFONT = ../tools/makefont
+GOLIB    = ../tools/golib00
+
+default :
+	$(MAKE) $(APP).rub
+
+$(APP).bim : $(APP).obj $(APILIBPATH)apilib.lib Makefile ../app_make.txt
+	$(OBJ2BIM) @$(RULEFILE) out:$(APP).bim map:$(APP).map stack:$(STACK) \
+		$(APP).obj $(APILIBPATH)apilib.lib
+
+$(APP).rub : $(APP).bim Makefile ../app_make.txt
+	$(BIM2RUB) $(APP).bim $(APP).rub $(MALLOC)
+
+rubbish.img : ../rubbish/ipl10.bin ../rubbish/rubbish.sys $(APP).rub \
+	Makefile ../app_make.txt
+	$(EDIMG) imgin:../tools/fdimg0at.tek \
+		wbinimg src:../rubbish/ipl10.bin len:512 from:0 to:0 \
+		copy from:../rubbish/rubbish.sys to:@: \
+		copy from:$(APP).rub to:@: \
+		imgout:rubbish.img
+
+%.gas : %.c Makefile
+	$(CC1) -o $*.gas $*.c
+
+%.nas : %.gas Makefile
+	$(GAS2NASK) $*.gas $*.nas
+
+%.obj : %.nas Makefile
+	$(NASK) $*.nas $*.obj $*.lst
+
+run :
+	$(MAKE) rubbish.img
+	cp rubbish.img ../tools/qemu/fdimage0.bin
+	$(MAKE) -C ../tools/qemu
+
+full :
+	$(MAKE) -C $(APILIBPATH)
+	$(MAKE) $(APP).rub
+
+run_full :
+	$(MAKE) -C $(APILIBPATH)
+	$(MAKE) -C ../rubbish
+	$(MAKE) run
+
+clean :
+	$(DEL) *.lst
+	$(DEL) *.obj
+	$(DEL) *.map
+	$(DEL) *.bim
+	$(DEL) rubbish.img
+
+src_only :
+	$(MAKE) clean
+	$(DEL) $(APP).rub

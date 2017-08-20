@@ -1,4 +1,4 @@
-#include "app.h"
+#include "../app.h"
 unsigned char rgb2pal(int r, int g, int b, int x, int y);
 
 void RubbMain(void)
