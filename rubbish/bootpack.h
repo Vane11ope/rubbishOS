@@ -90,14 +90,22 @@ int fifo32_put(struct FIFO32 *fifo, int data);
 int fifo32_get(struct FIFO32 *fifo);
 int fifo32_status(struct FIFO32 *fifo);
 
+struct FILEHANDLE {
+	char *buf;
+	int size;
+	int pos;
+};
+
 struct TASK {
 	struct FIFO32 fifo;
 	struct TSS32 tss;
 	struct CONSOLE *console;
 	struct SEGMENT_DESCRIPTOR ldt[2];
+	struct FILEHANDLE *fhandle;
 	int sel, flags;
 	int level, priority;
 	int ds_base, console_stack;
+	int *fat;
 };
 
 struct TASKLEVEL {

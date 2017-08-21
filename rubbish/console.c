@@ -18,6 +18,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct FILEINFO *finfo = (struct FILEINFO *) (ADR_DISKIMG + 0x002600);
 	struct CONSOLE console;
+	struct FILEHANDLE fhandle[8];
 	int i, x, y;
 	int *fat = (int *) memman_alloc_4k(memman, 4 * 2880);
 	char s[64], cmdline[64], *p;
@@ -34,6 +35,12 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 		timer_init(console.timer, &task->fifo, 1);
 		timer_settime(console.timer, 50);
 	}
+
+	for (i = 0; i < 8; ++i) {
+		fhandle[i].buf = 0;
+	}
+	task->fhandle = fhandle;
+	task->fat = fat;
 
 	console_putchar(&console, '>', 1);
 	for (;;) {
@@ -359,6 +366,12 @@ int app(struct CONSOLE *console, int *fat, char *cmdline)
 				q[esp + i] = p[datarub + i];
 			}
 			start_app(0x1b, 0 * 8 + 4, esp, 1 * 8 + 4, &(task->tss.esp0));
+			for (i = 0; i < 8; ++i) {
+				if (task->fhandle[i].buf != 0) {
+					memman_free_4k(memman, (int)task->fhandle[i].buf, task->fhandle[i].size);
+					task->fhandle[i].buf = 0;
+				}
+			}
 			shtctl = (struct SHTCTL *) *((int *)0x0fe4);
 			for (i = 0; i < MAX_SHEETS; ++i) {
 				sheet = &(shtctl->sheets0[i]);
@@ -385,6 +398,9 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 	struct CONSOLE *console = task->console;
 	struct SHEET *sheet;
 	struct FIFO32 *sys_fifo = (struct FIFO32 *)*((int *)0x0fec);
+	struct FILEINFO *finfo;
+	struct FILEHANDLE *fh;
+	struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
 	int *reg = &eax + 1; /* rewrite the values assigned to each register */
 	int i, ds_base = task->ds_base;
 	char s[30];
@@ -520,6 +536,77 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 				i = io_in8(0x61);
 				io_out8(0x61, (i | 0x03) & 0x0f);
 			}
+			break;
+		case 21:
+			for (i = 0; i < 8; ++i) {
+				if (task->fhandle[i].buf == 0) { break; }
+			}
+			fh = &task->fhandle[i];
+			reg[7] = 0;
+			if (i < 8) {
+				finfo = file_search((char *)ebx + ds_base, (struct FILEINFO *)(ADR_DISKIMG + 0x002600), 224);
+				if (finfo != 0) {
+					reg[7] = (int)fh;
+					fh->buf = (char *)memman_alloc_4k(memman, finfo->size);
+					fh->size = finfo->size;
+					fh->pos = 0;
+					file_loadfile(finfo->cluster_no, finfo->size, fh->buf, task->fat, (char *)(ADR_DISKIMG + 0x003e00));
+				}
+			}
+			break;
+		case 22:
+			fh = (struct FILEHANDLE *)eax;
+			memman_free_4k(memman, (int)fh->buf, fh->size);
+			fh->buf = 0;
+			break;
+		case 23:
+			fh = (struct FILEHANDLE *)eax;
+			switch (ecx) {
+				case 0:
+					fh->pos = ebx;
+					break;
+				case 1:
+					fh->pos += ebx;
+					break;
+				case 2:
+					fh->pos = fh->size + ebx;
+					break;
+				default:
+					console_putstr(console, "ecx is illegal");
+					return &(task->tss.esp0);
+			}
+			if (fh->pos < 0) {
+				fh->pos = 0;
+			}
+			if (fh->pos > fh->size) {
+				fh->pos = fh->size;
+			}
+			break;
+		case 24:
+			fh = (struct FILEHANDLE *)eax;
+			switch (ecx) {
+				case 0:
+					reg[7] = fh->size;
+					break;
+				case 1:
+					reg[7] = fh->pos;
+					break;
+				case 2:
+					reg[7] = fh->pos - fh->size;
+					break;
+				default:
+					console_putstr(console, "ecx is illegal");
+					return &(task->tss.esp0);
+			}
+			break;
+		case 25:
+			fh = (struct FILEHANDLE *)eax;
+			for (i = 0; i < ecx; ++i) {
+				if (fh->pos == fh->size) { break; }
+				*((char *)ebx + ds_base + i) = fh->buf[fh->pos];
+				++fh->pos;
+			}
+			reg[7] = i;
 			break;
 		default:
 			console_putstr(console, "edx is illegal");
