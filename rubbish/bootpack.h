@@ -102,6 +102,7 @@ struct TASK {
 	struct CONSOLE *console;
 	struct SEGMENT_DESCRIPTOR ldt[2];
 	struct FILEHANDLE *fhandle;
+	char *cmdline;
 	int sel, flags;
 	int level, priority;
 	int ds_base, console_stack;
@@ -278,7 +279,6 @@ void console_putstr_with_length(struct CONSOLE *console, char *s, int length);
 void console_command(char *cmdline, struct CONSOLE *console, int *fat, unsigned int memtotal);
 void mem(struct CONSOLE *console, unsigned int memtotal);
 void ls(struct CONSOLE *console);
-void cat(struct CONSOLE *console, int *fat, char *cmdline);
 void start(struct CONSOLE *console, char *cmdline, int memtotal);
 void ncst(struct CONSOLE *console, char *cmdline, int memtotal);
 void shut(struct CONSOLE *console, int *fat);

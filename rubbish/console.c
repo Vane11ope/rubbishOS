@@ -29,6 +29,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	console.cursor_y = WINDOW_TITLE_HEIGHT;
 	console.cursor_color = -1;
 	task->console = &console;
+	task->cmdline = cmdline;
 
 	if (sheet != 0) {
 		console.timer = timer_alloc();
@@ -213,8 +214,6 @@ void console_command(char *cmdline, struct CONSOLE *console, int *fat, unsigned 
 		mem(console, memtotal);
 	} else if (strcmp(cmdline, "ls") == 0 && console->sheet != 0) {
 		ls(console);
-	} else if (strncmp(cmdline, "cat ", 4) == 0 && console->sheet != 0) {
-		cat(console, fat, cmdline);
 	} else if (strncmp(cmdline, "start ", 6) == 0) {
 		start(console, cmdline, memtotal);
 	} else if (strncmp(cmdline, "ncst ", 5) == 0) {
@@ -253,24 +252,6 @@ void ls(struct CONSOLE *console)
 			s[11] = finfo[x].ext[2];
 			console_putstr(console, s);
 		}
-	}
-	console_newline(console);
-	return;
-}
-
-void cat(struct CONSOLE *console, int *fat, char *cmdline)
-{
-	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
-	struct FILEINFO *finfo = file_search(cmdline + 4, (struct FILEINFO *) (ADR_DISKIMG + 0x002600), 224);
-	char *p;
-	int i;
-	if (finfo != 0) {
-		p = (char *) memman_alloc_4k(memman, finfo->size);
-		file_loadfile(finfo->cluster_no, finfo->size, p, fat, (char *) (ADR_DISKIMG + 0x003e00));
-		console_putstr_with_length(console, p, finfo->size);
-		memman_free_4k(memman, (int) p, finfo->size);
-	} else {
-		console_putstr(console, "File not found.\n");
 	}
 	console_newline(console);
 	return;
@@ -605,6 +586,16 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 				if (fh->pos == fh->size) { break; }
 				*((char *)ebx + ds_base + i) = fh->buf[fh->pos];
 				++fh->pos;
+			}
+			reg[7] = i;
+			break;
+		case 26:
+			i = 0;
+			for (;;) {
+				*((char *)ebx + ds_base + i) = task->cmdline[i];
+				if (task->cmdline[i] == 0) { break; }
+				if (i >= ecx) { break; }
+				++i;
 			}
 			reg[7] = i;
 			break;
