@@ -1,6 +1,7 @@
 #include "bootpack.h"
 #define ADR_BINFO   0x00000ff0
 #define ADR_GDT     0x00270000
+#define ADR_DISKIMG  0x00100000
 #define PORT_KEYDAT 0x0060
 #define KEYCMD_LED  0xed
 #define MEMMAN_ADDR 0x003c0000
@@ -31,12 +32,14 @@ void RubbMain(void)
 	struct FIFO32 fifo, keycmd;
 	struct TASK *task_a, *task_console[2], *task;
 	struct CONSOLE *console;
-	unsigned char *sht_buf_back, sht_buf_mouse[256], *sht_buf_console[2];
+	struct FILEINFO *finfo;
+	extern char hankaku[4096];
+	unsigned char *sht_buf_back, sht_buf_mouse[256], *sht_buf_console[2], *nihongo;
 	char s[40];
 	short tweetx = 11;
 	short tweety = binfo->scrny - 20;
 	unsigned int memtotal, count = 0;
-	int fifobuf[128], keycmd_buf[32], *cons_fifo[2];
+	int fifobuf[128], keycmd_buf[32], *cons_fifo[2], *fat;
 	int mouse_x = (binfo->scrnx - 16) / 2;
 	int mouse_y = (binfo->scrny - 28 - 16) / 2;
 	int mouse_w = 16;
@@ -67,6 +70,24 @@ void RubbMain(void)
 		0,   0,   0,   '_', 0,   0,   0,   0,   0,   0,   0,   0,   0,   '|', 0,   0
 	};
 
+	// load nihongo
+	nihongo = (unsigned char *)memman_alloc_4k(memman, 16 * 256 + 32 * 94 * 47);
+	fat = (int *)memman_alloc_4k(memman, 4 * 2880);
+	file_readfat(fat, (unsigned char *)(ADR_DISKIMG + 0x000200));
+	finfo = file_search("nihongo.fnt", (struct FILEINFO *) (ADR_DISKIMG + 0x002600), 224);
+	if (finfo != 0) {
+		file_loadfile(finfo->cluster_no, finfo->size, nihongo, fat, (char *)(ADR_DISKIMG + 0x003e00));
+	} else {
+		for (i = 0; i < 16 * 256; ++i) {
+			nihongo[i] = hankaku[i];
+		}
+		for (i = 16 * 256; i < 16 * 256 + 32 * 94 * 47; ++i) {
+			nihongo[i] = 0xff;
+		}
+	}
+	*((int *)0x0fe8) = (int) nihongo;
+	memman_free_4k(memman, (int)fat, 4 * 2880);
+
 	// memory manager
 	memtotal = memtest(0x00400000, 0xbfffffff);
 	memman_init(memman);
@@ -93,6 +114,7 @@ void RubbMain(void)
 	task_a = task_init(memman);
 	fifo.task = task_a;
 	task_run(task_a, 1, 2);
+	task_a->langmode = 0;
 
 	// sheet settings
 	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);

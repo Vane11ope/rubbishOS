@@ -21,7 +21,11 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	struct FILEHANDLE fhandle[8];
 	int i, x, y;
 	int *fat = (int *) memman_alloc_4k(memman, 4 * 2880);
+	unsigned char *nihongo = (char *)*((int *)0x0fe8);
 	char s[64], cmdline[64], *p;
+
+	if (nihongo[4096] != 0xff) { task->langmode = 1; }
+	else { task->langmode = 0; }
 
 	file_readfat(fat, (unsigned char *) (ADR_DISKIMG + 0x000200));
 	console.sheet = sheet;
@@ -218,6 +222,8 @@ void console_command(char *cmdline, struct CONSOLE *console, int *fat, unsigned 
 		start(console, cmdline, memtotal);
 	} else if (strncmp(cmdline, "ncst ", 5) == 0) {
 		ncst(console, cmdline, memtotal);
+	} else if (strncmp(cmdline, "langmode ", 9) == 0) {
+		langmode(console, cmdline);
 	} else if (cmdline[0] != 0) {
 		if ( app(console, fat, cmdline) == 0) {
 			console_putstr(console, "Bad command.\n\n");
@@ -304,6 +310,16 @@ void shut(struct CONSOLE *console, int *fat)
 	for (;;) {
 		task_sleep(task);
 	}
+}
+
+void langmode(struct CONSOLE *console, char *cmdline)
+{
+	struct TASK *task = task_now();
+	unsigned char mode = cmdline[9] - '0';
+	if (mode <= 1) { task->langmode = mode; }
+	else { console_putstr(console, "mode number error.\n"); }
+	console_newline(console);
+	return;
 }
 
 int app(struct CONSOLE *console, int *fat, char *cmdline)

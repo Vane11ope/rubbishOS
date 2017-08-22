@@ -223,9 +223,19 @@ void putfont8(char *vram, int xsize, int x, int y, char color, char *font)
 void putfonts8_asc(char *vram, int xsize, int x, int y, char color, unsigned char *s)
 {
 	extern char hankaku[4096];
-	for (; *s != 0x00; ++s) {
-		putfont8(vram, xsize, x, y, color, hankaku + *s * 16);
-		x += 8;
+	struct TASK *task = task_now();
+	char *nihongo = (char *)*((int *)0x0fe8);
+	if (task->langmode == 0) {
+		for (; *s != 0x00; ++s) {
+			putfont8(vram, xsize, x, y, color, hankaku + *s * 16);
+			x += 8;
+		}
+	}
+	if (task->langmode == 1) {
+		for (; *s != 0x00; ++s) {
+			putfont8(vram, xsize, x, y, color, nihongo + *s * 16);
+			x += 8;
+		}
 	}
 	return;
 }

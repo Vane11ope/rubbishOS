@@ -103,6 +103,7 @@ struct TASK {
 	struct SEGMENT_DESCRIPTOR ldt[2];
 	struct FILEHANDLE *fhandle;
 	char *cmdline;
+	char langmode;
 	int sel, flags;
 	int level, priority;
 	int ds_base, console_stack;
@@ -282,6 +283,7 @@ void ls(struct CONSOLE *console);
 void start(struct CONSOLE *console, char *cmdline, int memtotal);
 void ncst(struct CONSOLE *console, char *cmdline, int memtotal);
 void shut(struct CONSOLE *console, int *fat);
+void langmode(struct CONSOLE *console, char *cmdline);
 int app(struct CONSOLE *console, int *fat, char *cmdline);
 int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int eax);
 int inthandler0d(int *esp);
