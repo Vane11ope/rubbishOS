@@ -32,6 +32,7 @@ rubbish.img : ../rubbish/ipl10.bin ../rubbish/rubbish.sys $(APP).rub \
 		wbinimg src:../rubbish/ipl10.bin len:512 from:0 to:0 \
 		copy from:../rubbish/rubbish.sys to:@: \
 		copy from:$(APP).rub to:@: \
+		copy from:../nihongo/nihongo.fnt to:@: \
 		imgout:rubbish.img
 
 %.gas : %.c Makefile

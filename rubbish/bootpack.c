@@ -70,6 +70,12 @@ void RubbMain(void)
 		0,   0,   0,   '_', 0,   0,   0,   0,   0,   0,   0,   0,   0,   '|', 0,   0
 	};
 
+	// memory manager
+	memtotal = memtest(0x00400000, 0xbfffffff);
+	memman_init(memman);
+	memman_free(memman, 0x00001000, 0x0009e000);
+	memman_free(memman, 0x00400000, memtotal - 0x00400000);
+
 	// load nihongo
 	nihongo = (unsigned char *)memman_alloc_4k(memman, 16 * 256 + 32 * 94 * 47);
 	fat = (int *)memman_alloc_4k(memman, 4 * 2880);
@@ -87,12 +93,6 @@ void RubbMain(void)
 	}
 	*((int *)0x0fe8) = (int) nihongo;
 	memman_free_4k(memman, (int)fat, 4 * 2880);
-
-	// memory manager
-	memtotal = memtest(0x00400000, 0xbfffffff);
-	memman_init(memman);
-	memman_free(memman, 0x00001000, 0x0009e000);
-	memman_free(memman, 0x00400000, memtotal - 0x00400000);
 
 	// segment settings
 	init_gdtidt();
