@@ -1,4 +1,4 @@
-	CYLS EQU 10
+	CYLS EQU 20
 	ORG 0x7c00
 	JMP entry
 	DB 0x90

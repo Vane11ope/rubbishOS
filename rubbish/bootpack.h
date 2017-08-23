@@ -103,7 +103,7 @@ struct TASK {
 	struct SEGMENT_DESCRIPTOR ldt[2];
 	struct FILEHANDLE *fhandle;
 	char *cmdline;
-	char langmode;
+	unsigned char langmode, langbyte;
 	int sel, flags;
 	int level, priority;
 	int ds_base, console_stack;

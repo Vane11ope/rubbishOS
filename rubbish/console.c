@@ -14,20 +14,14 @@ const short CONSOLE_TEXTBOX_HEIGHT = CONSOLE_HEIGHT - 37;
 void console_task(struct SHEET *sheet, unsigned int memtotal)
 {
 	struct TASK *task = task_now();
-	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
-	struct FILEINFO *finfo = (struct FILEINFO *) (ADR_DISKIMG + 0x002600);
 	struct CONSOLE console;
 	struct FILEHANDLE fhandle[8];
-	int i, x, y;
+	int i;
 	int *fat = (int *) memman_alloc_4k(memman, 4 * 2880);
 	unsigned char *nihongo = (char *)*((int *)0x0fe8);
-	char s[64], cmdline[64], *p;
+	char cmdline[64];
 
-	if (nihongo[4096] != 0xff) { task->langmode = 1; }
-	else { task->langmode = 0; }
-
-	file_readfat(fat, (unsigned char *) (ADR_DISKIMG + 0x000200));
 	console.sheet = sheet;
 	console.cursor_x = CHAR_WIDTH;
 	console.cursor_y = WINDOW_TITLE_HEIGHT;
@@ -35,17 +29,20 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	task->console = &console;
 	task->cmdline = cmdline;
 
-	if (sheet != 0) {
+	if (console.sheet != 0) {
 		console.timer = timer_alloc();
 		timer_init(console.timer, &task->fifo, 1);
 		timer_settime(console.timer, 50);
 	}
-
+	file_readfat(fat, (unsigned char *) (ADR_DISKIMG + 0x000200));
 	for (i = 0; i < 8; ++i) {
 		fhandle[i].buf = 0;
 	}
+	if (nihongo[4096] != 0xff) { task->langmode = 1; }
+	else { task->langmode = 0; }
 	task->fhandle = fhandle;
 	task->fat = fat;
+	task->langbyte = 0;
 
 	console_putchar(&console, '>', 1);
 	for (;;) {
@@ -117,6 +114,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 void console_newline(struct CONSOLE *console)
 {
 	int x, y;
+	struct TASK *task = task_now();
 	short threshold = WINDOW_TITLE_HEIGHT + (CONSOLE_TEXTBOX_HEIGHT - CHAR_HEIGHT);
 	if (console->cursor_y < threshold) {
 		console->cursor_y += CHAR_HEIGHT;
@@ -136,6 +134,7 @@ void console_newline(struct CONSOLE *console)
 		}
 	}
 	console->cursor_x = CHAR_WIDTH;
+	if (task->langmode == 1 && task->langbyte != 0) { console->cursor_x = CHAR_WIDTH * 2; }
 	return;
 }
 
@@ -378,6 +377,7 @@ int app(struct CONSOLE *console, int *fat, char *cmdline)
 			}
 			timer_cancelall(&task->fifo);
 			memman_free_4k(memman, (int) q, segsize);
+			task->langbyte = 0;
 		} else {
 			console_putstr(console, ".rub file format error.\n");
 		}

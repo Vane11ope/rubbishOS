@@ -70,29 +70,16 @@ void RubbMain(void)
 		0,   0,   0,   '_', 0,   0,   0,   0,   0,   0,   0,   0,   0,   '|', 0,   0
 	};
 
+	// fifo init
+	fifo32_init(&fifo, 128, fifobuf, 0);
+	fifo32_init(&keycmd, 32, keycmd_buf, 0);
+	*((int *)0x0fec) = (int)&fifo;
+
 	// memory manager
 	memtotal = memtest(0x00400000, 0xbfffffff);
 	memman_init(memman);
 	memman_free(memman, 0x00001000, 0x0009e000);
 	memman_free(memman, 0x00400000, memtotal - 0x00400000);
-
-	// load nihongo
-	nihongo = (unsigned char *)memman_alloc_4k(memman, 16 * 256 + 32 * 94 * 47);
-	fat = (int *)memman_alloc_4k(memman, 4 * 2880);
-	file_readfat(fat, (unsigned char *)(ADR_DISKIMG + 0x000200));
-	finfo = file_search("nihongo.fnt", (struct FILEINFO *) (ADR_DISKIMG + 0x002600), 224);
-	if (finfo != 0) {
-		file_loadfile(finfo->cluster_no, finfo->size, nihongo, fat, (char *)(ADR_DISKIMG + 0x003e00));
-	} else {
-		for (i = 0; i < 16 * 256; ++i) {
-			nihongo[i] = hankaku[i];
-		}
-		for (i = 16 * 256; i < 16 * 256 + 32 * 94 * 47; ++i) {
-			nihongo[i] = 0xff;
-		}
-	}
-	*((int *)0x0fe8) = (int) nihongo;
-	memman_free_4k(memman, (int)fat, 4 * 2880);
 
 	// segment settings
 	init_gdtidt();
@@ -105,10 +92,9 @@ void RubbMain(void)
 	// color settings
 	init_palette();
 
-	// fifo init
-	fifo32_init(&fifo, 128, fifobuf, 0);
-	fifo32_init(&keycmd, 32, keycmd_buf, 0);
-	*((int *)0x0fec) = (int)&fifo;
+	// sheet settings
+	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
+	*((int *)0xfe4) = shtctl;
 
 	// multitasking
 	task_a = task_init(memman);
@@ -116,9 +102,6 @@ void RubbMain(void)
 	task_run(task_a, 1, 2);
 	task_a->langmode = 0;
 
-	// sheet settings
-	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
-	*((int *)0xfe4) = shtctl;
 	// sheet alloc
 	sht_back = sheet_alloc(shtctl);
 	sht_mouse = sheet_alloc(shtctl);
@@ -127,6 +110,9 @@ void RubbMain(void)
 	// set buf for each sheet
 	sheet_setbuf(sht_back, sht_buf_back, binfo->scrnx, binfo->scrny, -1);
 	sheet_setbuf(sht_mouse, sht_buf_mouse, 16, 16, 99);
+
+	// console
+	key_win = open_console(shtctl, memtotal);
 
 	// init screens and mouse graphics after sheet settings
 	init_screen(sht_buf_back, binfo->scrnx, binfo->scrny);
@@ -137,9 +123,6 @@ void RubbMain(void)
 	putfonts8_asc(sht_buf_back, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
 	putfonts8_asc(sht_buf_back, binfo->scrnx, 240, 192, COL8_FFFFFF, "VANELLOPE");
 	putfonts8_asc(sht_buf_back, binfo->scrnx, tweetx, tweety, COL8_000000, "TWEET");
-
-	// console
-	key_win = open_console(shtctl, memtotal);
 
 	// sheet positionings(refresh included)
 	sheet_slide(sht_back, 0, 0);
@@ -160,6 +143,24 @@ void RubbMain(void)
 
 	fifo32_put(&keycmd, KEYCMD_LED);
 	fifo32_put(&keycmd, key_leds);
+
+	// load nihongo
+	nihongo = (unsigned char *)memman_alloc_4k(memman, 16 * 256 + 32 * 94 * 47);
+	fat = (int *)memman_alloc_4k(memman, 4 * 2880);
+	file_readfat(fat, (unsigned char *)(ADR_DISKIMG + 0x000200));
+	finfo = file_search("nihongo.fnt", (struct FILEINFO *) (ADR_DISKIMG + 0x002600), 224);
+	if (finfo != 0) {
+		file_loadfile(finfo->cluster_no, finfo->size, nihongo, fat, (char *)(ADR_DISKIMG + 0x003e00));
+	} else {
+		for (i = 0; i < 16 * 256; ++i) {
+			nihongo[i] = hankaku[i];
+		}
+		for (i = 16 * 256; i < 16 * 256 + 32 * 94 * 47; ++i) {
+			nihongo[i] = 0xff;
+		}
+	}
+	*((int *)0x0fe8) = (int) nihongo;
+	memman_free_4k(memman, (int)fat, 4 * 2880);
 
 	for (;;) {
 		if (fifo32_status(&keycmd) > 0 && keycmd_wait < 0) {

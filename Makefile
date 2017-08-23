@@ -17,6 +17,7 @@ rubbish.img : rubbish/ipl10.nas rubbish/rubbish.sys Makefile \
 		wbinimg src:rubbish/ipl10.bin len:512 from:0 to:0 \
 		copy from:rubbish/rubbish.sys to:@: \
 		copy from:rubbish/ipl10.nas to:@: \
+		copy from:sample.txt to:@: \
 		copy from:a/a.rub to:@: \
 		copy from:eff/eff.rub to:@: \
 		copy from:open_window/window.rub to:@: \
