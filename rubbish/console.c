@@ -34,6 +34,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 		timer_init(console.timer, &task->fifo, 1);
 		timer_settime(console.timer, 50);
 	}
+
 	file_readfat(fat, (unsigned char *) (ADR_DISKIMG + 0x000200));
 	for (i = 0; i < 8; ++i) {
 		fhandle[i].buf = 0;
@@ -45,6 +46,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 	task->langbyte = 0;
 
 	console_putchar(&console, '>', 1);
+
 	for (;;) {
 		io_cli();
 		if (fifo32_status(&task->fifo) == 0) {
@@ -427,7 +429,7 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 			sheet = (struct SHEET *)(ebx & 0xfffffffe);
 			putfonts8_asc(sheet->buf, sheet->bxsize, esi, edi, eax, (char *) ebp + ds_base);
 			if ((ebx & 1) == 0) {
-				sheet_refresh(sheet, esi, edi, esi + ecx * 8, edi + 16);
+				sheet_refresh(sheet, esi, edi, esi + ecx * CHAR_WIDTH, edi + CHAR_HEIGHT);
 			}
 			break;
 		case 7:
@@ -572,12 +574,8 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 					console_putstr(console, "ecx is illegal");
 					return &(task->tss.esp0);
 			}
-			if (fh->pos < 0) {
-				fh->pos = 0;
-			}
-			if (fh->pos > fh->size) {
-				fh->pos = fh->size;
-			}
+			fh->pos = max(fh->pos, 0);
+			fh->pos = min(fh->pos, fh->size);
 			break;
 		case 24:
 			fh = (struct FILEHANDLE *)eax;

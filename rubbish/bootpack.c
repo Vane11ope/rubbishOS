@@ -92,16 +92,15 @@ void RubbMain(void)
 	// color settings
 	init_palette();
 
-	// sheet settings
-	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
-	*((int *)0xfe4) = shtctl;
-
 	// multitasking
 	task_a = task_init(memman);
 	fifo.task = task_a;
 	task_run(task_a, 1, 2);
 	task_a->langmode = 0;
 
+	// sheet settings
+	shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
+	*((int *)0xfe4) = shtctl;
 	// sheet alloc
 	sht_back = sheet_alloc(shtctl);
 	sht_mouse = sheet_alloc(shtctl);
