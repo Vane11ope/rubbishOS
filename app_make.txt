@@ -26,10 +26,10 @@ $(APP).bim : $(APP).obj $(APILIBPATH)apilib.lib Makefile ../app_make.txt
 $(APP).rub : $(APP).bim Makefile ../app_make.txt
 	$(BIM2RUB) $(APP).bim $(APP).rub $(MALLOC)
 
-rubbish.img : ../rubbish/ipl10.bin ../rubbish/rubbish.sys $(APP).rub \
+rubbish.img : ../rubbish/ipl20.bin ../rubbish/rubbish.sys $(APP).rub \
 	Makefile ../app_make.txt
 	$(EDIMG) imgin:../tools/fdimg0at.tek \
-		wbinimg src:../rubbish/ipl10.bin len:512 from:0 to:0 \
+		wbinimg src:../rubbish/ipl20.bin len:512 from:0 to:0 \
 		copy from:../rubbish/rubbish.sys to:@: \
 		copy from:$(APP).rub to:@: \
 		copy from:../nihongo/nihongo.fnt to:@: \

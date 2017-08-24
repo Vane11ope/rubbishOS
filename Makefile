@@ -8,15 +8,15 @@ DEL      = rm -f
 default :
 	$(MAKE) rubbish.img
 
-rubbish.img : rubbish/ipl10.nas rubbish/rubbish.sys Makefile \
+rubbish.img : rubbish/ipl20.nas rubbish/rubbish.sys Makefile \
 		a/a.rub beep/beep.rub color/color.rub color2/color2.rub \
 		dot/dot.rub dots/dots.rub dots2/dots2.rub eff/eff.rub line/line.rub \
 		noodle/noodle.rub open_window/window.rub walk/walk.rub sosu/sosu.rub \
 		typeipl/typeipl.rub cat/cat.rub iroha/iroha.rub
 	$(EDIMG) imgin:tools/fdimg0at.tek \
-		wbinimg src:rubbish/ipl10.bin len:512 from:0 to:0 \
+		wbinimg src:rubbish/ipl20.bin len:512 from:0 to:0 \
 		copy from:rubbish/rubbish.sys to:@: \
-		copy from:rubbish/ipl10.nas to:@: \
+		copy from:rubbish/ipl20.nas to:@: \
 		copy from:sample.txt to:@: \
 		copy from:a/a.rub to:@: \
 		copy from:eff/eff.rub to:@: \
