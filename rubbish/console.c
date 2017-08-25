@@ -317,7 +317,7 @@ void langmode(struct CONSOLE *console, char *cmdline)
 {
 	struct TASK *task = task_now();
 	unsigned char mode = cmdline[9] - '0';
-	if (mode <= 1) { task->langmode = mode; }
+	if (mode <= 2) { task->langmode = mode; }
 	else { console_putstr(console, "mode number error.\n"); }
 	console_newline(console);
 	return;

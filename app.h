@@ -22,6 +22,12 @@ void api_dot(int window, int x, int y, int color);
 
 // system
 void api_end(void);
+int api_cmdline(char *buf, int maxsize);
+int api_fread(char *buf, int maxsize, int fhandle);
+int api_fsize(int fhandle, int mode);
+int api_fseek(int fhandle, int offset, int mode);
+int api_fclose(int fhandle);
+int api_fopen(char *fname);
 int rand(void);
 
 // timer
