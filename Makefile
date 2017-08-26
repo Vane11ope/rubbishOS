@@ -12,7 +12,8 @@ rubbish.img : rubbish/ipl20.nas rubbish/rubbish.sys Makefile \
 		a/a.rub beep/beep.rub color/color.rub color2/color2.rub \
 		dot/dot.rub dots/dots.rub dots2/dots2.rub eff/eff.rub line/line.rub \
 		noodle/noodle.rub open_window/window.rub walk/walk.rub sosu/sosu.rub \
-		typeipl/typeipl.rub cat/cat.rub iroha/iroha.rub chklang/chklang.rub
+		typeipl/typeipl.rub cat/cat.rub iroha/iroha.rub chklang/chklang.rub \
+		bball/bball.rub
 	$(EDIMG) imgin:tools/fdimg0at.tek \
 		wbinimg src:rubbish/ipl20.bin len:512 from:0 to:0 \
 		copy from:rubbish/rubbish.sys to:@: \
@@ -37,6 +38,7 @@ rubbish.img : rubbish/ipl20.nas rubbish/rubbish.sys Makefile \
 		copy from:cat/cat.rub to:@: \
 		copy from:iroha/iroha.rub to:@: \
 		copy from:chklang/chklang.rub to:@: \
+		copy from:bball/bball.rub to:@: \
 		copy from:nihongo/nihongo.fnt to:@: \
 		imgout:rubbish.img
 
@@ -65,6 +67,7 @@ full :
 	$(MAKE) -C cat
 	$(MAKE) -C iroha
 	$(MAKE) -C chklang
+	$(MAKE) -C bball
 	$(MAKE) rubbish.img
 
 run_full :
@@ -101,7 +104,8 @@ clean_full :
 	$(MAKE) -C typeipl     clean
 	$(MAKE) -C cat         clean
 	$(MAKE) -C iroha       clean
-	$(MAKE) -C chklang   clean
+	$(MAKE) -C chklang     clean
+	$(MAKE) -C bball       clean
 
 src_only_full :
 	$(MAKE) -C rubbish     src_only
@@ -122,7 +126,8 @@ src_only_full :
 	$(MAKE) -C typeipl     src_only
 	$(MAKE) -C cat         src_only
 	$(MAKE) -C iroha       src_only
-	$(MAKE) -C chklang   src_only
+	$(MAKE) -C chklang     src_only
+	$(MAKE) -C bball       src_only
 	$(DEL) rubbish.img
 
 refresh :

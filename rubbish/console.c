@@ -467,6 +467,16 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 			sheet = (struct SHEET *)(ebx & 0xfffffffe);
 			drawline(sheet, eax, ecx, esi, edi, ebp);
 			if ((ebx & 1) == 0) {
+				if (eax > esi) {
+					i = eax;
+					eax = esi;
+					esi = i;
+				}
+				if (ecx > edi) {
+					i = ecx;
+					ecx = edi;
+					edi = i;
+				}
 				sheet_refresh(sheet, eax, ecx, esi + 1, edi + 1);
 			}
 			break;
