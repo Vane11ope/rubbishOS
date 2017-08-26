@@ -18,6 +18,7 @@ rubbish.img : rubbish/ipl20.nas rubbish/rubbish.sys Makefile \
 		copy from:rubbish/rubbish.sys to:@: \
 		copy from:rubbish/ipl20.nas to:@: \
 		copy from:sample.txt to:@: \
+		copy from:sample2.txt to:@: \
 		copy from:euc.txt to:@: \
 		copy from:a/a.rub to:@: \
 		copy from:eff/eff.rub to:@: \
