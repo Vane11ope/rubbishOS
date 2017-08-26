@@ -613,6 +613,9 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 			}
 			reg[7] = i;
 			break;
+		case 27:
+			reg[7] = task->langmode;
+			break;
 		default:
 			console_putstr(console, "edx is illegal");
 			return &(task->tss.esp0);

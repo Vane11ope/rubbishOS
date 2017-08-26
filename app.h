@@ -28,6 +28,7 @@ int api_fsize(int fhandle, int mode);
 int api_fseek(int fhandle, int offset, int mode);
 int api_fclose(int fhandle);
 int api_fopen(char *fname);
+int api_getlang(void);
 int rand(void);
 
 // timer
