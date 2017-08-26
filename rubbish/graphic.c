@@ -284,7 +284,7 @@ void putfonts8_asc_sht(struct SHEET *sheet, int x, int y, int color, int backcol
 	int len = length(str);
 	boxfill8(sheet->buf, sheet->bxsize, backcolor, x, y, x + len * CHAR_WIDTH - 1, y + CHAR_HEIGHT - 1);
 	putfonts8_asc(sheet->buf, sheet->bxsize, x, y, color, str);
-	if (task->langmode == 1 || task->langmode == 2) sheet_refresh(sheet, x - len * CHAR_WIDTH, y, x + len * CHAR_WIDTH, y + CHAR_HEIGHT);
+	if (task->langmode != 0) sheet_refresh(sheet, x - len * CHAR_WIDTH, y, x + len * CHAR_WIDTH, y + CHAR_HEIGHT);
 	else sheet_refresh(sheet, x, y, x + len * CHAR_WIDTH, y + CHAR_HEIGHT);
 	return;
 }
