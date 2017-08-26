@@ -9,6 +9,7 @@ GAS2NASK = ../tools/gas2nask -a
 OBJ2BIM  = ../tools/obj2bim
 BIM2RUB  = ../tools/bim2rub
 BIN2OBJ  = ../tools/bin2obj
+BIM2BIN  = ../tools/bim2bin
 RULEFILE = ../tools/rubbish/rubbish.rul
 EDIMG    = ../tools/edimg
 IMGTOL   = ../tools/imgtol
@@ -43,6 +44,12 @@ rubbish.img : ../rubbish/ipl20.bin ../rubbish/rubbish.sys $(APP).rub \
 
 %.obj : %.nas Makefile
 	$(NASK) $*.nas $*.obj $*.lst
+
+%.org : %.bim Makefile ../app_make.txt
+	$(BIM2RUB)$*.bim $*.org $(MALLOC)
+
+%.rub : %.org Makefile ../app_make.txt
+	$(BIM2BIN) -osacmp in:$*.org out:$*.rub
 
 run :
 	$(MAKE) rubbish.img

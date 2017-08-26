@@ -331,7 +331,7 @@ int app(struct CONSOLE *console, int *fat, char *cmdline)
 	struct SHTCTL *shtctl;
 	struct SHEET *sheet;
 	char name[18], *p, *q;
-	int i, segsize, datasize, esp, datarub;
+	int i, segsize, datasize, esp, datarub, appsize;
 
 	for (i = 0; i < 13; ++i) {
 		if (cmdline[i] <= ' ') { break; }
@@ -348,9 +348,10 @@ int app(struct CONSOLE *console, int *fat, char *cmdline)
 		finfo = file_search(name, (struct FILEINFO *) (ADR_DISKIMG + 0x002600), 224);
 	}
 	if (finfo != 0) {
-		p = (char *)memman_alloc_4k(memman, finfo->size);
+		appsize = finfo->size;
+		p = file_loadfile2(finfo->cluster_no, &appsize, fat);
 		file_loadfile(finfo->cluster_no, finfo->size, p, fat, (char *) (ADR_DISKIMG + 0x003e00));
-		if (finfo->size >= 36 && strncmp(p + 4, "main", 4) == 0 && *p ==  0x00) {
+		if (appsize >= 36 && strncmp(p + 4, "main", 4) == 0 && *p ==  0x00) {
 			segsize = *((int *) (p + 0x0000));
 			esp = *((int *) (p + 0x000c));
 			datasize = *((int *) (p + 0x0010));
@@ -382,7 +383,7 @@ int app(struct CONSOLE *console, int *fat, char *cmdline)
 		} else {
 			console_putstr(console, ".rub file format error.\n");
 		}
-		memman_free_4k(memman, (int) p, finfo->size);
+		memman_free_4k(memman, (int) p, appsize);
 		console_newline(console);
 		return 1;
 	}
@@ -545,10 +546,9 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 				finfo = file_search((char *)ebx + ds_base, (struct FILEINFO *)(ADR_DISKIMG + 0x002600), 224);
 				if (finfo != 0) {
 					reg[7] = (int)fh;
-					fh->buf = (char *)memman_alloc_4k(memman, finfo->size);
+					fh->buf = file_loadfile2(finfo->cluster_no, &fh->size, task->fat);
 					fh->size = finfo->size;
 					fh->pos = 0;
-					file_loadfile(finfo->cluster_no, finfo->size, fh->buf, task->fat, (char *)(ADR_DISKIMG + 0x003e00));
 				}
 			}
 			break;
