@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 /* common define */
+#define MEMMAN_ADDR          0x003c0000
 #define PIC0_ICW1            0x0020
 #define PIC0_ICW2            0x0021
 #define PIC0_ICW3            0x0021
@@ -292,7 +293,12 @@ int inthandler0c(int *esp);
 /* file.c */
 void file_readfat (int *fat, unsigned char *img);
 void file_loadfile(int cluster_no, int size, char *buf, int *fat, char *img);
+char *file_loadfile2(int cluster_no, int *psize, int *fat);
 struct FILEINFO* file_search(char *name, struct FILEINFO *finfo, int max);
+
+/* tek.c */
+int tek_getsize(unsigned char *p);
+int tek_decomp(unsigned char *p, char *q, int size);
 
 /* utility */
 static inline int max(int a, int b) { return a >= b ? a : b; }

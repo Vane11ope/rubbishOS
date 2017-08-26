@@ -1,6 +1,5 @@
 #include "bootpack.h"
 #include "string.h"
-#define MEMMAN_ADDR  0x003c0000
 #define ADR_GDT      0x00270000
 #define ADR_DISKIMG  0x00100000
 #define CONSOLE_ON   2

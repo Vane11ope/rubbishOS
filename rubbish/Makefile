@@ -11,7 +11,7 @@ EDIMG    = ../tools/edimg
 IMGTOL   = ../tools/imgtol
 DEL      = rm -f
 MAKEFONT = ../tools/makefont
-OBJS_BOOTPACK = bootpack.obj func.obj hankaku.obj graphic.obj dsctbl.obj timer.obj int.obj fifo.obj mouse.obj keyboard.obj memory.obj sheet.obj mtask.obj console.obj file.obj
+OBJS_BOOTPACK = bootpack.obj func.obj hankaku.obj graphic.obj dsctbl.obj timer.obj int.obj fifo.obj mouse.obj keyboard.obj memory.obj sheet.obj mtask.obj console.obj file.obj tek.obj
 GOLIB    = ../tools/golib00
 
 default :

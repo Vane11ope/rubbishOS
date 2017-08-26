@@ -1,5 +1,6 @@
 #include "bootpack.h"
 #define ALL_SECTORS 2880
+#define ADR_DISKIMG  0x00100000
 
 void file_readfat (int *fat, unsigned char *img)
 {
@@ -32,6 +33,27 @@ void file_loadfile(int cluster_no, int size, char *buf, int *fat, char *img)
 	}
 	return;
 }
+
+char *file_loadfile2(int cluster_no, int *psize, int *fat)
+{
+	int size = *psize, size2;
+	struct MEMMAN *memman = (struct MEMMAN *)MEMMAN_ADDR;
+	char *buf, *buf2;
+	buf = (char *)memman_alloc_4k(memman, size);
+	file_loadfile(cluster_no, size, buf, fat, (char *)(ADR_DISKIMG + 0x003e00));
+	if (size >= 17) {
+		size2 = tek_getsize(buf);
+		if (size2 > 0) {
+			buf2 = (char *)memman_alloc_4k(memman, size2);
+			tek_decomp(buf, buf2, size2);
+			memman_free_4k(memman, (int)buf, size);
+			buf = buf2;
+			*psize = size2;
+		}
+	}
+	return buf;
+}
+
 struct FILEINFO* file_search(char *name, struct FILEINFO *finfo, int max)
 {
 	int i, j;
