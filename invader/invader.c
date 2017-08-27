@@ -83,7 +83,7 @@ next_group:
 	ly = 0;
 	laserwait = 0;
 	movewait = movewait0;
-	idir = 1;
+	idir = +1;
 	wait(100, timer, keyflag);
 
 	for (;;) {
@@ -91,7 +91,9 @@ next_group:
 			--laserwait;
 			keyflag[2] = 0;
 		}
+
 		wait(4, timer, keyflag);
+
 		if (keyflag[0] != 0 && fx > 0) {
 			--fx;
 			putstr(window, windowbuf, fx, 13, 6, "efg ");
@@ -130,13 +132,13 @@ next_group:
 				} else {
 					putstr(window, windowbuf, lx, ly, 0, " ");
 				}
-				--ly;
-				if (ly > 0) {
-					putstr(window, windowbuf, lx, ly, 3, "h");
-				} else {
-					point -= 10;
-					if (point <= 0) { point = 1; }
-				}
+			}
+			--ly;
+			if (ly > 0) {
+				putstr(window, windowbuf, lx, ly, 3, "h");
+			} else {
+				point -= 10;
+				if (point <= 0) { point = 1; }
 			}
 			if (ix < lx && lx < ix + 25 && iy <= ly && ly < iy + invisibleline) {
 				p = invisiblestr + (ly - iy) * 32 + (lx - ix);
@@ -159,7 +161,7 @@ next_group:
 					}
 					movewait0 -= movewait0 / 3;
 					goto next_group;
-alive:
+	alive:
 					ly = 0;
 				}
 			}
