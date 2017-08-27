@@ -13,7 +13,7 @@ rubbish.img : rubbish/ipl20.nas rubbish/rubbish.sys Makefile \
 		dot/dot.rub dots/dots.rub dots2/dots2.rub eff/eff.rub line/line.rub \
 		noodle/noodle.rub open_window/window.rub walk/walk.rub sosu/sosu.rub \
 		typeipl/typeipl.rub cat/cat.rub iroha/iroha.rub chklang/chklang.rub \
-		bball/bball.rub
+		bball/bball.rub invader/invader.rub
 	$(EDIMG) imgin:tools/fdimg0at.tek \
 		wbinimg src:rubbish/ipl20.bin len:512 from:0 to:0 \
 		copy from:rubbish/rubbish.sys to:@: \
@@ -39,6 +39,7 @@ rubbish.img : rubbish/ipl20.nas rubbish/rubbish.sys Makefile \
 		copy from:iroha/iroha.rub to:@: \
 		copy from:chklang/chklang.rub to:@: \
 		copy from:bball/bball.rub to:@: \
+		copy from:invader/invader.rub to:@: \
 		copy from:nihongo/nihongo.fnt to:@: \
 		imgout:rubbish.img
 
@@ -68,6 +69,7 @@ full :
 	$(MAKE) -C iroha
 	$(MAKE) -C chklang
 	$(MAKE) -C bball
+	$(MAKE) -C invader
 	$(MAKE) rubbish.img
 
 run_full :
@@ -106,6 +108,7 @@ clean_full :
 	$(MAKE) -C iroha       clean
 	$(MAKE) -C chklang     clean
 	$(MAKE) -C bball       clean
+	$(MAKE) -C invader     clean
 
 src_only_full :
 	$(MAKE) -C rubbish     src_only
@@ -128,6 +131,7 @@ src_only_full :
 	$(MAKE) -C iroha       src_only
 	$(MAKE) -C chklang     src_only
 	$(MAKE) -C bball       src_only
+	$(MAKE) -C invader     src_only
 	$(DEL) rubbish.img
 
 refresh :
