@@ -116,7 +116,7 @@ next_group:
 			if (ix + idir > 14 || ix + idir < 0) {
 				if (iy + invisibleline == 13) { break; }
 				idir = -idir;
-				putstr(window, windowbuf, ix + 1, iy, 0, "              ");
+				putstr(window, windowbuf, ix + 1, iy, 0, "                         ");
 				++iy;
 			} else {
 				ix += idir;
@@ -170,7 +170,7 @@ next_group:
 	putstr(window, windowbuf, 15, 6, 1, "GAME OVER");
 	wait(0, timer, keyflag);
 	for (i = 1; i < 14; ++i) {
-		putstr(window, windowbuf, 0, i, 0, "              ");
+		putstr(window, windowbuf, 0, i, 0, "                         ");
 	}
 	goto restart;
 }
