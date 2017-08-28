@@ -76,14 +76,14 @@ next_group:
 		}
 		putstr(window, windowbuf, ix, iy + i, 2, invisiblestr + i * 32);
 	}
-	keyflag[0] = 0;
-	keyflag[1] = 0;
-	keyflag[2] = 0;
+	keyflag[0] = 1;
+	keyflag[1] = 1;
+	keyflag[2] = 1;
 
 	ly = 0;
 	laserwait = 0;
 	movewait = movewait0;
-	idir = +1;
+	idir = 1;
 	wait(100, timer, keyflag);
 
 	for (;;) {
