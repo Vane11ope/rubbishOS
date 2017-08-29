@@ -41,6 +41,7 @@ rubbish.img : rubbish/ipl20.nas rubbish/rubbish.sys Makefile \
 		copy from:bball/bball.rub to:@: \
 		copy from:invader/invader.rub to:@: \
 		copy from:calc/calc.rub to:@: \
+		copy from:textview/textview.rub to:@: \
 		copy from:nihongo/nihongo.fnt to:@: \
 		imgout:rubbish.img
 
@@ -72,6 +73,7 @@ full :
 	$(MAKE) -C bball
 	$(MAKE) -C invader
 	$(MAKE) -C calc
+	$(MAKE) -C textview
 	$(MAKE) rubbish.img
 
 run_full :
@@ -112,6 +114,7 @@ clean_full :
 	$(MAKE) -C bball       clean
 	$(MAKE) -C invader     clean
 	$(MAKE) -C calc        clean
+	$(MAKE) -C textview    clean
 
 src_only_full :
 	$(MAKE) -C rubbish     src_only
@@ -136,6 +139,7 @@ src_only_full :
 	$(MAKE) -C bball       src_only
 	$(MAKE) -C invader     src_only
 	$(MAKE) -C calc        src_only
+	$(MAKE) -C textview    src_only
 	$(DEL) rubbish.img
 
 refresh :
