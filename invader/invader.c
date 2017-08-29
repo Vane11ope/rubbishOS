@@ -3,7 +3,7 @@
 #include "../app.h"
 
 void putstr(int window, char *windowbuf, int x, int y, int color, unsigned char *s);
-void wait(int i, int timer, char *keyflag);
+void wait(int window, char *windowbuf, int i, int timer, char *keyflag);
 
 static unsigned char charset[16 * 8] = {
 
@@ -63,10 +63,10 @@ restart:
 	movewait0 = 20;
 	fx = 18;
 	putstr(window, windowbuf, fx, 13, 6, "efg");
-	wait(100, timer, keyflag);
+	wait(window, windowbuf, 100, timer, keyflag);
 
 next_group:
-	wait(100, timer, keyflag);
+	wait(window, windowbuf, 100, timer, keyflag);
 	ix = 7;
 	iy = 1;
 	invisibleline = 6;
@@ -76,15 +76,15 @@ next_group:
 		}
 		putstr(window, windowbuf, ix, iy + i, 2, invisiblestr + i * 32);
 	}
-	keyflag[0] = 1;
-	keyflag[1] = 1;
-	keyflag[2] = 1;
+	keyflag[0] = 0;
+	keyflag[1] = 0;
+	keyflag[2] = 0;
 
 	ly = 0;
 	laserwait = 0;
 	movewait = movewait0;
 	idir = 1;
-	wait(100, timer, keyflag);
+	wait(window, windowbuf, 100, timer, keyflag);
 
 	for (;;) {
 		if (laserwait != 0) {
@@ -92,7 +92,7 @@ next_group:
 			keyflag[2] = 0;
 		}
 
-		wait(4, timer, keyflag);
+		wait(window, windowbuf, 4, timer, keyflag);
 
 		if (keyflag[0] != 0 && fx > 0) {
 			--fx;
@@ -168,7 +168,7 @@ next_group:
 		}
 	}
 	putstr(window, windowbuf, 15, 6, 1, "GAME OVER");
-	wait(0, timer, keyflag);
+	wait(window, windowbuf, 0, timer, keyflag);
 	for (i = 1; i < 14; ++i) {
 		putstr(window, windowbuf, 0, i, 0, "                         ");
 	}
@@ -217,8 +217,9 @@ void putstr(int window, char *windowbuf, int x, int y, int color, unsigned char 
 	return;
 }
 
-void wait(int i, int timer, char *keyflag)
+void wait(int window, char *windowbuf, int i, int timer, char *keyflag)
 {
+	char s[12];
 	int j;
 	if (i > 0) {
 		api_set_timer(timer, i);
@@ -230,12 +231,18 @@ void wait(int i, int timer, char *keyflag)
 		j = api_getkey(1);
 		if (i == j) { break; }
 		if (j == '4') {
+			//sprintf(s, "%01d", j);
+			//putstr(window, windowbuf, 10, 50, 7, s);
 			keyflag[0] = 1;
 		}
 		if (j == '6') {
+			//sprintf(s, "%01d", j);
+			//putstr(window, windowbuf, 10, 50, 7, s);
 			keyflag[1] = 1;
 		}
 		if (j == ' ') {
+			//sprintf(s, "%01d", j);
+			//putstr(window, windowbuf, 10, 50, 7, s);
 			keyflag[2] = 1;
 		}
 	}

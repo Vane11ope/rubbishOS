@@ -248,7 +248,7 @@ void RubbMain(void)
 						} else {
 							fifo32_put(&task->fifo, s[0] + 256);
 						}
-					} else if ((key_win->flags & 0x20) != 0) {
+					} else if ((key_win->flags & 0x20) != 0 || key_win->flags & 0x10) {
 						fifo32_put(&key_win->task->fifo, s[0] + 256);
 					}
 				}
