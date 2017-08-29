@@ -497,7 +497,7 @@ int rub_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int e
 				}
 				i = fifo32_get(&task->fifo);
 				io_sti();
-				if (i <= 1) {
+				if (i <= 1 && console->sheet != 0) {
 					timer_init(console->timer, &task->fifo, 1);
 					timer_settime(console->timer, 50);
 				}

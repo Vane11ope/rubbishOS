@@ -16,7 +16,6 @@ void init_pit(void)
 	io_out8(PIT_CNT0, 0x9c);
 	io_out8(PIT_CNT0, 0x2e);
 	timerctl.count = 0;
-	timerctl.next = 0xffffffff;
 	for (i = 0; i < MAX_TIMER; ++i) {
 		timerctl.timer0[i].flags = TIMER_FLAGS_INIT;
 	}
@@ -86,10 +85,8 @@ void timer_settime(struct TIMER *timer, unsigned int timeout)
 void inthandler20(int *esp)
 {
 	io_out8(PIC0_OCW2, 0x60);
-
 	struct TIMER *timer;
 	char ts = 0;
-
 	++timerctl.count;
 	if (timerctl.next > timerctl.count) {
 		return;

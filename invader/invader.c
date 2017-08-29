@@ -229,9 +229,15 @@ void wait(int i, int timer, char *keyflag)
 	for (;;) {
 		j = api_getkey(1);
 		if (i == j) { break; }
-		if (j == '4') { keyflag[0] = 1; }
-		if (j == '6') { keyflag[1] = 1; }
-		if (j == ' ') { keyflag[2] = 1; }
+		if (j == '4') {
+			keyflag[0] = 1;
+		}
+		if (j == '6') {
+			keyflag[1] = 1;
+		}
+		if (j == ' ') {
+			keyflag[2] = 1;
+		}
 	}
 	return;
 }
