@@ -21,20 +21,12 @@ void RubbMain(void)
 		if (*p == '-') {
 			if (p[1] == 'w') {
 				width = strtol(p + 2, &p, 0);
-				if (width < 20) {
-					width = 20;
-				}
-				if (width > 126) {
-					width = 126;
-				}
+				width = max(width, 20);
+				width = min(width, 126);
 			} else if (p[1] == 'h') {
 				height = strtol(p + 2, &p, 0);
-				if (height < 1) {
-					height = 1;
-				}
-				if (height > 45) {
-					height = 45;
-				}
+				height = max(height, 1);
+				height = min(height, 45);
 			} else if (p[1] == 't') {
 				t = strtol(p + 2, &p, 0);
 				if (t < 1) {

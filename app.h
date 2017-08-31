@@ -39,3 +39,14 @@ void api_free_timer(int timer);
 
 // sound
 void api_beep(int tone);
+
+/* utility */
+static inline int max(int a, int b) { return a >= b ? a : b; }
+static inline int min(int a, int b) { return a <= b ? a : b; }
+static inline int length(unsigned char* s) {
+	int len = 0;
+	for (; *s != 0x00; ++s) {
+		++len;
+	}
+	return len;
+}
